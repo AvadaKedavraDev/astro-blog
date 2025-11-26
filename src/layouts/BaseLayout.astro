@@ -1,0 +1,44 @@
+---
+// src/layouts/BaseLayout.astro
+import SEO from "../components/SEO.astro";
+import Navigation from "../components/Navigation.astro";
+import Footer from "../components/Footer.astro";
+import "../styles/global.css"; // 仅保留全局样式导入
+
+export interface Props {
+    title: string;
+    description?: string;
+    canonicalUrl?: string;
+    ogImage?: string; // 传递给 SEO 组件
+}
+
+// 设置 props 默认值
+const {
+    title,
+    description = "一个专注于技术分享的博客",
+    canonicalUrl,
+    ogImage,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="zh-CN" class="scroll-smooth">
+    <head>
+        <SEO
+            title={title}
+            description={description}
+            canonicalUrl={canonicalUrl}
+            ogImage={ogImage}
+        />
+    </head>
+
+    <body>
+        <Navigation />
+
+        <main id="main-content" class="default-container">
+            <slot />
+        </main>
+
+        <Footer />
+    </body>
+</html>

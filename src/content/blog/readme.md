@@ -1,0 +1,1 @@
+`npx astro add tailwind`

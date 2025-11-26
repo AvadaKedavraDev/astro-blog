@@ -1,0 +1,23 @@
+@import "tailwindcss";
+@plugin '@tailwindcss/typography';
+
+@theme {
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --primary: #3b82f6;
+  --secondary: #6b7280;
+  --accent: #10b981;
+  --muted: #f3f4f6;
+}
+
+@layer base {
+  body {
+    @apply min-h-screen font-sans antialiased leading-relaxed flex flex-col;
+  }
+}
+
+@layer components {
+  .default-container {
+    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
