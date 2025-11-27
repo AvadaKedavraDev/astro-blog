@@ -1,6 +1,6 @@
 ---
-title: "我的第一篇博客文章"
-description: "这是我使用 Astro 和 Tailwind CSS 构建博客的第一步。"
+title: "test"
+description: "test"
 pubDate: 2023-10-27
 author: "你的名字"
 tags: ["astro", "tailwindcss", "博客"]

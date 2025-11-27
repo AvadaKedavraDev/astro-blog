@@ -1,19 +1,22 @@
 ---
-
+import ThemeIcon from "./ThemeIcon.astro";
 ---
 
 <header
     class="sticky top-0 z-40 bg-surface/80 backdrop-blur-md border-b border-border/50"
 >
-    <nav class="max-w-4xl mx-auto px-6 py-4" aria-label="主导航">
-        <div class="flex items-center justify-between">
+    <nav
+        class=" w-full max-w-7xl mx-auto px-6 py-4 flex flex-row justify-between"
+        aria-label="主导航"
+    >
+        <div class="flex items-center justify-between flex-1">
             <!-- 网站标志 -->
             <a
                 href="/"
                 class="text-2xl font-semibold text-foreground hover:text-primary transition-colors duration-200"
                 aria-label="返回首页"
             >
-                TechBlog
+                Moonpeak's Blog
             </a>
 
             <!-- 主导航链接 -->
@@ -43,7 +46,8 @@
                     </a>
                 </li>
             </ul>
-
+        </div>
+        <div class="flex items-center space-x-4 min-w-24 justify-around">
             <!-- 移动端菜单按钮 -->
             <button
                 class="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
@@ -62,6 +66,9 @@
                         d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
+            <div>
+                <ThemeIcon size="md" variant="icon" />
+            </div>
         </div>
     </nav>
 </header>

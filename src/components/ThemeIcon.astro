@@ -1,0 +1,154 @@
+---
+// src/components/ThemeToggle.astro
+
+// 定义组件的 Props 接口
+export interface Props {
+    size?: "sm" | "md" | "lg"; // 按钮尺寸，默认为 "md"
+    variant?: "icon" | "button"; // 变体类型：纯图标或带文字的按钮
+}
+
+// 从 Astro.props 中解构参数，设置默认值
+const { size = "md", variant = "icon" } = Astro.props;
+
+// 尺寸对应的 CSS 类名映射
+const sizeClasses = {
+    sm: "w-6 h-6", // 小尺寸：宽高 6 * 6
+    md: "w-8 h-8", // 中尺寸：宽高 8 * 8（默认）
+    lg: "w-10 h-10", // 大尺寸：宽高 10 * 10
+};
+
+// 变体对应的 CSS 类名映射
+const variantClasses = {
+    icon: "p-1 rounded-md", // 图标模式：内边距较小
+    button: "px-3 py-2 rounded-lg border", // 按钮模式：更大的内边距和边框
+};
+---
+
+<!-- 
+  主题切换按钮
+  id: 用于 JavaScript 事件绑定
+  class: 动态组合样式类，包含尺寸、变体和主题相关样式
+  aria-label: 为无障碍访问提供描述
+-->
+<button
+    id="themeToggle"
+    class={`flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition-all hover:scale-105 ${sizeClasses[size]} ${variantClasses[variant]}`}
+    aria-label="切换主题"
+>
+    <!-- 太阳图标 - 浅色模式时显示 -->
+    <svg class="sun" width="20" height="20" viewBox="0 0 24 24">
+        <!-- 太阳中心圆 -->
+        <circle cx="12" cy="12" r="5" fill="currentColor"></circle>
+        <!-- 太阳光芒射线 -->
+        <path
+            d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42m12.72-12.72l1.42-1.42"
+            stroke="currentColor"
+            stroke-width="2"
+            fill="none"></path>
+    </svg>
+
+    <!-- 月亮图标 - 深色模式时显示 -->
+    <svg class="moon" width="20" height="20" viewBox="0 0 24 24">
+        <!-- 月亮形状 -->
+        <path
+            d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+            fill="currentColor"></path>
+    </svg>
+
+    <!-- 
+      条件渲染：如果是按钮变体，显示文字标签
+      浅色模式显示"浅色"，深色模式显示"深色"
+    -->
+    {
+        variant === "button" && (
+            <span class="ml-2 text-sm">
+                <span class="light-text">浅色</span>
+                <span class="dark-text">深色</span>
+            </span>
+        )
+    }
+</button>
+
+<style>
+    /* 浅色模式样式 */
+    .sun {
+        display: block; /* 显示太阳图标 */
+        fill: currentColor; /* 使用当前文字颜色 */
+    }
+    .moon {
+        display: none; /* 隐藏月亮图标 */
+        fill: currentColor;
+    }
+
+    /* 深色模式样式（通过 :global(.dark) 选择器应用） */
+    :global(.dark) .sun {
+        display: none; /* 深色模式下隐藏太阳 */
+    }
+    :global(.dark) .moon {
+        display: block; /* 深色模式下显示月亮 */
+    }
+
+    /* 文字标签的显示控制 */
+    .light-text {
+        display: inline; /* 浅色模式显示"浅色"文字 */
+    }
+    .dark-text {
+        display: none; /* 浅色模式隐藏"深色"文字 */
+    }
+    :global(.dark) .light-text {
+        display: none; /* 深色模式隐藏"浅色"文字 */
+    }
+    :global(.dark) .dark-text {
+        display: inline; /* 深色模式显示"深色"文字 */
+    }
+</style>
+
+<script is:inline>
+    // 主题初始化函数：确定当前应该使用的主题
+    const theme = (() => {
+        // 尝试从 localStorage 读取用户之前设置的主题
+        const localStorageTheme = localStorage?.getItem("theme") ?? "";
+
+        // 优先级1：如果本地存储有有效主题，使用该主题
+        if (["dark", "light"].includes(localStorageTheme)) {
+            return localStorageTheme;
+        }
+
+        // 优先级2：检测系统偏好，如果系统偏好深色模式，使用深色主题
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            return "dark";
+        }
+
+        // 优先级3：默认使用浅色主题
+        return "light";
+    })();
+
+    // 应用主题到文档根元素
+    if (theme === "light") {
+        document.documentElement.classList.remove("dark"); // 移除深色类
+    } else {
+        document.documentElement.classList.add("dark"); // 添加深色类
+    }
+
+    // 将当前主题保存到 localStorage，确保下次访问时保持一致
+    window.localStorage.setItem("theme", theme);
+
+    // 主题切换点击事件处理函数
+    const handleToggleClick = () => {
+        const element = document.documentElement;
+
+        // 切换 dark 类（如果存在则移除，不存在则添加）
+        element.classList.toggle("dark");
+
+        // 检测当前是否是深色模式
+        const isDark = element.classList.contains("dark");
+
+        // 将用户选择保存到本地存储
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+    };
+
+    // 为主题切换按钮绑定点击事件
+    document
+        .getElementById("themeToggle")
+        ?.addEventListener("click", handleToggleClick);
+</script>
