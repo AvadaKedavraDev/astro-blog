@@ -15,3 +15,9 @@ image: "/images/blog-post-1-cover.jpg" # 假设图片在 public/images/ 下
 
 - 学习更多 Astro 组件
 - 继续美化我的博客样式
+
+```java
+    public void static() {
+        
+    }
+```

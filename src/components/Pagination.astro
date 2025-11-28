@@ -1,0 +1,145 @@
+---
+//src/components/Pagination.astro
+type PaginationProps = {
+    section?: string;
+    currentPage?: number;
+    totalPages?: number;
+    basePath?: string; // 新增：明确的基础路径
+};
+
+const {
+    section,
+    currentPage = 1,
+    totalPages = 1,
+    basePath = "/page", // 默认分页路径
+}: PaginationProps = Astro.props;
+
+const hasPrevPage = currentPage > 1;
+const hasNextPage = totalPages > currentPage;
+const isSecondPage = currentPage === 2;
+
+// 生成页码数组
+const pageList = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+// 生成页面链接的辅助函数
+const getPageUrl = (pageNumber: number) => {
+    if (pageNumber === 1) {
+        return section ? `/${section}` : "/";
+    }
+    return section ? `/${section}${basePath}/${pageNumber}`: `${basePath}/${pageNumber}`;
+};
+---
+
+{
+    totalPages > 1 && (
+        <nav
+            class="flex items-center justify-center space-x-3 p-8"
+            role="navigation"
+            aria-label="分页导航"
+        >
+            {/* 上一页按钮 */}
+            {hasPrevPage ? (
+                <a
+                    href={getPageUrl(currentPage - 1)}
+                    class="rounded px-2 py-1.5 text-dark hover:bg-gray-400 dark:text-darkmode-text-dark dark:hover:bg-darkmode-light"
+                    aria-label={`前往第 ${currentPage - 1} 页`}
+                >
+                    <svg
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                        height="30"
+                        width="30"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                </a>
+            ) : (
+                <span
+                    class="rounded px-2 py-1.5 text-text-light cursor-not-allowed"
+                    aria-disabled="true"
+                >
+                    <svg
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                        height="30"
+                        width="30"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                </span>
+            )}
+
+            {/* 页码数字 */}
+            {pageList.map((page) =>
+                page === currentPage ? (
+                    <span
+                        aria-current="page"
+                        class="rounded bg-primary px-4 py-2 text-zinc-50 bg-zinc-950 dark:bg-zinc-200 dark:text-zinc-900"
+                    >
+                        {page}
+                    </span>
+                ) : (
+                    <a
+                        href={getPageUrl(page)}
+                        class="rounded px-4 py-2 text-text-dark hover:bg-light dark:text-darkmode-text-dark dark:hover:bg-darkmode-light"
+                        aria-label={`前往第 ${page} 页`}
+                    >
+                        {page}
+                    </a>
+                ),
+            )}
+
+            {/* 下一页按钮 */}
+            {hasNextPage ? (
+                <a
+                    href={getPageUrl(currentPage + 1)}
+                    class="rounded px-2 py-1.5 text-text-dark gray:bg-light dark:text-darkmode-text-dark dark:hover:bg-darkmode-light"
+                    aria-label={`前往第 ${currentPage + 1} 页`}
+                >
+                    <svg
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                        height="30"
+                        width="30"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                </a>
+            ) : (
+                <span
+                    class="rounded px-2 py-1.5 text-text-light cursor-not-allowed"
+                    aria-disabled="true"
+                >
+                    <svg
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                        height="30"
+                        width="30"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                </span>
+            )}
+        </nav>
+    )
+}
