@@ -26,12 +26,12 @@ class TaxonomyService {
         
         const allItems = allPosts.flatMap(post => post.data[field as 'categories' | 'tags']).filter((item): item is string => item !== undefined);
 
-console.log(allItems)
-console.log("---------------")
+        console.log(allItems)
+        console.log("---------------")
         const result = this.processTaxonomy(allItems, field);
         this.cache.set(cacheKey, result);
-console.log(result)
-console.log('********')
+        console.log(result)
+        console.log('********')
         return result;
     }
 

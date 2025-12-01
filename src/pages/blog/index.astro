@@ -1,9 +1,9 @@
 ---
 // src/pages/blog/index.astro
-import BaseLayout from "../../layouts/BaseLayout.astro";
+import BaseLayout from "@/layouts/BaseLayout.astro";
 import { getCollection, type CollectionEntry } from "astro:content";
-import Pagination from "../../components/Pagination.astro";
-import PageSiderBar from "@/components/PageSiderBar.astro";
+import Pagination from "@/components/main/Pagination.astro";
+import PageSiderBar from "@/components/main/PageSiderBar.astro";
 import { taxonomyService } from "@/lib/utils/optimizedTaxonomy";
 
 const allPosts = (await getCollection("blog")).sort(

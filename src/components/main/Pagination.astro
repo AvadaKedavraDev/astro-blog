@@ -26,7 +26,7 @@ const getPageUrl = (pageNumber: number) => {
     if (pageNumber === 1) {
         return section ? `/${section}` : "/";
     }
-    return section ? `/${section}${basePath}/${pageNumber}`: `${basePath}/${pageNumber}`;
+    return section? `/${section}${basePath}/${pageNumber}`: `${basePath}/${pageNumber}`;
 };
 ---
 
