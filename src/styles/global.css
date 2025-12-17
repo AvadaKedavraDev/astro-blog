@@ -1,38 +1,51 @@
 @import "tailwindcss";
-
+@plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
-@plugin '@tailwindcss/typography';
-
-/* 定义主题颜色变量 */
 @theme {
-    --color-code-bg: #1a1b26;
-    --color-code-text: #c0caf5;
-    --color-code-border: #414868;
-    --color-code-highlight: #2a2e3a;
+    /* 1. 定义基础颜色变量 */
+    --color-prose-body: var(--color-gray-700);
+    --color-prose-headings: var(--color-gray-900);
+    --color-prose-links: var(--color-indigo-600);
+    --color-prose-bold: var(--color-gray-900);
+    --color-prose-counters: var(--color-gray-500);
+    --color-prose-bullets: var(--color-gray-300);
+    --color-prose-quotes: var(--color-gray-900);
+    --color-prose-hr: var(--color-gray-200);
+    --color-code-bg: #1a1b26;        /* 东京夜主题背景色 */
+    --color-code-text: #c0caf5;      /* 文本色 */
+    --color-code-inline-bg: #f3f4f6; /* 行内代码背景（浅色模式） */
+    --color-code-inline-text: #d1127e; /* 行内代码文字（浅色模式） */
 }
 
-/* 配置 Typography 样式 */
-@plugin "@tailwindcss/typography" {
-    /* 当前 v4 中，直接在 CSS 中使用 @plugin 配置 */
-    --typography-pre-bg: var(--color-code-bg);
-    --typography-pre-color: var(--color-code-text);
-    --typography-pre-border-color: var(--color-code-border);
-    --typography-pre-border-radius: 8px;
-    --typography-pre-padding: 1.5rem;
-    --typography-code-bg: var(--color-code-highlight);
-    --typography-code-color: var(--color-code-text);
-    --typography-code-border-radius: 4px;
-    --typography-code-padding: 0.2em 0.4em;
-}
-
-@layer base {
-    body {
-        @apply min-h-screen font-sans antialiased leading-relaxed flex flex-col;
+/* 2. 暗黑模式变量重写 */
+@variant dark {
+    :root {
+        --color-prose-body: var(--color-gray-300);
+        --color-prose-headings: var(--color-white);
+        --color-prose-links: var(--color-indigo-400);
+        --color-prose-bold: var(--color-white);
+        --color-prose-counters: var(--color-gray-400);
+        --color-prose-bullets: var(--color-gray-600);
+        --color-prose-quotes: var(--color-gray-100);
+        --color-prose-hr: var(--color-gray-800);
     }
 }
 
 @layer components {
-    .default-container {
-        @apply min-w-full min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    .prose-custom {
+        /* 3. 必须覆盖所有关键的 prose 变量 */
+        --tw-prose-body: var(--color-prose-body);
+        --tw-prose-headings: var(--color-prose-headings);
+        --tw-prose-links: var(--color-prose-links);
+        --tw-prose-bold: var(--color-prose-bold);
+        --tw-prose-counters: var(--color-prose-counters);
+        --tw-prose-bullets: var(--color-prose-bullets);
+        --tw-prose-quotes: var(--color-prose-quotes);
+        --tw-prose-hr: var(--color-prose-hr);
+
+        /* 代码块相关变量 */
+        --tw-prose-pre-bg: var(--color-gray-900);
+        --tw-prose-pre-code: var(--color-gray-100);
+
     }
 }

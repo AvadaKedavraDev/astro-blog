@@ -7,5 +7,11 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   vite: {
     plugins: [tailwindcss()]
+  },
+  markdown: {
+    shikiConfig: {
+      theme: 'tokyo-night', // 确保这里的颜色与你 CSS 变量一致
+      wrap: true,
+    },
   }
 });
