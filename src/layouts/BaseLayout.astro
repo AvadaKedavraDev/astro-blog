@@ -1,44 +1,46 @@
 ---
 // src/layouts/BaseLayout.astro
-import SEO from "@/components/header/SEO.astro";
-import Navigation from "@/components/header/Navigation.astro";
-import Footer from "@/components/footer/Footer.astro";
-import "@/styles/global.css"; // 仅保留全局样式导入
+import SEO from "@components/widgets/SEO.astro";
+import Navigation from "@components/common/Navigation.astro";
+import Footer from "@components/common/Footer.astro";
+import "@/styles/global.css";
 
 export interface Props {
     title: string;
     description?: string;
     canonicalUrl?: string;
-    ogImage?: string; // 传递给 SEO 组件
+    ogImage?: string;
+    mainClass?: string;
 }
 
-// 设置 props 默认值
 const {
     title,
     description = "一个专注于技术分享的博客",
-    canonicalUrl,
+    canonicalUrl = Astro.url.href, // 自动获取当前 URL
     ogImage,
+    mainClass = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
 } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="zh-CN" class="scroll-smooth">
+<html lang="zh-CN" class="scroll-smooth antialiased">
     <head>
-        <SEO
-            title={title}
-            description={description}
-            canonicalUrl={canonicalUrl}
-            ogImage={ogImage}
-        />
+        <SEO {title} {description} {canonicalUrl} {ogImage}/>
     </head>
 
-    <body>
-        <Navigation />
+    <body class="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+        <Navigation/>
 
-        <main id="main-content" class="default-container">
-            <slot />
+        <main
+                id="main-content"
+                class:list={["flex-grow w-full outline-none flex", mainClass]}
+                tabindex="-1"
+        >
+            <slot/>
         </main>
 
-        <Footer />
+        <Footer/>
+
+        <slot name="footer-scripts"/>
     </body>
 </html>

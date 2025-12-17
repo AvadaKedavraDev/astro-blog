@@ -1,89 +1,59 @@
 ---
 // src/components/article/ArticleNavigation.astro
-interface Props {
-    prevArticle?: {
-        title: string;
-        slug: string;
-    };
-    nextArticle?: {
-        title: string;
-        slug: string;
-    };
+interface ArticleLink {
+    title: string;
+    slug: string;
 }
 
-const { prevArticle, nextArticle } = Astro.props;
+interface Props {
+    prevArticle?: ArticleLink;
+    nextArticle?: ArticleLink;
+}
+
+const {prevArticle, nextArticle} = Astro.props;
+
+// 统一路径生成逻辑
+const getUrl = (slug: string) => `/blog/${slug}/`;
 ---
 
-<nav class="max-w-4xl mx-auto px-6 py-8 border-t border-border">
-    <div class="grid md:grid-cols-2 gap-8">
-        {
-            prevArticle ? (
+<nav class="grid sm:grid-cols-2 gap-4 mt-12 not-prose">
+    {/* 上一篇：靠左对齐 */}
+    <div class="flex">
+        {prevArticle && (
                 <a
-                    href={`/blog/post/${prevArticle.slug}`}
-                    class="group p-4 border border-border rounded-lg hover:border-primary/50 transition-colors"
+                        href={getUrl(prevArticle.slug)}
+                        class="flex-1 group flex flex-col gap-2 p-5 border border-gray-200 dark:border-gray-800 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-all duration-300"
                 >
-                    <div class="flex items-center space-x-3">
-                        <svg
-                            class="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M15 19l-7-7 7-7"
-                            />
-                        </svg>
-                        <div>
-                            <span class="text-sm text-muted-foreground">
-                                上一篇
-                            </span>
-                            <h3 class="font-medium text-foreground group-hover:text-primary transition-colors">
-                                {prevArticle.title}
-                            </h3>
-                        </div>
-                    </div>
+        <span class="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-gray-400 group-hover:text-indigo-500 transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Previous
+        </span>
+                    <span class="text-base font-semibold text-gray-700 dark:text-gray-200 line-clamp-2 group-hover:translate-x-[-4px] transition-transform">
+          {prevArticle.title}
+        </span>
                 </a>
-            ) : (
-                <div />
-            )
-        }
+        )}
+    </div>
 
-        {
-            nextArticle ? (
+    {/* 下一篇：靠右对齐 */}
+    <div class="flex">
+        {nextArticle && (
                 <a
-                    href={`/blog/post/${nextArticle.slug}`}
-                    class="group p-4 border border-border rounded-lg hover:border-primary/50 transition-colors text-right"
+                        href={getUrl(nextArticle.slug)}
+                        class="flex-1 group flex flex-col items-end gap-2 p-5 border border-gray-200 dark:border-gray-800 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-all duration-300 text-right"
                 >
-                    <div class="flex items-center space-x-3 justify-end">
-                        <div>
-                            <span class="text-sm text-muted-foreground">
-                                下一篇
-                            </span>
-                            <h3 class="font-medium text-foreground group-hover:text-primary transition-colors">
-                                {nextArticle.title}
-                            </h3>
-                        </div>
-                        <svg
-                            class="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 5l7 7-7 7"
-                            />
-                        </svg>
-                    </div>
+        <span class="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-gray-400 group-hover:text-indigo-500 transition-colors">
+          Next
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+          </svg>
+        </span>
+                    <span class="text-base font-semibold text-gray-700 dark:text-gray-200 line-clamp-2 group-hover:translate-x-[4px] transition-transform">
+          {nextArticle.title}
+        </span>
                 </a>
-            ) : (
-                <div />
-            )
-        }
+        )}
     </div>
 </nav>

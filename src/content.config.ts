@@ -1,5 +1,4 @@
 // src/content/config.ts
-
 import { defineCollection, z } from 'astro:content';
 
 // 1. 定义 'blog' 集合的 Frontmatter 架构 (Schema)
@@ -8,12 +7,8 @@ const blogCollection = defineCollection({
     type: 'content',
     // 定义预期的 Frontmatter 字段及其类型
     schema: z.object({
-        title: z.string({
-            required_error: "博客文章必须有标题。",
-        }),
-        pubDate: z.date({
-            required_error: "博客文章必须有发布日期。",
-        }),
+        title: z.string({required_error: "博客文章必须有标题。",}),
+        pubDate: z.coerce.date({required_error: "博客文章必须有发布日期。",}),
         description: z.string().optional(),
         tags: z.array(z.string()).optional(),
         categories: z.array(z.string()).optional(),
@@ -21,7 +16,6 @@ const blogCollection = defineCollection({
         readingTime: z.number().optional(),
         coverImage: z.string().optional(),
         draft: z.boolean().optional(),
-        // 根据您实际使用的字段进行添加或修改
     }),
 });
 

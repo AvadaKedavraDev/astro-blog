@@ -1,179 +1,83 @@
 ---
 // src/layouts/ArticleLayout.astro
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import ArticleNavigation from "@/components/article/ArticleNavigation.astro";
-import Page from "@/pages/blog/page/[page].astro";
+import BaseLayout from "@layouts/BaseLayout.astro";
+import ArticleNavigation from "@components/article/ArticleNavigation.astro";
+import { getAdjacentPosts } from "@lib/post";
+import type { CollectionEntry } from "astro:content";
 
-export interface Props {
-  title: string;
-  description?: string;
-  pubDate?: Date;
-  author?: string;
-  tags?: string[];
-  readingTime?: number;
-  coverImage?: string;
-  prev?: {
-    title: string;
-    slug: string;
-  };
-  next?: {
-    title: string;
-    slug: string;
-  };
-}
+interface Props {post: CollectionEntry<'blog'>;}
 
-const {
-  title,
-  description,
-  pubDate,
-  author = "匿名作者",
-  tags = [],
-  readingTime = 5,
-  coverImage,
-  next,
-  prev,
-} = Astro.props;
-console.log(Astro.props);
+const { post } = Astro.props;
+const { title, description, pubDate, author = "匿名作者", tags = [], readingTime, coverImage } = post.data;
+
+// 1. 自动化核心：直接在 Layout 级别获取相邻文章
+const { prev, next } = await getAdjacentPosts(post.slug);
+
+// 2. 预处理显示数据
+const formattedDate = pubDate?.toLocaleDateString("zh-CN", {year: 'numeric', month: 'long', day: 'numeric'});
 ---
 
-<BaseLayout title={`${title} | TechBlog`} description={description}>
-  <article class="min-h-screen">
-    <!-- 文章头部区域 -->
+<BaseLayout {title} {description} ogImage={coverImage}>
+  <article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-    <!-- 封面图片 -->
-    {
-      coverImage && (
-        <div class="max-w-5xl mx-auto px-6 py-8">
-          <div class="relative aspect-video md:aspect-21/9 bg-muted rounded-xl overflow-hidden">
-            <img
+    <header class="mb-12 text-center">
+      {tags.length > 0 && (
+          <div class="flex justify-center gap-3 mb-4">
+            {tags.map(tag => (
+                <span class="text-xs font-bold tracking-widest uppercase text-indigo-600 dark:text-indigo-400">
+              #{tag}
+            </span>
+            ))}
+          </div>
+      )}
+
+      <h1 class="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6 tracking-tight leading-tight">
+        {title}
+      </h1>
+
+      <div class="flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 space-x-3 font-medium">
+        <span>{author}</span>
+        {pubDate && <time datetime={pubDate.toISOString()}>· {formattedDate}</time>}
+        {readingTime && <span>· 约 {readingTime} 分钟阅读</span>}
+      </div>
+    </header>
+
+    {coverImage && (
+        <figure class="mb-14 -mx-4 sm:-mx-0">
+          <img
               src={coverImage}
               alt={title}
-              class="w-full h-full object-cover"
+              class="w-full aspect-[21/9] object-cover rounded-2xl shadow-2xl shadow-indigo-500/10 border border-gray-100 dark:border-gray-800"
               loading="eager"
-            />
-          </div>
-        </div>
-      )
-    }
+          />
+        </figure>
+    )}
 
-    <!-- 文章内容区域 -->
-    <div class="max-h-full max-w-full mx-auto px-6 py-8">
-      <div class="prose prose-lg prose-slate max-w-none">
-        <!-- 使用 Typography 插件的样式 -->
-        <div
-          class="prose-headings:font-semibold
-          prose-h1:text-3xl prose-h1:border-b prose-h1:border-border prose-h1:pb-4
-          prose-h2:text-2xl prose-h2:mt-12
-          prose-h3:text-xl
-          prose-p:leading-8
-          prose-a:text-primary prose-a:no-underline prose-a:border-b prose-a:border-primary/30 hover:prose-a:border-primary
-          prose-strong:font-semibold
-          prose-em:italic
-          prose-blockquote:border-l-primary prose-blockquote:bg-muted/50 prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:rounded-r-lg
-          prose-code:before:content-none prose-code:after:content-none
-          prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
-          prose-pre:bg-surface prose-pre:border prose-pre:border-border
-          prose-ol:list-decimal prose-ul:list-disc
-          prose-li:my-2
-          prose-table:border prose-table:border-border
-          prose-th:bg-muted prose-th:border prose-th:border-border
-          prose-td:border prose-td:border-border
-          prose-img:rounded-lg prose-img:border prose-img:border-border
-          prose-hr:border-border"
-        >
-          <slot />
-        </div>
-      </div>
-
-      <!-- 文章底部信息 -->
-      <footer class="mt-16 pt-8 border-t border-border">
-        <!-- 作者信息卡片 -->
-        <div class="bg-muted/30 rounded-xl p-6 mb-8">
-          <div class="flex items-center space-x-4">
-            <div
-              class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center"
-            >
-              <span class="text-primary font-semibold text-lg">
-                {author.charAt(0)}
-              </span>
-            </div>
-            <div>
-              <h3 class="font-semibold text-foreground">{author}</h3>
-              <p class="text-sm text-muted-foreground mt-1">
-                本文作者，分享技术见解和实践经验。
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 标签和分享 -->
-        <div
-          class="flex flex-col sm:flex-row justify-between items-center gap-4"
-        >
-          {
-            tags.length > 0 && (
-              <div class="flex items-center space-x-2">
-                <span class="text-sm text-muted-foreground">标签:</span>
-                <div class="flex flex-wrap gap-2">
-                  {tags.map((tag) => (
-                    <a
-                      href={`/tags/${tag}`}
-                      class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-muted text-muted-foreground hover:bg-border transition-colors"
-                    >
-                      #{tag}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )
-          }
-
-          <div class="flex items-center space-x-4">
-            <span class="text-sm text-muted-foreground">分享:</span>
-            <div class="flex space-x-2">
-              <button
-                class="p-2 rounded-lg bg-muted hover:bg-border transition-colors"
-              >
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path
-                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
-                  ></path>
-                </svg>
-              </button>
-              <button
-                class="p-2 rounded-lg bg-muted hover:bg-border transition-colors"
-              >
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path
-                    d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"
-                  ></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </footer>
+    <div class="prose prose-custom max-w-none dark:prose-invert">
+      <slot />
     </div>
 
-    <!-- 上一篇/下一篇导航 -->
-    <ArticleNavigation prevArticle={prev} nextArticle={next} />
+    <footer class="mt-20">
+      <ArticleNavigation
+          prevArticle={prev ? { title: prev.data.title, slug: prev.slug } : undefined}
+          nextArticle={next ? { title: next.data.title, slug: next.slug } : undefined}
+      />
+    </footer>
   </article>
 </BaseLayout>
 
-<style>
-  /* 自定义代码高亮样式 */
-  .prose pre {
-    position: relative;
+<style is:global>
+  @reference "@/styles/global.css";
+  .prose-custom {
+    --tw-prose-headings: var(--color-gray-900);
+    --tw-prose-links: var(--color-indigo-600);
   }
 
-  .prose pre code {
-    background: transparent !important;
-    padding: 0 !important;
+  .dark .prose-custom {
+    --tw-prose-headings: var(--color-white);
+    --tw-prose-links: var(--color-indigo-400);
   }
-
-  /* 表格响应式 */
-  .prose table {
-    display: block;
-    overflow-x: auto;
-  }
+  /* 优化移动端表格和代码块体验 */
+  .prose pre { @apply overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700; }
+  .prose table { @apply block overflow-x-auto; }
 </style>

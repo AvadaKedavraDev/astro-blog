@@ -1,0 +1,58 @@
+---
+// src/components/PostCard.astro
+import type {CollectionEntry} from 'astro:content';
+
+interface Props {
+    post: CollectionEntry<'blog'>;
+}
+
+const {post} = Astro.props;
+const {title, pubDate, author, readingTime, description, tags = []} = post.data;
+
+// 预处理数据
+const formattedDate = pubDate.toLocaleDateString("zh-CN");
+const displayTags = tags.slice(0, 3);
+const extraTagsCount = tags.length - 3;
+---
+
+<a
+        href={`/blog/${post.slug}/`}
+        class="group block border shadow-lg border-gray-200 rounded-xl p-5 transition duration-300 ease-in-out bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+>
+    <article>
+        <h2 class="text-2xl font-bold text-indigo-700 dark:text-indigo-400 mb-2 group-hover:text-indigo-600 transition-colors">
+            {title}
+        </h2>
+
+        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3 space-x-2">
+            <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+            <span>•</span>
+            <span>作者: {author}</span>
+            {readingTime && (
+                    <>
+                        <span>•</span>
+                        <span>阅读时间: {readingTime} 分钟</span>
+                    </>
+            )}
+        </div>
+
+        <p class="text-base text-gray-700 dark:text-gray-300 line-clamp-2 mb-3">
+            {description}
+        </p>
+
+        {tags.length > 0 && (
+                <div class="flex flex-wrap gap-2">
+                    {displayTags.map((tag) => (
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+            #{tag}
+          </span>
+                    ))}
+                    {extraTagsCount > 0 && (
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+            +{extraTagsCount}
+          </span>
+                    )}
+                </div>
+        )}
+    </article>
+</a>

@@ -1,10 +1,8 @@
 ---
-import { contentUtils } from "@/lib/utils/textConverter";
-
 const { tags, categories, allCategories } = Astro.props;
 ---
 
-<div class="w-full lg:w-80 fixed lg:top-4">  <!-- 粘性定位 -->
+<div class="w-full lg:w-80 lg:top-4">  <!-- 粘性定位 -->
     <!-- categories -->
     <div class="mb-8">
         <h5 class="mb-6 flex items-center gap-2">  <!-- Flex 标题 -->
@@ -28,7 +26,7 @@ const { tags, categories, allCategories } = Astro.props;
                                 >
                                     <span class="flex items-center gap-2">
                                         <span class="w-2 h-2 bg-primary rounded-full"></span>
-                                        {contentUtils.formatTaxonomy(category)}
+                                        <!--{contentUtils.formatTaxonomy(category)}-->
                                     </span>
                                     <span class="bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded text-xs font-medium">
                                         {count}
@@ -60,7 +58,7 @@ const { tags, categories, allCategories } = Astro.props;
                                     class="inline-flex items-center rounded-full bg-white px-3 py-1 text-sm hover:bg-primary hover:text-white dark:bg-darkmode-body dark:hover:bg-darkmode-primary transition-all hover:scale-105"
                                     href={`/tags/${tag}`}
                                 >
-                                    #{contentUtils.formatTaxonomy(tag)}
+                                    <!--#{contentUtils.formatTaxonomy(tag)}-->
                                 </a>
                             </li>
                         );

@@ -1,24 +1,38 @@
 @import "tailwindcss";
+
 @custom-variant dark (&:where(.dark, .dark *));
 @plugin '@tailwindcss/typography';
 
+/* 定义主题颜色变量 */
 @theme {
-  --background: #ffffff;
-  --foreground: #1a1a1a;
-  --primary: #3b82f6;
-  --secondary: #6b7280;
-  --accent: #10b981;
-  --muted: #f3f4f6;
+    --color-code-bg: #1a1b26;
+    --color-code-text: #c0caf5;
+    --color-code-border: #414868;
+    --color-code-highlight: #2a2e3a;
+}
+
+/* 配置 Typography 样式 */
+@plugin "@tailwindcss/typography" {
+    /* 当前 v4 中，直接在 CSS 中使用 @plugin 配置 */
+    --typography-pre-bg: var(--color-code-bg);
+    --typography-pre-color: var(--color-code-text);
+    --typography-pre-border-color: var(--color-code-border);
+    --typography-pre-border-radius: 8px;
+    --typography-pre-padding: 1.5rem;
+    --typography-code-bg: var(--color-code-highlight);
+    --typography-code-color: var(--color-code-text);
+    --typography-code-border-radius: 4px;
+    --typography-code-padding: 0.2em 0.4em;
 }
 
 @layer base {
-  body {
-    @apply min-h-screen font-sans antialiased leading-relaxed flex flex-col;
-  }
+    body {
+        @apply min-h-screen font-sans antialiased leading-relaxed flex flex-col;
+    }
 }
 
 @layer components {
-  .default-container {
-    @apply min-w-full min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
+    .default-container {
+        @apply min-w-full min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    }
 }
