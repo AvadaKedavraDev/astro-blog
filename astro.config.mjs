@@ -10,22 +10,18 @@ export default defineConfig({
   },
   integrations: [
     expressiveCode({
-      // 这里的顺序决定了默认主题，它会自动适配系统/类名切换
+      // 1. 仅保留最核心的主题定义
+      // 插件会自动识别 github-light 为亮色，tokyo-night 为暗色
       themes: ['github-light', 'tokyo-night'],
-      // 增强功能配置
-      shikiConfig: {
-        langs: ['typescript', 'javascript', 'rust', 'astro', 'shell', 'css'],
-      },
+
+      // 2. 这里的配置是 styleOverrides，它是受支持的已知属性
       styleOverrides: {
-        // 统一 UI 风格
         borderRadius: '0.75rem',
         codeFontSize: '0.875rem',
-        codeLineHeight: '1.7',
-        // 让 UI 边框在暗色模式下更克制
-        uiBorderColor: 'var(--code-border-color, #24283b)',
+        // 如果你一定要手动干预背景，请确保在这里写逻辑
+        codeBackground: ({ theme }) =>
+            theme.name.includes('light') ? '#f8fafc' : '#1a1b26',
       },
-      // 允许在代码块上方显示文件名
-      showClassName: true,
     }),
   ],
 });

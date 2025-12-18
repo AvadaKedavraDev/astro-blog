@@ -1,53 +1,76 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
+/*@plugin "@tailwindcss/typography";*/
 @plugin 'tailwind-scrollbar';
+
+/* 定义暗色模式变体触发方式 */
 @custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-    /* 1. 定义基础颜色变量 */
+    /* 1. 基础颜色变量定义 */
     --color-prose-body: var(--color-gray-700);
     --color-prose-headings: var(--color-gray-900);
     --color-prose-links: var(--color-indigo-600);
     --color-prose-bold: var(--color-gray-900);
-    --color-prose-counters: var(--color-gray-500);
-    --color-prose-bullets: var(--color-gray-300);
-    --color-prose-quotes: var(--color-gray-900);
-    --color-prose-hr: var(--color-gray-200);
-    --color-code-bg: #1a1b26;        /* 东京夜主题背景色 */
-    --color-code-text: #c0caf5;      /* 文本色 */
-    --color-code-inline-bg: #f3f4f6; /* 行内代码背景（浅色模式） */
-    --color-code-inline-text: #d1127e; /* 行内代码文字（浅色模式） */
 
+    /* 这里只定义变量名，不写死具体的颜色，具体颜色在下方 @variant 中切换 */
 }
 
-/* 2. 暗黑模式变量重写 */
+/* 2. 核心变量映射系统 */
+:root {
+    --color-prose-body: #374151;      /* gray-700 */
+    --color-prose-headings: #111827;  /* gray-900 */
+    --color-prose-links: #4f46e5;    /* indigo-600 */
+
+    /* 行内代码样式（非代码块） */
+    --color-code-inline-bg: #f3f4f6;
+    --color-code-inline-text: #d1127e;
+}
+
 @variant dark {
     :root {
-        --color-prose-body: var(--color-gray-300);
-        --color-prose-headings: var(--color-white);
-        --color-prose-links: var(--color-indigo-400);
-        --color-prose-bold: var(--color-white);
-        --color-prose-counters: var(--color-gray-400);
-        --color-prose-bullets: var(--color-gray-600);
-        --color-prose-quotes: var(--color-gray-100);
-        --color-prose-hr: var(--color-gray-800);
+        --color-prose-body: #d1d5db;      /* gray-300 */
+        --color-prose-headings: #ffffff;
+        --color-prose-links: #818cf8;    /* indigo-400 */
+
+        /* 行内代码暗色模式 */
+        --color-code-inline-bg: #1f2937;
+        --color-code-inline-text: #fb7185;
     }
 }
 
 @layer components {
     .prose-custom {
-        /* 3. 必须覆盖所有关键的 prose 变量 */
+        /* 3. 应用 Typography 变量映射 */
         --tw-prose-body: var(--color-prose-body);
         --tw-prose-headings: var(--color-prose-headings);
         --tw-prose-links: var(--color-prose-links);
-        --tw-prose-bold: var(--color-prose-bold);
-        --tw-prose-counters: var(--color-prose-counters);
-        --tw-prose-bullets: var(--color-prose-bullets);
-        --tw-prose-quotes: var(--color-prose-quotes);
-        --tw-prose-hr: var(--color-prose-hr);
+        --tw-prose-bold: var(--color-prose-headings);
+        --tw-prose-quotes: var(--color-prose-body);
 
-        /* 代码块相关变量 */
-        --tw-prose-pre-bg: var(--color-gray-900);
-        --tw-prose-pre-code: var(--color-gray-100);
-
+        /* 重点：彻底移除对 --tw-prose-pre-bg 的定义。
+           Expressive Code 会自动管理代码块容器的背景，
+           如果在这里写了变量，会干扰插件的亮暗主题切换。
+        */
     }
+
+    /* 4. 行内代码样式优化（针对 Markdown 中的 `code`） */
+    .prose-custom :not(pre) > code {
+        background-color: var(--color-code-inline-bg);
+        color: var(--color-code-inline-text);
+        padding: 0.2em 0.4em;
+        border-radius: 0.375rem;
+        font-size: 0.9em;
+        font-weight: 500;
+        &::before, &::after { content: none !important; } /* 移除默认引号 */
+    }
+
+    /* 5. 修正 Expressive Code 的外边距 */
+    .expressive-code {
+        @apply my-8 shadow-sm;
+    }
+}
+
+/* 6. 全局平滑滚动 */
+html {
+    scroll-behavior: smooth;
 }
