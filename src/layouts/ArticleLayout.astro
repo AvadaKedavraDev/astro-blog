@@ -2,82 +2,133 @@
 // src/layouts/ArticleLayout.astro
 import BaseLayout from "@layouts/BaseLayout.astro";
 import ArticleNavigation from "@components/article/ArticleNavigation.astro";
+import BackToTop from "@components/common/BackToTop.astro";
+import TableOfContents from "@components/common/TableOfContents.astro"
+
 import { getAdjacentPosts } from "@lib/post";
 import type { CollectionEntry } from "astro:content";
+import type { MarkdownHeading } from "astro";
 
-interface Props {post: CollectionEntry<'blog'>;}
+interface Props { post: CollectionEntry<'blog'>, headings: MarkdownHeading[]; }
 
-const { post } = Astro.props;
+const { post, headings } = Astro.props;
 const { title, description, pubDate, author = "匿名作者", tags = [], readingTime, coverImage } = post.data;
 
-// 1. 自动化核心：直接在 Layout 级别获取相邻文章
 const { prev, next } = await getAdjacentPosts(post.slug);
-
-// 2. 预处理显示数据
-const formattedDate = pubDate?.toLocaleDateString("zh-CN", {year: 'numeric', month: 'long', day: 'numeric'});
+const formattedDate = pubDate?.toLocaleDateString("zh-CN", { year: 'numeric', month: 'long', day: 'numeric' });
 ---
 
 <BaseLayout {title} {description} ogImage={coverImage}>
-  <article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
 
-    <header class="mb-12 text-center">
-      {tags.length > 0 && (
-          <div class="flex justify-center gap-3 mb-4">
-            {tags.map(tag => (
-                <span class="text-xs font-bold tracking-widest uppercase text-indigo-600 dark:text-indigo-400">
-              #{tag}
-            </span>
-            ))}
+    <div class="flex flex-col xl:flex-row gap-12 py-12 relative">
+
+      <article class="flex-1 max-w-4xl min-w-0">
+        <header class="mb-12 text-center lg:text-left" transition:persist>
+          {tags.length > 0 && (
+              <div class="flex justify-center lg:justify-start gap-3 mb-4">
+                {tags.map(tag => (
+                    <span class="text-xs font-bold tracking-widest uppercase text-indigo-600 dark:text-indigo-400">
+                  #{tag}
+                </span>
+                ))}
+              </div>
+          )}
+
+          <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-6 tracking-tight leading-[1.2]">
+            {title}
+          </h1>
+
+          <div class="flex items-center justify-center lg:justify-start text-sm text-gray-500 dark:text-gray-400 space-x-3 font-medium">
+            <span>{author}</span>
+            {pubDate && <time datetime={pubDate.toISOString()}>· {formattedDate}</time>}
+            {readingTime && <span>· 约 {readingTime} 分钟阅读</span>}
           </div>
-      )}
+        </header>
 
-      <h1 class="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6 tracking-tight leading-tight">
-        {title}
-      </h1>
+        {coverImage && (
+            <figure class="mb-14 -mx-4 sm:-mx-0">
+              <img
+                  src={coverImage}
+                  alt={title}
+                  class="w-full aspect-[21/9] object-cover rounded-2xl shadow-2xl shadow-indigo-500/10 border border-gray-100 dark:border-gray-800"
+                  loading="eager"
+              />
+            </figure>
+        )}
 
-      <div class="flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 space-x-3 font-medium">
-        <span>{author}</span>
-        {pubDate && <time datetime={pubDate.toISOString()}>· {formattedDate}</time>}
-        {readingTime && <span>· 约 {readingTime} 分钟阅读</span>}
-      </div>
-    </header>
+        <div class="prose prose-custom max-w-none dark:prose-invert" transition:animate="fade">
+          <slot />
+        </div>
 
-    {coverImage && (
-        <figure class="mb-14 -mx-4 sm:-mx-0">
-          <img
-              src={coverImage}
-              alt={title}
-              class="w-full aspect-[21/9] object-cover rounded-2xl shadow-2xl shadow-indigo-500/10 border border-gray-100 dark:border-gray-800"
-              loading="eager"
+        <footer class="mt-20">
+          <ArticleNavigation
+              prevArticle={prev ? { title: prev.data.title, slug: prev.slug } : undefined}
+              nextArticle={next ? { title: next.data.title, slug: next.slug } : undefined}
           />
-        </figure>
-    )}
+        </footer>
+      </article>
 
-    <div class="prose prose-custom max-w-none dark:prose-invert">
-      <slot />
+      <aside class="hidden xl:block w-72 shrink-0">
+        <div class="sticky top-24 self-start">
+          <div class="pl-8 border-l border-gray-100 dark:border-zinc-800">
+            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">
+              On this page
+            </p>
+            <TableOfContents {headings} />
+          </div>
+        </div>
+      </aside>
+
     </div>
 
-    <footer class="mt-20">
-      <ArticleNavigation
-          prevArticle={prev ? { title: prev.data.title, slug: prev.slug } : undefined}
-          nextArticle={next ? { title: next.data.title, slug: next.slug } : undefined}
-      />
-    </footer>
-  </article>
-</BaseLayout>
+  </div>
 
+</BaseLayout>
 <style is:global>
   @reference "@/styles/global.css";
+
+  /* 1. 基础页面交互 */
+  html {
+    scroll-behavior: smooth;
+    /* 配合导航栏高度，防止跳转遮挡 */
+    scroll-padding-top: 100px;
+  }
+
+  /* 2. Prose 颜色主题定义 */
   .prose-custom {
     --tw-prose-headings: var(--color-gray-900);
     --tw-prose-links: var(--color-indigo-600);
+    --tw-prose-bold: var(--color-gray-900);
   }
 
   .dark .prose-custom {
     --tw-prose-headings: var(--color-white);
     --tw-prose-links: var(--color-indigo-400);
+    --tw-prose-bold: var(--color-white);
   }
-  /* 优化移动端表格和代码块体验 */
-  .prose pre { @apply overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700; }
-  .prose table { @apply block overflow-x-auto; }
+
+  /* 3. 正文元素优化 */
+  .prose-custom table {
+    @apply block overflow-x-auto my-8 rounded-xl border border-gray-100 dark:border-zinc-800;
+  }
+
+  .prose-custom thead {
+    @apply bg-gray-50 dark:bg-zinc-900/50;
+  }
+
+  .prose-custom th, .prose-custom td {
+    @apply px-4 py-3 text-sm border-b border-gray-50 dark:border-zinc-900;
+  }
+
+  /* 4. 标题锚点偏移 (改进版：不使用伪元素，直接利用 scroll-margin) */
+  .prose-custom :where(h1, h2, h3, h4, h5) {
+    scroll-margin-top: 100px;
+    @apply tracking-tight font-bold;
+  }
+
+  /* 5. 引用块微调 */
+  .prose-custom blockquote {
+    @apply border-l-4 border-indigo-500 bg-indigo-50/30 dark:bg-indigo-900/10 py-1 px-5 rounded-r-lg italic text-slate-700 dark:text-slate-300;
+  }
 </style>

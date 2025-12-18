@@ -14,9 +14,9 @@ export async function getStaticPaths() {
 
 // 2. 获取当前文章数据
 const { post } = Astro.props;
-const { Content } = await post.render();
+const { Content, headings } = await post.render();
 ---
 
-<ArticleLayout {post}>
+<ArticleLayout {post} {headings}>
     <Content />
 </ArticleLayout>

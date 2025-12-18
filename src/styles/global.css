@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@plugin 'tailwind-scrollbar';
 @custom-variant dark (&:where(.dark, .dark *));
 @theme {
     /* 1. 定义基础颜色变量 */
@@ -15,6 +16,7 @@
     --color-code-text: #c0caf5;      /* 文本色 */
     --color-code-inline-bg: #f3f4f6; /* 行内代码背景（浅色模式） */
     --color-code-inline-text: #d1127e; /* 行内代码文字（浅色模式） */
+
 }
 
 /* 2. 暗黑模式变量重写 */
