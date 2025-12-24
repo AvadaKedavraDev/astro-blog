@@ -1,76 +1,110 @@
 @import "tailwindcss";
-/*@plugin "@tailwindcss/typography";*/
+
+@plugin "@tailwindcss/typography";
 @plugin 'tailwind-scrollbar';
 
-/* 定义暗色模式变体触发方式 */
+/* 1. 定义暗色模式变体（Tailwind v4 推荐方式） */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    /* 1. 基础颜色变量定义 */
+    /* 基础颜色变量 */
     --color-prose-body: var(--color-gray-700);
     --color-prose-headings: var(--color-gray-900);
     --color-prose-links: var(--color-indigo-600);
     --color-prose-bold: var(--color-gray-900);
-
-    /* 这里只定义变量名，不写死具体的颜色，具体颜色在下方 @variant 中切换 */
 }
 
 /* 2. 核心变量映射系统 */
 :root {
-    --color-prose-body: #374151;      /* gray-700 */
-    --color-prose-headings: #111827;  /* gray-900 */
-    --color-prose-links: #4f46e5;    /* indigo-600 */
+    /* 基础 Prose 颜色 */
+    --color-prose-body: #374151;
+    --color-prose-headings: #111827;
+    --color-prose-links: #4f46e5;
 
-    /* 行内代码样式（非代码块） */
+    /* 行内代码样式 (Inline Code) */
     --color-code-inline-bg: #f3f4f6;
     --color-code-inline-text: #d1127e;
-}
 
-@variant dark {
-    :root {
-        --color-prose-body: #d1d5db;      /* gray-300 */
-        --color-prose-headings: #ffffff;
-        --color-prose-links: #818cf8;    /* indigo-400 */
+    /* Expressive Code 逻辑控制：默认使用索引 0 (亮色主题) */
+    --ec-theme-active-index: 0;
 
-        /* 行内代码暗色模式 */
-        --color-code-inline-bg: #1f2937;
-        --color-code-inline-text: #fb7185;
+    /* 让 Expressive Code 的变量在切换时有过渡动画 */
+    .expressive-code {
+        transition: all 0.3s ease-in-out;
+    }
+
+    /* 如果你想让代码块内部的背景也丝滑过渡 */
+    .expressive-code pre {
+        transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
     }
 }
 
+/* 统一管理暗色模式下的变量覆盖 */
+@variant dark {
+    :root {
+        --color-prose-body: #d1d5db;
+        --color-prose-headings: #ffffff;
+        --color-prose-links: #818cf8;
+
+        --color-code-inline-bg: #1f2937;
+        --color-code-inline-text: #fb7185;
+
+        /* 关键：切换到索引 1 (暗色主题) */
+        --ec-theme-active-index: 1;
+    }
+}
+
+/* 3. 组件层优化 */
 @layer components {
     .prose-custom {
-        /* 3. 应用 Typography 变量映射 */
+        /* 映射 Typography 变量 */
         --tw-prose-body: var(--color-prose-body);
         --tw-prose-headings: var(--color-prose-headings);
         --tw-prose-links: var(--color-prose-links);
         --tw-prose-bold: var(--color-prose-headings);
         --tw-prose-quotes: var(--color-prose-body);
 
-        /* 重点：彻底移除对 --tw-prose-pre-bg 的定义。
-           Expressive Code 会自动管理代码块容器的背景，
-           如果在这里写了变量，会干扰插件的亮暗主题切换。
-        */
-    }
+        /* 行内代码样式优化 */
 
-    /* 4. 行内代码样式优化（针对 Markdown 中的 `code`） */
-    .prose-custom :not(pre) > code {
-        background-color: var(--color-code-inline-bg);
-        color: var(--color-code-inline-text);
-        padding: 0.2em 0.4em;
-        border-radius: 0.375rem;
-        font-size: 0.9em;
-        font-weight: 500;
-        &::before, &::after { content: none !important; } /* 移除默认引号 */
-    }
+        & :not(pre) > code {
+            @apply px-1.5 py-0.5 rounded-md font-medium transition-colors duration-300;
+            background-color: var(--color-code-inline-bg);
+            color: var(--color-code-inline-text);
+            font-size: 0.875em;
 
-    /* 5. 修正 Expressive Code 的外边距 */
-    .expressive-code {
-        @apply my-8 shadow-sm;
+            &::before, &::after {
+                content: none !important;
+            }
+        }
     }
 }
 
-/* 6. 全局平滑滚动 */
-html {
-    scroll-behavior: smooth;
+/* 5. 全局基础样式 */
+@layer base {
+    html {
+        @apply scroll-smooth;
+    }
+
+    body {
+        /* 确保页面背景与代码块切换同步 */
+        @apply bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300;
+    }
+
+    .prose {
+        /* 1. 确保长单词和长链接在必要时自动换行 */
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    /* 2. 优化列表项（li）的换行体验，防止内容挤在一起 */
+    .prose li p {
+        margin-top: 0.25em;
+        margin-bottom: 0.25em;
+    }
+    /* 增加代码块前后的间距，让排版更有呼吸感 */
+    .prose .expressive-code {
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
 }
+
