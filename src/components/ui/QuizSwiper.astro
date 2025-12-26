@@ -1,0 +1,99 @@
+---
+// 从 API 或数据库获取数据
+const questions = [
+    {
+        id: 1,
+        q: "Astro 的核心架构是什么？",
+        options: ["MVC", "岛屿架构", "单体架构"],
+        answer: 1,
+        analysis: "Astro 率先提出了岛屿架构（Islands Architecture），旨在减少客户端 JS。"
+    },
+    {
+        id: 2,
+        q: "Tailwind CSS 是属于哪类 CSS？",
+        options: ["Inline CSS", "Utility-First", "CSS-in-JS"],
+        answer: 1,
+        analysis: "Tailwind 是一类原子级（Utility-First）的 CSS 框架。"
+    }
+];
+---
+
+
+<div class="min-h-[80vh] w-full flex items-center justify-center p-4">
+
+    <div class="swiper mySwiper w-full max-w-md h-[550px] rounded-3xl shadow-xl bg-white border border-gray-100 overflow-hidden">
+        <div class="swiper-wrapper">
+            {questions.map((item) => (
+                    <div class="swiper-slide p-8 flex flex-col">
+
+                        <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="flex justify-between items-center mb-6">
+                                <span class="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full">SINGLE CHOICE</span>
+                            </div>
+
+                            <h2 class="text-xl font-bold text-gray-800 leading-snug mb-6">{item.q}</h2>
+
+                            <div class="space-y-3">
+                                {item.options.map((opt, i) => (
+                                        <button class="option-btn w-full p-4 text-left border border-gray-200 rounded-xl hover:bg-gray-50 active:scale-[0.98] transition-all text-sm font-medium text-gray-700" data-index={i}>
+                                            {opt}
+                                        </button>
+                                ))}
+                            </div>
+
+                            <div class="analysis-box hidden mt-6 p-4 bg-gray-50 rounded-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-2">
+                                <p class="text-xs font-bold text-gray-400 uppercase mb-1">Answer Analysis</p>
+                                <p class="text-sm text-gray-600 leading-relaxed">{item.analysis}</p>
+                            </div>
+                        </div>
+
+                    </div>
+            ))}
+        </div>
+
+        <div class="swiper-pagination !static py-4 bg-white border-t border-gray-50"></div>
+    </div>
+</div>
+
+<style>
+    /* 隐藏滚动条但保留滚动功能 */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e5e7eb;
+        border-radius: 10px;
+    }
+
+    /* 强制卡片内的 Swiper 比例 */
+    .mySwiper {
+        display: flex;
+        flex-direction: column;
+    }
+</style>
+
+<script>
+    // 2. 在这里引入 JS 和 CSS 依赖
+    import Swiper from 'swiper/bundle';
+    import 'swiper/css/bundle'; // 这行替代了之前的外链 link 标签
+
+    new Swiper(".mySwiper", {
+        grabCursor: true,
+        spaceBetween: 20,
+        pagination: {
+            el: ".swiper-pagination",
+            type: 'bullets',
+            clickable: true
+        },
+    });
+
+    // 简单的点击显示解析逻辑
+    document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const slide = btn.closest('.swiper-slide');
+            slide.querySelector('.analysis-box').classList.remove('hidden');
+            // 给选中的按钮加个高亮
+            btn.classList.add('border-blue-500', 'bg-blue-50');
+        });
+    });
+</script>

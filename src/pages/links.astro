@@ -1,0 +1,43 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import BookMarkManager from "@/components/ui/BookMarkManager.astro"
+const categories = [
+    {
+        title: "常用工具",
+        icon: "wrench",
+        links: [
+            { name: "Gemini", url: "https://gemini.google.com/app", desc: "Gemini 助手" },
+            { name: "GitHub", url: "https://github.com", desc: "代码托管与协作" },
+            { name: "BeJson", url: "https://www.bejson.com/explore/index_new/", desc: "json格式化" },
+        ]
+    },
+    {
+        title: "开发资源",
+        icon: "mdi:wrench",
+        links: [
+            { name: "Tailwind CSS", url: "https://tailwindcss.com/docs/installation/using-vite", desc: "原子化 CSS 框架" },
+            { name: "Astro Docs", url: "https://docs.astro.build", desc: "当前项目的文档" },
+            { name: "MDN Web Docs", url: "https://developer.mozilla.org", desc: "前端开发者必备" },
+        ]
+    },
+    {
+        title: "娱乐休闲",
+        icon: "mdi:wrench",
+        links: [
+            { name: "YouTube", url: "https://youtube.com", desc: "全球最大的视频平台" },
+            { name: "Bilibili", url: "https://bilibili.com", desc: "国内领先的弹幕视频网" },
+        ]
+    },
+    {
+        title: "研公软",
+        icon: "wrench",
+        links: [
+            {name: "Hello算法", url: "https://www.hello-algo.com/chapter_introduction/", desc: "LeeCode 入门"},
+        ]
+    }
+];
+
+---
+<BaseLayout title="导航页" mainClass="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <BookMarkManager {categories} />
+</BaseLayout>

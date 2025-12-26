@@ -1,10 +1,9 @@
 ---
 // src/layouts/BaseLayout.astro
-import "@/styles/global.css";
+import "../styles/global.css";
 import SEO from "@components/widgets/SEO.astro";
 import Navigation from "@components/common/Navigation.astro";
 import Footer from "@components/common/Footer.astro";
-import { ClientRouter } from 'astro:transitions';
 
 export interface Props {
     title: string;
@@ -19,7 +18,7 @@ const {
     description = "一个专注于技术分享的博客",
     canonicalUrl = Astro.url.href, // 自动获取当前 URL
     ogImage,
-    mainClass = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+    mainClass = "w-full"
 } = Astro.props;
 ---
 
@@ -27,7 +26,6 @@ const {
 <html lang="zh-CN" class="scroll-smooth antialiased">
     <head>
         <SEO {title} {description} {canonicalUrl} {ogImage}/>
-        <ClientRouter />
     </head>
 
     <body class="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
