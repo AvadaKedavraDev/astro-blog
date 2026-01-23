@@ -3,82 +3,110 @@ import ThemeIcon from "@components/widgets/ThemeIcon.astro";
 ---
 
 <header class="sticky top-0 z-40 bg-surface/80 backdrop-blur-md border-b border-border/50">
-    <nav class="w-full max-w-7xl mx-auto px-6 py-4 flex flex-row justify-between" aria-label="主导航">
+    <nav class="w-full max-w-7xl mx-auto px-6 py-4 flex flex-row justify-between relative" aria-label="主导航">
         <div class="flex items-center justify-between flex-1">
-            <!-- 网站标志 -->
-            <a
-                    href="/"
-                    class="text-2xl font-semibold text-foreground hover:text-primary transition-colors duration-200"
-                    aria-label="返回首页"
-            >
-                Moonpeak's Blog
+            <a href="/" class="flex items-center gap-3 group">
+                <img
+                        src="/favicon.png"
+                        alt="Moonpeak Logo"
+                        class="w-10 h-10 rounded-full transition-transform duration-200 group-hover:scale-110"
+                />
+                <span class="text-2xl font-semibold text-foreground hover:text-primary transition-colors duration-200">
+                    Moonpeak's Blog
+                </span>
             </a>
 
-            <!-- 主导航链接 -->
             <ul class="hidden md:flex items-center space-x-8">
-                <li>
-                    <a href="/"
-                       class="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium">
-                        首页
-                    </a>
-                </li>
-                <li>
-                    <a href="/blog"
-                       class="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium">
-                        博客
-                    </a>
-                </li>
-                <li>
-                    <a href="/about"
-                       class="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium">
-                        关于
-                    </a>
-                </li>
-                <li class="relative group">
-                    <button class="flex items-center gap-1 text-foreground/80 group-hover:text-foreground transition-colors duration-200 font-medium py-2">
-                        工具箱
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-300 group-hover:rotate-180" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
-
-                    <div class="absolute left-0 top-full pt-2 opacity-0 translate-y-2 invisible group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible transition-all duration-300 z-50">
-                        <div class="w-56 p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-black/50 backdrop-blur-xl">
-
-                            <div class="space-y-1">
-                                <a href="/links#常用工具" class="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl transition-all">
-                                    <span>常用工具</span>
-                                    <span class="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 group-hover:bg-indigo-100">Hot</span>
-                                </a>
-
-                                <a href="/links#开发资源" class="flex items-center px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl transition-all">
-                                    开发资源
-                                </a>
-
-                                <a href="/links#娱乐休闲" class="flex items-center px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl transition-all">
-                                    娱乐休闲
-                                </a>
-                            </div>
-
-                            <div class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 px-4 py-2">
-                                <a href="/links" class="text-[11px] font-bold text-indigo-500 hover:text-indigo-600 uppercase tracking-tighter">查看全部 →</a>
-                            </div>
-                        </div>
-                    </div>
-                </li>
+                <li><a href="/" class="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium">首页</a></li>
+                <li><a href="/blog" class="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium">博客</a></li>
+                <li><a href="/about" class="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium">关于</a></li>
             </ul>
         </div>
+
         <div class="flex items-center space-x-4 min-w-24 justify-around">
-            <!-- 移动端菜单按钮 -->
-            <button class="md:hidden p-2 rounded-lg hover:bg-muted transition-colors" aria-label="切换菜单">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M4 6h16M4 12h16M4 18h16"></path>
+            <button id="mobile-menu-button" class="md:hidden p-2 rounded-lg hover:bg-muted transition-colors text-foreground" aria-label="切换菜单" aria-expanded="false">
+                <svg id="menu-icon" class="w-6 h-6 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+                <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
             <div>
                 <ThemeIcon size="md" variant="icon"/>
             </div>
         </div>
+
+        <div id="mobile-menu" class="hidden absolute top-full left-0 w-full bg-surface/95 backdrop-blur-xl border-b border-border/50 md:hidden flex-col p-6 space-y-4 shadow-2xl z-50">
+            <a href="/" class="mobile-link text-lg font-medium text-foreground/80 hover:text-primary transition-colors">首页</a>
+            <a href="/blog" class="mobile-link text-lg font-medium text-foreground/80 hover:text-primary transition-colors">博客</a>
+            <a href="/about" class="mobile-link text-lg font-medium text-foreground/80 hover:text-primary transition-colors">关于</a>
+
+            <div class="pt-4 border-t border-border/50">
+                <p class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">工具箱</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="/links#常用工具" class="mobile-link px-3 py-2 bg-muted/50 rounded-lg text-sm">常用工具</a>
+                    <a href="/links#开发资源" class="mobile-link px-3 py-2 bg-muted/50 rounded-lg text-sm">开发资源</a>
+                    <a href="/links#娱乐休闲" class="mobile-link px-3 py-2 bg-muted/50 rounded-lg text-sm">娱乐休闲</a>
+                    <a href="/links" class="mobile-link px-3 py-2 bg-primary/10 text-primary rounded-lg text-sm font-bold">全部 →</a>
+                </div>
+            </div>
+        </div>
     </nav>
 </header>
+
+<script is:inline>
+    (function() {
+        if (window.hasMobileMenuInitialized) return;
+
+        const toggleMenu = (forceClose = false) => {
+            const menu = document.getElementById('mobile-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+            const button = document.getElementById('mobile-menu-button');
+
+            if (!menu || !menuIcon || !closeIcon || !button) return;
+
+            // 如果是强制关闭，或者是目前正在显示状态，则执行隐藏
+            const isClosing = forceClose || !menu.classList.contains('hidden');
+
+            if (isClosing) {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+                menuIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+                button.setAttribute('aria-expanded', 'false');
+            } else {
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+                menuIcon.classList.add('hidden');
+                closeIcon.classList.remove('hidden');
+                button.setAttribute('aria-expanded', 'true');
+            }
+        };
+
+        document.addEventListener('click', (event) => {
+            const target = event.target;
+
+            // 1. 点击切换按钮（匹配 HTML 中的 ID）
+            if (target.closest('#mobile-menu-button')) {
+                toggleMenu();
+                return;
+            }
+
+            // 2. 点击了带 mobile-link 类的链接
+            if (target.closest('.mobile-link')) {
+                toggleMenu(true);
+                return;
+            }
+
+            // 3. 点击菜单外部自动收起
+            const menu = document.getElementById('mobile-menu');
+            if (menu && !menu.contains(target) && !menu.classList.contains('hidden')) {
+                toggleMenu(true);
+            }
+        });
+
+        window.hasMobileMenuInitialized = true;
+    })();
+</script>

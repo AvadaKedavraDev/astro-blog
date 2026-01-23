@@ -1,5 +1,78 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
+// 导入 ReactBits 组件 (假设你已将源码放入 components 文件夹)
+import SplitText from "../components/reactbits/SplitText";
+import TrueFocus from "../components/reactbits/TrueFocus";
+import TargetCursor from "../components/reactbits/TargetCursor";
 ---
 
-<BaseLayout title="首页"> 11 </BaseLayout>
+<BaseLayout title="首页">
+    <main class="container">
+
+        <section class="hero">
+            <SplitText
+                    text="欢迎来到我的创意世界"
+                    className="title"
+                    delay={150}
+                    to={{ opacity: 1, transform: 'translate3d(0,0,0)' }}
+                    ease="easeOutCubic"
+                    threshold={0.2}
+                    rootMargin="-50px"
+                    client:load
+            />
+
+            <TrueFocus
+                    sentence="MOONPEAK's BLOG"
+                    manualMode={false}
+                    blurAmount={5}
+                    borderColor="red"
+                    glowColor="rgba(255, 0, 0, 0.6)"
+                    client:load
+            />
+            <div>
+                <!--<TargetCursor-->
+                <!--        spinDuration={2}-->
+                <!--        hideDefaultCursor={true}-->
+                <!--        parallaxOn={true}-->
+                <!--        client:only="react"-->
+                <!--/>-->
+
+                <!--<h1 class="text-2xl font-bold">Hover over the elements below</h1>-->
+
+                <!--<button class="cursor-target px-4 py-2 bg-blue-500 text-white rounded">-->
+                <!--    Click me!-->
+                <!--</button>-->
+
+                <!--<div class="cursor-target p-4 border border-gray-300 mt-4">-->
+                <!--    Hover target-->
+                <!--</div>-->
+            </div>
+        </section>
+    </main>
+</BaseLayout>
+
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    .hero {
+        height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    .title {
+        font-size: 4rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+</style>

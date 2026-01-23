@@ -1,19 +1,41 @@
 {
   "extends": "astro/tsconfigs/strict",
-   "compilerOptions": {
+  "compilerOptions": {
     "baseUrl": ".",
-     "paths": {
-       "@components/*": ["src/components/*"],
-       "@assets/*": ["src/assets/*"],
-       "@constants/*": ["src/constants/*"],
-       "@utils/*": ["src/utils/*"],
-       "@lib/*": ["src/lib/*"],
-       "@i18n/*": ["src/i18n/*"],
-       "@layouts/*": ["src/layouts/*"],
-       "@/*": ["src/*"]
-     }
-    // 其他 TypeScript 配置...
+    "paths": {
+      "@components/*": [
+        "src/components/*"
+      ],
+      "@assets/*": [
+        "src/assets/*"
+      ],
+      "@constants/*": [
+        "src/constants/*"
+      ],
+      "@utils/*": [
+        "src/utils/*"
+      ],
+      "@lib/*": [
+        "src/lib/*"
+      ],
+      "@i18n/*": [
+        "src/i18n/*"
+      ],
+      "@layouts/*": [
+        "src/layouts/*"
+      ],
+      "@/*": [
+        "src/*"
+      ]
+    },
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
   },
-  "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"]
+  "include": [
+    ".astro/types.d.ts",
+    "**/*"
+  ],
+  "exclude": [
+    "dist"
+  ]
 }
