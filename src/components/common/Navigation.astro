@@ -6,11 +6,7 @@ import ThemeIcon from "@components/widgets/ThemeIcon.astro";
     <nav class="w-full max-w-7xl mx-auto px-6 py-4 flex flex-row justify-between relative" aria-label="主导航">
         <div class="flex items-center justify-between flex-1">
             <a href="/" class="flex items-center gap-3 group">
-                <img
-                        src="/favicon.png"
-                        alt="Moonpeak Logo"
-                        class="w-10 h-10 rounded-full transition-transform duration-200 group-hover:scale-110"
-                />
+                <img src="/favicon.png" alt="Moonpeak Logo" class="w-10 h-10 rounded-full transition-transform duration-200 group-hover:scale-110" />
                 <span class="text-2xl font-semibold text-foreground hover:text-primary transition-colors duration-200">
                     Moonpeak's Blog
                 </span>
@@ -19,28 +15,44 @@ import ThemeIcon from "@components/widgets/ThemeIcon.astro";
             <ul class="hidden md:flex items-center space-x-8">
                 <li><a href="/" class="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium">首页</a></li>
                 <li><a href="/blog" class="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium">博客</a></li>
+
+                <li class="relative group/tool">
+                    <button class="flex items-center gap-1 text-foreground/80 group-hover/tool:text-primary transition-colors duration-200 font-medium">
+                        工具箱
+                        <svg class="w-4 h-4 transition-transform group-hover/tool:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="absolute top-full -left-4 pt-4 hidden group-hover/tool:block w-48">
+                        <div class="bg-surface border border-border/50 rounded-xl shadow-xl p-2 backdrop-blur-xl">
+                            <a href="/links#常用工具" class="block px-4 py-2 text-sm hover:bg-primary/10 hover:text-primary rounded-lg transition-colors">常用工具</a>
+                            <a href="/links#开发资源" class="block px-4 py-2 text-sm hover:bg-primary/10 hover:text-primary rounded-lg transition-colors">开发资源</a>
+                            <a href="/links#娱乐休闲" class="block px-4 py-2 text-sm hover:bg-primary/10 hover:text-primary rounded-lg transition-colors">娱乐休闲</a>
+                            <div class="my-1 border-t border-border/50"></div>
+                            <a href="/links" class="block px-4 py-2 text-sm font-bold text-primary">全部资源 →</a>
+                        </div>
+                    </div>
+                </li>
+
                 <li><a href="/about" class="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium">关于</a></li>
             </ul>
         </div>
 
-        <div class="flex items-center space-x-4 min-w-24 justify-around">
-            <button id="mobile-menu-button" class="md:hidden p-2 rounded-lg hover:bg-muted transition-colors text-foreground" aria-label="切换菜单" aria-expanded="false">
-                <svg id="menu-icon" class="w-6 h-6 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center space-x-4 min-w-24 justify-end">
+            <ThemeIcon size="md" variant="icon"/>
+
+            <button id="mobile-menu-button" class="md:hidden p-2 rounded-lg hover:bg-muted transition-colors text-foreground" aria-label="切换菜单">
+                <svg id="menu-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
                 <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
-            <div>
-                <ThemeIcon size="md" variant="icon"/>
-            </div>
         </div>
 
-        <div id="mobile-menu" class="hidden absolute top-full left-0 w-full bg-surface/95 backdrop-blur-xl border-b border-border/50 md:hidden flex-col p-6 space-y-4 shadow-2xl z-50">
-            <a href="/" class="mobile-link text-lg font-medium text-foreground/80 hover:text-primary transition-colors">首页</a>
-            <a href="/blog" class="mobile-link text-lg font-medium text-foreground/80 hover:text-primary transition-colors">博客</a>
-            <a href="/about" class="mobile-link text-lg font-medium text-foreground/80 hover:text-primary transition-colors">关于</a>
+        <div id="mobile-menu" class="hidden absolute top-full left-0 w-full bg-surface/95 backdrop-blur-xl border-b border-border/50 flex-col p-6 space-y-4 shadow-2xl z-50">
+            <a href="/" class="mobile-link text-lg font-medium">首页</a>
+            <a href="/blog" class="mobile-link text-lg font-medium">博客</a>
+            <a href="/about" class="mobile-link text-lg font-medium">关于</a>
 
             <div class="pt-4 border-t border-border/50">
                 <p class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">工具箱</p>
