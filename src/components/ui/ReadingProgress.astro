@@ -1,0 +1,60 @@
+---
+// 阅读进度条组件 - 使用 IntersectionObserver 优化性能
+---
+
+<div id="reading-progress" class="fixed top-0 left-0 h-[2px] bg-foreground/70 z-[100] w-0 transition-[width] duration-100 ease-out"></div>
+
+<script is:inline>
+  (function() {
+    // 使用 requestAnimationFrame 和 passive 事件监听器优化滚动性能
+    let ticking = false;
+    let progressBar = null;
+    let article = null;
+    
+    function updateProgress() {
+      if (!progressBar || !article) return;
+      
+      const scrollTop = window.scrollY;
+      const articleTop = article.offsetTop;
+      const articleHeight = article.offsetHeight;
+      const windowHeight = window.innerHeight;
+      
+      // 计算文章可见区域
+      const readableHeight = articleHeight - windowHeight + articleTop;
+      const currentProgress = Math.max(0, scrollTop - articleTop + 100);
+      const progress = Math.min(100, Math.max(0, (currentProgress / readableHeight) * 100));
+      
+      progressBar.style.width = progress + '%';
+      ticking = false;
+    }
+    
+    function initProgress() {
+      progressBar = document.getElementById('reading-progress');
+      article = document.querySelector('article');
+      
+      if (!progressBar) return;
+      
+      // 使用 passive 事件监听器提高滚动性能
+      window.addEventListener('scroll', function() {
+        if (!ticking) {
+          requestAnimationFrame(updateProgress);
+          ticking = true;
+        }
+      }, { passive: true });
+      
+      // 初始化
+      updateProgress();
+    }
+    
+    // 立即初始化
+    initProgress();
+    
+    // 兼容 Astro View Transitions
+    document.addEventListener('astro:page-load', initProgress);
+    
+    // 兼容 Swup
+    if (window.swup) {
+      window.swup.hooks?.on('page:view', initProgress);
+    }
+  })();
+</script>

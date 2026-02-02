@@ -1,0 +1,101 @@
+---
+// 打字机效果组件
+interface Props {
+  text: string;
+  class?: string;
+  speed?: number;
+  delay?: number;
+}
+
+const { text, class: className = '', speed = 100, delay = 500 } = Astro.props;
+---
+
+<span class={`type-writer ${className}`} data-text={text} data-speed={speed} data-delay={delay}>
+  <span class="type-text"></span><span class="cursor">|</span>
+</span>
+
+<style>
+  .type-writer {
+    display: inline;
+  }
+  
+  .cursor {
+    animation: blink 1s step-end infinite;
+  }
+  
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  
+  .cursor.typing {
+    animation: none;
+    opacity: 1;
+  }
+  
+  .cursor.finished {
+    animation: blink 1.5s step-end infinite;
+  }
+</style>
+
+<script>
+  class TypeWriter {
+    element: HTMLElement;
+    text: string;
+    speed: number;
+    delay: number;
+    textElement: HTMLElement;
+    cursorElement: HTMLElement;
+    
+    constructor(element: HTMLElement) {
+      this.element = element;
+      this.text = element.dataset.text || '';
+      this.speed = parseInt(element.dataset.speed || '100');
+      this.delay = parseInt(element.dataset.delay || '500');
+      this.textElement = element.querySelector('.type-text') as HTMLElement;
+      this.cursorElement = element.querySelector('.cursor') as HTMLElement;
+      
+      this.init();
+    }
+    
+    async init() {
+      await this.wait(this.delay);
+      this.cursorElement.classList.add('typing');
+      await this.type();
+      this.cursorElement.classList.remove('typing');
+      this.cursorElement.classList.add('finished');
+    }
+    
+    type(): Promise<void> {
+      return new Promise((resolve) => {
+        let i = 0;
+        const typeChar = () => {
+          if (i < this.text.length) {
+            this.textElement.textContent += this.text.charAt(i);
+            i++;
+            setTimeout(typeChar, this.speed);
+          } else {
+            resolve();
+          }
+        };
+        typeChar();
+      });
+    }
+    
+    wait(ms: number): Promise<void> {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  }
+  
+  // 初始化所有打字机
+  document.querySelectorAll('.type-writer').forEach(el => {
+    new TypeWriter(el as HTMLElement);
+  });
+  
+  // 兼容 Astro View Transitions
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll('.type-writer').forEach(el => {
+      new TypeWriter(el as HTMLElement);
+    });
+  });
+</script>

@@ -1,95 +1,92 @@
 ---
-// 定义组件的 Props 接口
-export interface Props {
-    size?: "sm" | "md" | "lg";
-    variant?: "icon" | "button";
+interface Props {
+  size?: "sm" | "md" | "lg";
+  variant?: "icon" | "button";
 }
 
 const { size = "md", variant = "icon" } = Astro.props;
 
 const sizeClasses = {
-    sm: "w-6 h-6",
-    md: "w-8 h-8",
-    lg: "w-10 h-10",
+  sm: "w-8 h-8",
+  md: "w-10 h-10",
+  lg: "w-12 h-12",
 };
 
-const variantClasses = {
-    icon: "p-1 rounded-md",
-    button: "px-3 py-2 rounded-lg border",
+const iconSizes = {
+  sm: "w-4 h-4",
+  md: "w-5 h-5",
+  lg: "w-6 h-6",
 };
 ---
 
 <button
-        id="themeToggle"
-        class={`flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition-all hover:scale-105 ${sizeClasses[size]} ${variantClasses[variant]}`}
-        aria-label="切换主题"
+  id="theme-toggle"
+  class:list={[
+    sizeClasses[size],
+    "rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all",
+    variant === 'button' && 'px-4 gap-2'
+  ]}
+  aria-label="切换主题"
 >
-    <svg class="sun" width="20" height="20" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="5" fill="currentColor"></circle>
-        <path
-                d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42m12.72-12.72l1.42-1.42"
-                stroke="currentColor"
-                stroke-width="2"
-                fill="none"></path>
-    </svg>
-
-    <svg class="moon" width="20" height="20" viewBox="0 0 24 24">
-        <path
-                d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
-                fill="currentColor"></path>
-    </svg>
-
-    {
-        variant === "button" && (
-                    <span class="ml-2 text-sm">
-                <span class="light-text">浅色</span>
-                <span class="dark-text">深色</span>
-            </span>
-        )
-    }
+  {/* Sun Icon - 在暗黑模式下显示 */}
+  <svg class:list={["sun-icon", iconSizes[size], "hidden dark:block"]} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+  </svg>
+  
+  {/* Moon Icon - 在浅色模式下显示 */}
+  <svg class:list={["moon-icon", iconSizes[size], "block dark:hidden"]} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+  </svg>
+  
+  {variant === "button" && (
+    <span class="text-sm font-medium">
+      <span class="dark:hidden">深色</span>
+      <span class="hidden dark:block">浅色</span>
+    </span>
+  )}
 </button>
 
-<style>
-    /* 基础显示逻辑 */
-    .sun { display: block; fill: currentColor; }
-    .moon { display: none; fill: currentColor; }
-    .light-text { display: inline; }
-    .dark-text { display: none; }
-
-    /* 深色模式下的状态叠加 */
-    :global(.dark) .sun { display: none; }
-    :global(.dark) .moon { display: block; }
-    :global(.dark) .light-text { display: none; }
-    :global(.dark) .dark-text { display: inline; }
-</style>
-
+{/* 主题初始化脚本 - 在页面加载前执行 */}
 <script is:inline>
-    /**
-     * 主题切换 - 全局事件委托版
-     * 核心逻辑：监听器挂在 document 上，不受 Swup 容器替换影响
-     */
-    (function() {
-        // 1. 声明一个全局标记，防止脚本被 Swup 重新加载时重复绑定 document 监听器
-        if (window.hasThemeToggleInitialized) return;
+  // 立即执行，避免闪烁
+  (function() {
+    const theme = localStorage.getItem('theme') || 
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  })();
+</script>
 
-        // 2. 统一的处理逻辑
-        const performToggle = () => {
-            const isDark = document.documentElement.classList.toggle("dark");
-            localStorage.setItem("theme", isDark ? "dark" : "light");
-        };
-
-        // 3. 事件委托：直接监听 document
-        document.addEventListener('click', (event) => {
-            // 只要点击的是 id 为 themeToggle 的元素或其内部图标
-            if (event.target.closest('#themeToggle')) {
-                performToggle();
-            }
-        });
-
-        // 4. 标记已初始化
-        window.hasThemeToggleInitialized = true;
-
-        // 可选：调试日志
-        console.log("Theme Toggle: Global delegation ready.");
-    })();
+{/* 主题切换事件处理 */}
+<script>
+  function initThemeToggle() {
+    const toggle = document.getElementById('theme-toggle');
+    if (!toggle) return;
+    
+    // 移除旧的事件监听器（如果存在）
+    const newToggle = toggle.cloneNode(true);
+    toggle.parentNode?.replaceChild(newToggle, toggle);
+    
+    // 添加新的事件监听器
+    newToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+  }
+  
+  // 初始化
+  initThemeToggle();
+  
+  // 兼容 Astro View Transitions
+  document.addEventListener('astro:page-load', initThemeToggle);
+  document.addEventListener('astro:after-swap', initThemeToggle);
+  
+  // 兼容 Swup
+  if (window.swup) {
+    window.swup.hooks?.on('page:view', initThemeToggle);
+  }
 </script>

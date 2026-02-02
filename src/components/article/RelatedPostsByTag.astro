@@ -1,0 +1,47 @@
+---
+// 同标签文章侧边栏组件
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+    posts: CollectionEntry<'blog'>[];
+    currentTags: string[];
+}
+
+const { posts, currentTags } = Astro.props;
+
+// 只取前 8 篇
+const displayPosts = posts.slice(0, 8);
+
+// 获取共同标签的文本
+function getCommonTags(post: CollectionEntry<'blog'>): string[] {
+    if (!post.data.tags) return [];
+    return post.data.tags.filter(tag => currentTags.includes(tag));
+}
+---
+
+{displayPosts.length > 0 && (
+    <nav class="space-y-1">
+        {displayPosts.map(post => {
+            const commonTags = getCommonTags(post);
+            return (
+                <a
+                    href={`/blog/${post.slug}/`}
+                    class="group block py-2 px-2 -mx-2 rounded-lg transition-colors hover:bg-muted"
+                >
+                    <div class="text-sm text-foreground group-hover:text-muted-foreground transition-colors line-clamp-2 leading-snug">
+                        {post.data.title}
+                    </div>
+                    {commonTags.length > 0 && (
+                        <div class="flex flex-wrap gap-1 mt-1.5">
+                            {commonTags.slice(0, 2).map(tag => (
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </a>
+            );
+        })}
+    </nav>
+)}

@@ -1,153 +1,110 @@
 ---
 import type { MarkdownHeading } from 'astro';
-interface Props { headings: MarkdownHeading[]; }
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
 const { headings = [] } = Astro.props;
 
-// 过滤掉 H1 和 H6
-const filteredHeadings = headings.filter((h) => h.depth > 1 && h.depth <= 5);
+// 只显示 H2 和 H3
+const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 ---
-<aside class="hidden xl:block w-72 shrink-0">
-    <div class="sticky top-24 self-start">
-        <div class="pl-8 border-l border-gray-100 dark:border-zinc-800">
-            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">
-                On this page
-            </p>
-            <nav id="toc-container" class="p-4 bg-white/50 dark:bg-zinc-900/50 rounded-xl border border-gray-100 dark:border-zinc-800 sticky top-24 transition-all overflow-y-auto max-h-[calc(100vh-120px)] custom-scrollbar">
-                <div class="flex items-center gap-2 mb-4 text-indigo-600 dark:text-indigo-400">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
-                    </svg>
-                    <span class="font-bold text-sm uppercase tracking-wider text-slate-900 dark:text-white">目录内容</span>
-                </div>
 
-                <ul class="relative space-y-1 border-l border-slate-200 dark:border-slate-800 ml-1">
-                    {filteredHeadings.map((heading) => (
-                            <li
-                                    class="toc-item group"
-                                    style={`padding-left: ${(heading.depth - 2) * 0.75}rem`}
-                            >
-                                <a
-                                        href={`#${heading.slug}`}
-                                        class="block py-1.5 px-3 -ml-[1px] border-l-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 text-[13px] leading-tight"
-                                        data-slug={heading.slug}
-                                >
-                                    {heading.text}
-                                </a>
-                            </li>
-                    ))}
-                </ul>
-            </nav>
-        </div>
-    </div>
-</aside>
+{filteredHeadings.length > 0 && (
+  <nav class="text-sm">
+    <ul class="space-y-1.5 border-l border-border" id="toc-list">
+      {filteredHeadings.map((heading) => (
+        <li
+          class="toc-item"
+          style={`margin-left: -1px; border-left: 1px solid transparent; padding-left: ${(heading.depth - 2) * 0.75 + 0.75}rem; transition: border-color 0.2s;`}
+        >
+          <a
+            href={`#${heading.slug}`}
+            class="block py-1 text-sm text-muted-foreground hover:text-foreground transition-colors toc-link"
+            data-slug={heading.slug}
+          >
+            {heading.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
 
-
-<style>
-    @reference "../../styles/global.css";
-    /* 极致平滑滚动 */
-    :global(html) {
-        scroll-behavior: smooth;
-    }
-
-    /* 激活状态 */
-    .toc-item.active a {
-        @apply border-indigo-500 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 font-semibold;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-slate-200 dark:bg-slate-800 rounded; }
-</style>
-
-<script>
-    /**
-     * 初始化目录(TOC)高亮逻辑
-     */
+<script is:inline>
+  (function() {
     function initTOC() {
-        // 获取目录中所有的列表项元素
-        const tocLinks = document.querySelectorAll('.toc-item');
-        // 获取文章正文中所有需要被监听的标题元素（H2 到 H5）
-        const headings = Array.from(document.querySelectorAll('article h2, article h3, article h4, article h5'));
-
-        // 如果页面上没有标题，直接返回，不执行后续逻辑
-        if (headings.length === 0) return;
-
-        /** * 用于记录每个标题的可见状态
-         * Key: 标题的 id (slug), Value: boolean (是否在视口内)
-         */
-        const visibleHeadings = new Map();
-
-        /**
-         * 创建交叉观察者 (IntersectionObserver)
-         * 用于监听标题元素何时进入或离开定义的“判定区”
-         */
-        const observer = new IntersectionObserver((entries) => {
-            // 1. 遍历观察者捕获到的每一个状态变化条目
-            entries.forEach((entry) => {
-                // 更新 Map 记录：标记该 id 对应的标题当前是否在视口内
-                visibleHeadings.set(entry.target.id, entry.isIntersecting);
-            });
-
-            // 2. 筛选出当前所有处于“可见”状态的标题 ID
-            const activeEntries = Array.from(visibleHeadings.entries()).filter(([_, isVisible]) => isVisible);
-
-            let activeId = "";
-
-            // 3. 确定当前应该高亮的标题 ID
-            if (activeEntries.length > 0) {
-                // 情况 A: 如果有标题在视口内，取第一个出现的标题作为活跃项
-                activeId = activeEntries[0][0];
-            } else {
-                /**
-                 * 情况 B: 如果没有标题在视口内（例如用户滚太快或正在看超长段落）
-                 * 手动计算：寻找页面位置在当前滚动高度上方、且离视口最近的那个标题
-                 */
-                const scrollPosition = window.scrollY + 150; // 150px 是偏移补偿，对应导航栏高度
-                activeId = headings
-                    .filter(h => (h instanceof HTMLElement) && h.offsetTop < scrollPosition)
-                    .pop()?.id || ""; // 取过滤结果的最后一个（即最接近当前位置的上方标题）
-            }
-
-            // 4. 如果找到了有效的活跃 ID，更新目录的视觉状态
-            if (activeId) updateActiveState(activeId);
-        }, {
-            /**
-             * rootMargin 判定区设置：
-             * '-10% 0px -80% 0px' 表示：
-             * 顶部收缩 10%，底部收缩 80%。只有进入视口上方约 10%-20% 区域的标题才被判定为有效。
-             */
-            rootMargin: '-10% 0px -80% 0px',
-            threshold: 0 // 只要有 1 像素交叉就触发回调
+      const tocItems = document.querySelectorAll('.toc-item');
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const headings = Array.from(document.querySelectorAll('article h2, article h3'));
+      
+      if (headings.length === 0) return;
+      
+      const visibleHeadings = new Map();
+      
+      // 使用 IntersectionObserver 优化性能
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          visibleHeadings.set(entry.target.id, entry.isIntersecting);
         });
-
-        // 启动观察：让观察者开始监听每一个标题元素
-        headings.forEach((h) => observer.observe(h));
-
-        /**
-         * 更新目录 UI 状态的函数
-         * @param slug 对应标题的 ID
-         */
-        function updateActiveState(slug: string) {
-            tocLinks.forEach((link) => {
-                const anchor = link.querySelector('a');
-                // 检查当前目录项的 data-slug 是否与活跃的 slug 匹配
-                const isActive = anchor?.getAttribute('data-slug') === slug;
-
-                if (isActive) {
-                    // 如果匹配，添加 active 类名（触发 CSS 高亮样式）
-                    link.classList.add('active');
-                    /**
-                     * 自动滚动目录：如果目录本身很长有滚动条，
-                     * 确保当前高亮项始终在目录视图内（block: 'nearest' 防止大幅度跳动）
-                     */
-                    link.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                } else {
-                    // 如果不匹配，移除 active 类名
-                    link.classList.remove('active');
-                }
-            });
+        
+        const activeEntries = Array.from(visibleHeadings.entries()).filter(([_, visible]) => visible);
+        
+        let activeId = '';
+        
+        if (activeEntries.length > 0) {
+          activeId = activeEntries[0][0];
+        } else {
+          const scrollY = window.scrollY + 100;
+          activeId = headings
+            .filter(h => h.offsetTop <= scrollY)
+            .pop()?.id || '';
         }
+        
+        if (activeId) {
+          tocItems.forEach((item, index) => {
+            const link = tocLinks[index];
+            const linkSlug = link?.getAttribute('data-slug');
+            if (linkSlug === activeId) {
+              item.style.borderLeftColor = 'currentColor';
+              link?.classList.add('font-medium');
+              link?.classList.remove('text-muted-foreground');
+              link?.classList.add('text-foreground');
+              
+              // 只在必要时滚动目录项到视图内
+              const itemRect = item.getBoundingClientRect();
+              const container = item.parentElement?.parentElement;
+              if (container) {
+                const containerRect = container.getBoundingClientRect();
+                if (itemRect.top < containerRect.top || itemRect.bottom > containerRect.bottom) {
+                  item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+              }
+            } else {
+              item.style.borderLeftColor = 'transparent';
+              link?.classList.remove('font-medium');
+              link?.classList.add('text-muted-foreground');
+              link?.classList.remove('text-foreground');
+            }
+          });
+        }
+      }, {
+        rootMargin: '-10% 0px -70% 0px',
+        threshold: 0
+      });
+      
+      headings.forEach(h => observer.observe(h));
     }
-
-    // 监听 Astro 的页面加载事件（支持 View Transitions），确保跳转后逻辑依然生效
+    
+    // 延迟初始化，确保页面完全加载
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initTOC);
+    } else {
+      initTOC();
+    }
+    
+    // 兼容 Astro View Transitions
     document.addEventListener('astro:page-load', initTOC);
+  })();
 </script>

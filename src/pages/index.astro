@@ -1,78 +1,156 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
-// 导入 ReactBits 组件 (假设你已将源码放入 components 文件夹)
-import SplitText from "../components/reactbits/SplitText";
-import TrueFocus from "../components/reactbits/TrueFocus";
-import TargetCursor from "../components/reactbits/TargetCursor";
+import TypeWriter from "@components/ui/TypeWriter.astro";
+import { getCollection } from "astro:content";
+
+// 获取最新 3 篇文章
+const posts = (await getCollection("blog"))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
 ---
 
 <BaseLayout title="首页">
-    <main class="container">
-
-        <section class="hero">
-            <SplitText
-                    text="欢迎来到我的创意世界"
-                    className="title"
-                    delay={150}
-                    to={{ opacity: 1, transform: 'translate3d(0,0,0)' }}
-                    ease="easeOutCubic"
-                    threshold={0.2}
-                    rootMargin="-50px"
-                    client:load
-            />
-
-            <TrueFocus
-                    sentence="MOONPEAK's BLOG"
-                    manualMode={false}
-                    blurAmount={5}
-                    borderColor="red"
-                    glowColor="rgba(255, 0, 0, 0.6)"
-                    client:load
-            />
-            <div>
-                <!--<TargetCursor-->
-                <!--        spinDuration={2}-->
-                <!--        hideDefaultCursor={true}-->
-                <!--        parallaxOn={true}-->
-                <!--        client:only="react"-->
-                <!--/>-->
-
-                <!--<h1 class="text-2xl font-bold">Hover over the elements below</h1>-->
-
-                <!--<button class="cursor-target px-4 py-2 bg-blue-500 text-white rounded">-->
-                <!--    Click me!-->
-                <!--</button>-->
-
-                <!--<div class="cursor-target p-4 border border-gray-300 mt-4">-->
-                <!--    Hover target-->
-                <!--</div>-->
-            </div>
-        </section>
-    </main>
+  <!-- Hero Section -->
+  <section class="min-h-[90vh] flex flex-col justify-center items-center relative px-6">
+    <!-- 背景装饰 -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-neutral-200/50 to-transparent dark:from-neutral-800/30 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tl from-neutral-200/30 to-transparent dark:from-neutral-800/20 rounded-full blur-3xl"></div>
+    </div>
+    
+    <div class="relative z-10 text-center max-w-3xl mx-auto">
+      <!-- 标签 -->
+      <!--<div class="mb-6 animate-fade-in" style="animation-delay: 0.1s">-->
+      <!--  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">-->
+      <!--    欢迎来到我的博客-->
+      <!--  </span>-->
+      <!--</div>-->
+      
+      <!-- 主标题 - 调整字体大小 -->
+      <h1 class="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight mb-6 animate-fade-in-up" style="animation-delay: 0.2s">
+        <span class="gradient-text">
+          <TypeWriter text="思考、记录、分享" speed={150} delay={300} />
+        </span>
+      </h1>
+      
+      <!-- 副标题 -->
+      <p class="text-base md:text-lg text-muted-foreground max-w-lg mx-auto mb-10 leading-relaxed animate-fade-in" style="animation-delay: 0.8s">
+        这里是 Moonpeak 的个人空间，分享技术探索、生活感悟与创作灵感。
+      </p>
+      
+      <!-- CTA 按钮 -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in" style="animation-delay: 1s">
+        <a href="/blog" class="btn px-8 py-3 text-base rounded-full">
+          浏览文章
+        </a>
+        <a href="/about" class="btn-ghost px-8 py-3 text-base rounded-full">
+          了解更多
+        </a>
+      </div>
+    </div>
+    
+    <!-- 滚动提示 -->
+    <div class="absolute bottom-12 left-1/2 -translate-x-1/2 animate-bounce">
+      <a href="#latest" class="text-muted-foreground hover:text-foreground transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+  
+  <!-- Latest Posts Section -->
+  <section id="latest" class="py-24 px-6">
+    <div class="container-narrow">
+      <!-- Section Header -->
+      <div class="flex items-end justify-between mb-10">
+        <div>
+          <h2 class="text-xl md:text-2xl font-semibold tracking-tight mb-1">最新文章</h2>
+          <p class="text-sm text-muted-foreground">探索最近的思考与创作</p>
+        </div>
+        <a href="/blog" class="hidden sm:flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          查看全部
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </a>
+      </div>
+      
+      <!-- Posts Grid -->
+      <div class="space-y-6">
+        {posts.map((post, index) => (
+          <article 
+            class="group"
+            style={`animation-delay: ${index * 0.1}s`}
+          >
+            <a href={`/blog/${post.slug}/`} class="block">
+              <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 py-5 border-b border-border transition-colors hover:border-foreground/20">
+                <!-- Date -->
+                <time class="text-sm text-muted-foreground font-mono shrink-0 w-20">
+                  {post.data.pubDate.toLocaleDateString('zh-CN', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                  })}
+                </time>
+                
+                <!-- Content -->
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-base md:text-lg font-medium text-foreground group-hover:text-muted-foreground transition-colors truncate">
+                    {post.data.title}
+                  </h3>
+                  {post.data.description && (
+                    <p class="text-sm text-muted-foreground mt-0.5 line-clamp-1">
+                      {post.data.description}
+                    </p>
+                  )}
+                </div>
+                
+                <!-- Arrow -->
+                <div class="hidden md:block opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+                  <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                  </svg>
+                </div>
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+      
+      <!-- Mobile View All -->
+      <div class="mt-8 sm:hidden">
+        <a href="/blog" class="btn-ghost w-full justify-center">
+          查看全部文章
+        </a>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Newsletter / Contact Section -->
+  <section class="py-20 px-6 border-t border-border">
+    <div class="container-narrow text-center">
+      <h2 class="text-xl md:text-2xl font-semibold tracking-tight mb-3">
+        保持联系
+      </h2>
+      <p class="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+        如果你对我的文章感兴趣，或者想交流技术话题，欢迎通过以下方式联系我。
+      </p>
+      <div class="flex justify-center gap-3">
+        <a href="mailto:hello@moonpeak.com" class="btn rounded-full text-sm px-6 py-2.5">
+          发送邮件
+        </a>
+        <a href="https://github.com" target="_blank" rel="noopener" class="btn-ghost rounded-full text-sm px-6 py-2.5">
+          GitHub
+        </a>
+      </div>
+    </div>
+  </section>
 </BaseLayout>
 
 <style>
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-    .hero {
-        height: 80vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
-    .title {
-        font-size: 4rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-    }
-    .features {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-    }
+  /* 初始隐藏动画元素 */
+  .animate-fade-in,
+  .animate-fade-in-up {
+    opacity: 0;
+  }
 </style>

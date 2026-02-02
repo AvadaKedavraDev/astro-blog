@@ -1,124 +1,194 @@
 ---
+// 极简导航栏
 import ThemeIcon from "@components/widgets/ThemeIcon.astro";
+
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+const navItems: NavItem[] = [
+  { label: '首页', href: '/' },
+  { label: '文章', href: '/blog' },
+  { label: '工具箱', href: '/links' },
+  { label: '关于', href: '/about' },
+];
+
+const currentPath = Astro.url.pathname;
 ---
 
-<header class="sticky top-0 z-40 bg-surface/80 backdrop-blur-md border-b border-border/50">
-    <nav class="w-full max-w-7xl mx-auto px-6 py-4 flex flex-row justify-between relative" aria-label="主导航">
-        <div class="flex items-center justify-between flex-1">
-            <a href="/" class="flex items-center gap-3 group">
-                <img src="/favicon.png" alt="Moonpeak Logo" class="w-10 h-10 rounded-full transition-transform duration-200 group-hover:scale-110" />
-                <span class="text-2xl font-semibold text-foreground hover:text-primary transition-colors duration-200">
-                    Moonpeak's Blog
-                </span>
-            </a>
-
-            <ul class="hidden md:flex items-center space-x-8">
-                <li><a href="/" class="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium">首页</a></li>
-                <li><a href="/blog" class="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium">博客</a></li>
-
-                <li class="relative group/tool">
-                    <button class="flex items-center gap-1 text-foreground/80 group-hover/tool:text-primary transition-colors duration-200 font-medium">
-                        工具箱
-                        <svg class="w-4 h-4 transition-transform group-hover/tool:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <div class="absolute top-full -left-4 pt-4 hidden group-hover/tool:block w-48">
-                        <div class="bg-surface border border-border/50 rounded-xl shadow-xl p-2 backdrop-blur-xl">
-                            <a href="/links#常用工具" class="block px-4 py-2 text-sm hover:bg-primary/10 hover:text-primary rounded-lg transition-colors">常用工具</a>
-                            <a href="/links#开发资源" class="block px-4 py-2 text-sm hover:bg-primary/10 hover:text-primary rounded-lg transition-colors">开发资源</a>
-                            <a href="/links#娱乐休闲" class="block px-4 py-2 text-sm hover:bg-primary/10 hover:text-primary rounded-lg transition-colors">娱乐休闲</a>
-                            <div class="my-1 border-t border-border/50"></div>
-                            <a href="/links" class="block px-4 py-2 text-sm font-bold text-primary">全部资源 →</a>
-                        </div>
-                    </div>
-                </li>
-
-                <li><a href="/about" class="text-foreground/80 hover:text-foreground transition-colors duration-200 font-medium">关于</a></li>
-            </ul>
-        </div>
-
-        <div class="flex items-center space-x-4 min-w-24 justify-end">
-            <ThemeIcon size="md" variant="icon"/>
-
-            <button id="mobile-menu-button" class="md:hidden p-2 rounded-lg hover:bg-muted transition-colors text-foreground" aria-label="切换菜单">
-                <svg id="menu-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                </svg>
-                <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-
-        <div id="mobile-menu" class="hidden absolute top-full left-0 w-full bg-surface/95 backdrop-blur-xl border-b border-border/50 flex-col p-6 space-y-4 shadow-2xl z-50">
-            <a href="/" class="mobile-link text-lg font-medium">首页</a>
-            <a href="/blog" class="mobile-link text-lg font-medium">博客</a>
-            <a href="/about" class="mobile-link text-lg font-medium">关于</a>
-
-            <div class="pt-4 border-t border-border/50">
-                <p class="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4">工具箱</p>
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="/links#常用工具" class="mobile-link px-3 py-2 bg-muted/50 rounded-lg text-sm">常用工具</a>
-                    <a href="/links#开发资源" class="mobile-link px-3 py-2 bg-muted/50 rounded-lg text-sm">开发资源</a>
-                    <a href="/links#娱乐休闲" class="mobile-link px-3 py-2 bg-muted/50 rounded-lg text-sm">娱乐休闲</a>
-                    <a href="/links" class="mobile-link px-3 py-2 bg-primary/10 text-primary rounded-lg text-sm font-bold">全部 →</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+<header class="fixed top-0 left-0 right-0 z-50 glass" data-current-path={currentPath}>
+  <nav class="container-wide h-16 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="/" class="text-lg font-semibold tracking-tight hover:opacity-70 transition-opacity">
+      Moonpeak
+    </a>
+    
+    <!-- Desktop Nav -->
+    <div class="hidden md:flex items-center gap-1" id="desktop-nav">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          data-nav-item
+          data-href={item.href}
+          class="nav-link relative px-4 py-2 text-sm rounded-lg transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+        >
+          {item.label}
+          <span class="nav-indicator absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-indigo-500 opacity-0 transition-opacity"></span>
+        </a>
+      ))}
+      <div class="pl-3 ml-2 border-l border-border">
+        <ThemeIcon size="sm" variant="icon" />
+      </div>
+    </div>
+    
+    <!-- Mobile Menu Button -->
+    <div class="flex items-center gap-3 md:hidden">
+      <ThemeIcon size="sm" variant="icon" />
+      <button
+        id="mobile-menu-btn"
+        class="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors"
+        aria-label="菜单"
+        aria-expanded="false"
+      >
+        <svg id="menu-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+        <svg id="close-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+  
+  <!-- Mobile Menu -->
+  <div
+    id="mobile-menu"
+    class="hidden md:hidden border-t border-border bg-background"
+  >
+    <div class="container-wide py-3 space-y-1" id="mobile-nav-items">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          data-mobile-nav-item
+          data-href={item.href}
+          class="mobile-nav-link block px-4 py-3 rounded-lg text-base transition-colors text-muted-foreground hover:text-foreground hover:bg-muted/50"
+        >
+          <div class="flex items-center gap-3">
+            <span class="nav-dot w-1.5 h-1.5 rounded-full bg-indigo-500 opacity-0 transition-opacity"></span>
+            <span class="nav-label">{item.label}</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
 </header>
 
 <script is:inline>
-    (function() {
-        if (window.hasMobileMenuInitialized) return;
-
-        const toggleMenu = (forceClose = false) => {
-            const menu = document.getElementById('mobile-menu');
-            const menuIcon = document.getElementById('menu-icon');
-            const closeIcon = document.getElementById('close-icon');
-            const button = document.getElementById('mobile-menu-button');
-
-            if (!menu || !menuIcon || !closeIcon || !button) return;
-
-            // 如果是强制关闭，或者是目前正在显示状态，则执行隐藏
-            const isClosing = forceClose || !menu.classList.contains('hidden');
-
-            if (isClosing) {
-                menu.classList.add('hidden');
-                menu.classList.remove('flex');
-                menuIcon.classList.remove('hidden');
-                closeIcon.classList.add('hidden');
-                button.setAttribute('aria-expanded', 'false');
-            } else {
-                menu.classList.remove('hidden');
-                menu.classList.add('flex');
-                menuIcon.classList.add('hidden');
-                closeIcon.classList.remove('hidden');
-                button.setAttribute('aria-expanded', 'true');
-            }
-        };
-
-        document.addEventListener('click', (event) => {
-            const target = event.target;
-
-            // 1. 点击切换按钮（匹配 HTML 中的 ID）
-            if (target.closest('#mobile-menu-button')) {
-                toggleMenu();
-                return;
-            }
-
-            // 2. 点击了带 mobile-link 类的链接
-            if (target.closest('.mobile-link')) {
-                toggleMenu(true);
-                return;
-            }
-
-            // 3. 点击菜单外部自动收起
-            const menu = document.getElementById('mobile-menu');
-            if (menu && !menu.contains(target) && !menu.classList.contains('hidden')) {
-                toggleMenu(true);
-            }
+  (function() {
+    // 判断是否是当前页面
+    function isActive(itemHref, currentPath) {
+      if (itemHref === '/') {
+        return currentPath === '/';
+      }
+      return currentPath === itemHref || currentPath.startsWith(itemHref + '/');
+    }
+    
+    // 更新导航高亮状态
+    function updateNavHighlight() {
+      const currentPath = window.location.pathname;
+      
+      // 更新桌面导航
+      document.querySelectorAll('[data-nav-item]').forEach(link => {
+        const href = link.getAttribute('data-href');
+        const indicator = link.querySelector('.nav-indicator');
+        
+        if (isActive(href, currentPath)) {
+          link.classList.remove('text-muted-foreground', 'hover:text-foreground', 'hover:bg-muted/50');
+          link.classList.add('text-foreground', 'font-medium', 'bg-muted');
+          if (indicator) indicator.classList.remove('opacity-0');
+        } else {
+          link.classList.add('text-muted-foreground', 'hover:text-foreground', 'hover:bg-muted/50');
+          link.classList.remove('text-foreground', 'font-medium', 'bg-muted');
+          if (indicator) indicator.classList.add('opacity-0');
+        }
+      });
+      
+      // 更新移动端导航
+      document.querySelectorAll('[data-mobile-nav-item]').forEach(link => {
+        const href = link.getAttribute('data-href');
+        const dot = link.querySelector('.nav-dot');
+        const label = link.querySelector('.nav-label');
+        
+        if (isActive(href, currentPath)) {
+          link.classList.remove('text-muted-foreground', 'hover:text-foreground', 'hover:bg-muted/50');
+          link.classList.add('text-foreground', 'font-medium', 'bg-muted');
+          if (dot) dot.classList.remove('opacity-0');
+          if (label) label.classList.remove('pl-3.5');
+        } else {
+          link.classList.add('text-muted-foreground', 'hover:text-foreground', 'hover:bg-muted/50');
+          link.classList.remove('text-foreground', 'font-medium', 'bg-muted');
+          if (dot) dot.classList.add('opacity-0');
+          if (label) label.classList.add('pl-3.5');
+        }
+      });
+    }
+    
+    // 初始化移动菜单
+    function initMobileMenu() {
+      const btn = document.getElementById('mobile-menu-btn');
+      const menu = document.getElementById('mobile-menu');
+      const menuIcon = document.getElementById('menu-icon');
+      const closeIcon = document.getElementById('close-icon');
+      
+      if (!btn || !menu) return;
+      
+      // 移除旧的事件监听器（通过克隆节点）
+      const newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+      
+      // 重新获取元素
+      const newMenuBtn = document.getElementById('mobile-menu-btn');
+      const newMenuIcon = document.getElementById('menu-icon');
+      const newCloseIcon = document.getElementById('close-icon');
+      
+      newMenuBtn.addEventListener('click', () => {
+        const isExpanded = newMenuBtn.getAttribute('aria-expanded') === 'true';
+        newMenuBtn.setAttribute('aria-expanded', String(!isExpanded));
+        menu.classList.toggle('hidden');
+        newMenuIcon.classList.toggle('hidden');
+        newCloseIcon.classList.toggle('hidden');
+      });
+      
+      // 点击链接后关闭菜单
+      menu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          menu.classList.add('hidden');
+          newMenuIcon.classList.remove('hidden');
+          newCloseIcon.classList.add('hidden');
+          newMenuBtn.setAttribute('aria-expanded', 'false');
         });
-
-        window.hasMobileMenuInitialized = true;
-    })();
+      });
+    }
+    
+    // 初始化
+    function init() {
+      updateNavHighlight();
+      initMobileMenu();
+    }
+    
+    // 页面加载时初始化
+    init();
+    
+    // 兼容 Swup - 页面过渡完成后重新初始化
+    if (window.swup) {
+      window.swup.hooks.on('page:view', init);
+    }
+    
+    // 兼容 Astro View Transitions
+    document.addEventListener('astro:page-load', init);
+    
+    // 监听 URL 变化（备用方案）
+    window.addEventListener('popstate', updateNavHighlight);
+  })();
 </script>

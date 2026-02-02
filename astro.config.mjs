@@ -22,7 +22,7 @@ export default defineConfig({
 
     integrations: [
         swup({
-            theme: [Theme.slide, {}]
+            theme: [Theme.fade, {}]
         }),
         expressiveCode({
             themes: ['catppuccin-latte', 'dracula'], // 1. 关闭自动媒体查询，完全交给下面的手动选择器控制

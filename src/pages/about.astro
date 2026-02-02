@@ -2,4 +2,56 @@
 import BaseLayout from "@layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title="首页"> 11 </BaseLayout>
+<BaseLayout title="关于" description="关于 Moonpeak 的博客">
+  <div class="pt-32 pb-24 px-6">
+    <div class="container-narrow">
+      {/* Header */}
+      <header class="mb-16">
+        <h1 class="text-3xl md:text-4xl font-semibold tracking-tight mb-4">
+          关于
+        </h1>
+        <p class="text-muted-foreground text-lg">
+          了解这个博客的背后
+        </p>
+      </header>
+      
+      {/* Content */}
+      <div class="prose-custom space-y-6">
+        <p>
+          你好，我是 Moonpeak，一名热爱技术的开发者。这个博客是我记录学习笔记、分享技术心得、以及表达个人思考的地方。
+        </p>
+        
+        <p>
+          我相信知识的分享能够产生更大的价值。在这里，你可以找到关于前端开发、后端架构、以及软件工程最佳实践的文章。
+        </p>
+        
+        <h2>技术栈</h2>
+        <p>
+          这个博客使用以下技术构建：
+        </p>
+        <ul>
+          <li><strong>Astro</strong> - 极速静态站点生成器</li>
+          <li><strong>Tailwind CSS</strong> - 原子化 CSS 框架</li>
+          <li><strong>React</strong> - 用户界面库</li>
+          <li><strong>MDX</strong> - 支持组件的 Markdown</li>
+        </ul>
+        
+        <h2>联系方式</h2>
+        <p>
+          如果你有任何问题或建议，欢迎通过以下方式联系我：
+        </p>
+        <ul>
+          <li>Email: hello@moonpeak.com</li>
+          <li>GitHub: @moonpeak</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+<style>
+  /* 初始隐藏动画元素 */
+  .animate-fade-in,
+  .animate-fade-in-up {
+    opacity: 0;
+  }
+</style>

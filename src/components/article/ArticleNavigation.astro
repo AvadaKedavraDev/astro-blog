@@ -1,59 +1,65 @@
 ---
-// src/components/article/ArticleNavigation.astro
-interface ArticleLink {
-    title: string;
-    slug: string;
+interface Article {
+  title: string;
+  slug: string;
 }
 
 interface Props {
-    prevArticle?: ArticleLink;
-    nextArticle?: ArticleLink;
+  prevArticle?: Article;
+  nextArticle?: Article;
 }
 
-const {prevArticle, nextArticle} = Astro.props;
-
-// 统一路径生成逻辑
-const getUrl = (slug: string) => `/blog/${slug}/`;
+const { prevArticle, nextArticle } = Astro.props;
 ---
 
-<nav class="grid sm:grid-cols-2 gap-4 mt-12 not-prose">
-    {/* 上一篇：靠左对齐 */}
-    <div class="flex">
-        {prevArticle && (
-                <a
-                        href={getUrl(prevArticle.slug)}
-                        class="flex-1 group flex flex-col gap-2 p-5 border border-gray-200 dark:border-gray-800 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-all duration-300"
-                >
-        <span class="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-gray-400 group-hover:text-indigo-500 transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
-          </svg>
-          Previous
-        </span>
-                    <span class="text-base font-semibold text-gray-700 dark:text-gray-200 line-clamp-2 group-hover:translate-x-[-4px] transition-transform">
-          {prevArticle.title}
-        </span>
-                </a>
-        )}
+{(prevArticle || nextArticle) && (
+  <nav class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {/* Previous Article */}
+    <div class={!prevArticle ? 'hidden md:block' : ''}>
+      {prevArticle ? (
+        <a
+          href={`/blog/${prevArticle.slug}/`}
+          class="group block p-6 rounded-2xl border border-border hover:border-foreground/30 hover:bg-muted/30 transition-all"
+        >
+          <div class="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            上一篇
+          </div>
+          <div class="font-medium text-foreground group-hover:text-muted-foreground transition-colors line-clamp-2">
+            {prevArticle.title}
+          </div>
+        </a>
+      ) : (
+        <div class="hidden md:block p-6 rounded-2xl border border-dashed border-border">
+          <div class="text-sm text-muted-foreground">没有更多了</div>
+        </div>
+      )}
     </div>
-
-    {/* 下一篇：靠右对齐 */}
-    <div class="flex">
-        {nextArticle && (
-                <a
-                        href={getUrl(nextArticle.slug)}
-                        class="flex-1 group flex flex-col items-end gap-2 p-5 border border-gray-200 dark:border-gray-800 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-all duration-300 text-right"
-                >
-        <span class="flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-gray-400 group-hover:text-indigo-500 transition-colors">
-          Next
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-          </svg>
-        </span>
-                    <span class="text-base font-semibold text-gray-700 dark:text-gray-200 line-clamp-2 group-hover:translate-x-[4px] transition-transform">
-          {nextArticle.title}
-        </span>
-                </a>
-        )}
+    
+    {/* Next Article */}
+    <div class={!nextArticle ? 'hidden md:block' : ''}>
+      {nextArticle ? (
+        <a
+          href={`/blog/${nextArticle.slug}/`}
+          class="group block p-6 rounded-2xl border border-border hover:border-foreground/30 hover:bg-muted/30 transition-all text-right"
+        >
+          <div class="flex items-center justify-end gap-2 text-sm text-muted-foreground mb-2">
+            下一篇
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </div>
+          <div class="font-medium text-foreground group-hover:text-muted-foreground transition-colors line-clamp-2">
+            {nextArticle.title}
+          </div>
+        </a>
+      ) : (
+        <div class="hidden md:block p-6 rounded-2xl border border-dashed border-border text-right">
+          <div class="text-sm text-muted-foreground">没有更多了</div>
+        </div>
+      )}
     </div>
-</nav>
+  </nav>
+)}

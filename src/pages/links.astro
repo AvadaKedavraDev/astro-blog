@@ -1,35 +1,53 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
-import BookMarkManager from "@/components/ui/BookMarkManager.astro"
+import BookMarkManager from "@components/ui/BookMarkManager.astro"
+
 const categories = [
     {
         title: "常用工具",
-        icon: "🧰", // Briefcase / Toolbox
+        icon: "🧰",
         links: [
-            { name: "Gemini", url: "https://gemini.google.com/app", desc: "✨ Gemini 助手" },
-            { name: "GitHub", url: "https://github.com", desc: "🐙 代码托管与协作" },
-            { name: "BeJson", url: "https://www.bejson.com/explore/index_new/", desc: "📦 JSON格式化" },
+            {name: "Gemini", url: "https://gemini.google.com/app", desc: "AI 助手"},
+            {name: "GitHub", url: "https://github.com", desc: "代码托管与协作"},
+            {name: "BeJson", url: "https://www.bejson.com", desc: "JSON 格式化"},
+            {name: "Kimi", url: "https://www.kimi.com/", desc: "Kimi"},
+            {name: "元宝", url: "https://yuanbao.tencent.com/", desc: "腾讯元宝"},
         ]
     },
     {
         title: "开发资源",
-        icon: "🛠️", // Hammer and Wrench
+        icon: "🛠️",
         links: [
-            { name: "Tailwind CSS", url: "https://tailwindcss.com/docs/installation/using-vite", desc: "🎨 原子化 CSS 框架" },
-            { name: "Astro Docs", url: "https://docs.astro.build", desc: "🚀 当前项目的文档" },
-            { name: "MDN Web Docs", url: "https://developer.mozilla.org", desc: "📖 前端开发者必备" },
+            {name: "Tailwind CSS", url: "https://tailwindcss.com", desc: "原子化 CSS 框架"},
+            {name: "Astro Docs", url: "https://docs.astro.build", desc: "Astro 官方文档"},
+            {name: "MDN Web Docs", url: "https://developer.mozilla.org", desc: "Web 技术文档"},
         ]
     },
     {
-        title: "研公软", // 针对算法/学习主题
-        icon: "🎓", // Graduation Cap
+        title: "学习资源",
+        icon: "🎓",
         links: [
-            { name: "Hello算法", url: "https://www.hello-algo.com/chapter_introduction/", desc: "💡 LeetCode 入门" },
+            {name: "Hello 算法", url: "https://www.hello-algo.com", desc: "算法学习入门"},
         ]
     }
 ]
-
 ---
-<BaseLayout title="导航页" mainClass="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <BookMarkManager {categories} />
+
+<BaseLayout title="工具箱" description="精选的开发工具与资源">
+    <div class="pt-32 pb-24 px-6">
+        <div class="container-wide">
+            <!-- Header -->
+            <header class="mb-16 text-center">
+                <h1 class="text-3xl md:text-4xl font-semibold tracking-tight mb-4">
+                    工具箱
+                </h1>
+                <p class="text-muted-foreground text-lg max-w-2xl mx-auto">
+                    精选的常用工具与开发资源，提升工作效率
+                </p>
+            </header>
+
+            <!-- BookMark Manager -->
+            <BookMarkManager {categories}/>
+        </div>
+    </div>
 </BaseLayout>

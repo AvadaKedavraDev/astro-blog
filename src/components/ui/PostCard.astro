@@ -1,58 +1,89 @@
 ---
-// src/components/PostCard.astro
-import type {CollectionEntry} from 'astro:content';
+// 文章卡片 - 极简设计
+import type { CollectionEntry } from 'astro:content';
 
 interface Props {
-    post: CollectionEntry<'blog'>;
+  post: CollectionEntry<'blog'>;
+  variant?: 'default' | 'compact';
 }
 
-const {post} = Astro.props;
-const {title, pubDate, author, readingTime, description, tags = []} = post.data;
+const { post, variant = 'default' } = Astro.props;
+const { title, pubDate, description, tags = [] } = post.data;
 
-// 预处理数据
-const formattedDate = pubDate.toLocaleDateString("zh-CN");
-const displayTags = tags.slice(0, 3);
-const extraTagsCount = tags.length - 3;
+const formattedDate = pubDate.toLocaleDateString('zh-CN', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric'
+});
 ---
 
-<a
-        href={`/blog/${post.slug}/`}
-        class="group block border shadow-lg border-gray-200 rounded-xl p-5 transition duration-300 ease-in-out bg-white hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
->
-    <article>
-        <h2 class="text-2xl font-bold text-indigo-700 dark:text-indigo-400 mb-2 group-hover:text-indigo-600 transition-colors">
-            {title}
-        </h2>
-
-        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3 space-x-2">
-            <time datetime={pubDate.toISOString()}>{formattedDate}</time>
-            <span>•</span>
-            <span>作者: {author}</span>
-            {readingTime && (
-                    <>
-                        <span>•</span>
-                        <span>阅读时间: {readingTime} 分钟</span>
-                    </>
-            )}
+{variant === 'default' ? (
+  <a href={`/blog/${post.slug}/`} class="group block">
+    <article class="card-hover bg-card border border-border rounded-2xl overflow-hidden">
+      {/* Cover Image */}
+      {post.data.coverImage && (
+        <div class="aspect-[2/1] overflow-hidden">
+          <img
+            src={post.data.coverImage}
+            alt={title}
+            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         </div>
-
-        <p class="text-base text-gray-700 dark:text-gray-300 line-clamp-2 mb-3">
+      )}
+      
+      <div class="p-6">
+        {/* Meta */}
+        <div class="flex items-center gap-3 text-sm text-muted-foreground mb-3">
+          <time>{formattedDate}</time>
+          {post.data.readingTime && (
+            <>
+              <span>·</span>
+              <span>{post.data.readingTime} 分钟阅读</span>
+            </>
+          )}
+        </div>
+        
+        {/* Title */}
+        <h3 class="text-xl font-semibold text-foreground group-hover:text-muted-foreground transition-colors mb-2 line-clamp-2">
+          {title}
+        </h3>
+        
+        {/* Description */}
+        {description && (
+          <p class="text-muted-foreground line-clamp-2 mb-4">
             {description}
-        </p>
-
-        {tags.length > 0 && (
-                <div class="flex flex-wrap gap-2">
-                    {displayTags.map((tag) => (
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-            #{tag}
-          </span>
-                    ))}
-                    {extraTagsCount > 0 && (
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-            +{extraTagsCount}
-          </span>
-                    )}
-                </div>
+          </p>
         )}
+        
+        {/* Tags */}
+        {tags.length > 0 && (
+          <div class="flex flex-wrap gap-2">
+            {tags.slice(0, 3).map(tag => (
+              <span class="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
     </article>
-</a>
+  </a>
+) : (
+  <a href={`/blog/${post.slug}/`} class="group block">
+    <article class="flex flex-col sm:flex-row sm:items-center gap-4 py-4 border-b border-border transition-colors hover:border-foreground/30">
+      <time class="text-sm text-muted-foreground font-mono shrink-0 w-24">
+        {formattedDate}
+      </time>
+      <div class="flex-1 min-w-0">
+        <h3 class="text-lg font-medium text-foreground group-hover:text-muted-foreground transition-colors truncate">
+          {title}
+        </h3>
+        {description && (
+          <p class="text-sm text-muted-foreground line-clamp-1 mt-0.5">
+            {description}
+          </p>
+        )}
+      </div>
+    </article>
+  </a>
+)}

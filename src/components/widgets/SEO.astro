@@ -1,45 +1,40 @@
 ---
-// src/components/SEO.astro
-
-export interface Props {
-    title: string;
-    description: string;
-    canonicalUrl?: string;
-    ogImage?: string; // 新增：用于社交分享的图片
+interface Props {
+  title: string;
+  description?: string;
+  canonicalUrl?: string;
+  ogImage?: string;
 }
 
-const { title, description, canonicalUrl, ogImage } = Astro.props;
+const { title, description, canonicalUrl, ogImage = '/favicon.png' } = Astro.props;
 
-// 默认值和常量
-const SITE_NAME = "技术分享博客"; // 可从配置中获取
-const BASE_URL = Astro.site; // 利用 Astro 提供的属性
+const siteName = "Moonpeak";
+const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
 ---
 
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-
-<title>{title}</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="description" content={description} />
+<meta name="author" content="Moonpeak" />
 
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={siteName} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:image" content={ogImage} />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+<!-- Canonical -->
 {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
-<meta property="og:title" content={title} />
-<meta property="og:description" content={description} />
-<meta property="og:type" content="website" />
-<meta property="og:site_name" content={SITE_NAME} />
-{
-    BASE_URL && (
-        <meta
-            property="og:url"
-            content={`${BASE_URL.href}${Astro.url.pathname}`}
-        />
-    )
-}
-{ogImage && <meta property="og:image" content={ogImage} />}
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="/favicon.png" />
 
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content={title} />
-<meta name="twitter:description" content={description} />
-{ogImage && <meta name="twitter:image" content={ogImage} />}
-
-<slot />
+<title>{fullTitle}</title>
