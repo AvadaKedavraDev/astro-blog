@@ -1,35 +1,64 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
 import { getCollection, type CollectionEntry } from "astro:content";
-import Pagination from "@components/common/Pagination.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  const tagSet = new Set<string>();
+  
+  posts.forEach(post => {
+    post.data.tags?.forEach(tag => tagSet.add(tag));
+  });
+  
+  return Array.from(tagSet).map(tag => ({ params: { tag } }));
+}
+
+const { tag } = Astro.params;
 
 const allPosts = (await getCollection("blog")).sort(
   (a: CollectionEntry<"blog">, b: CollectionEntry<"blog">) =>
     new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
 );
 
-const POSTS_PER_PAGE = 10;
-const currentPage = 1;
-const totalPages = Math.ceil(allPosts.length / POSTS_PER_PAGE);
-const posts = allPosts.slice(0, POSTS_PER_PAGE);
+const taggedPosts = allPosts.filter(post => 
+  post.data.tags?.includes(tag)
+);
+
+const allTags = new Map<string, number>();
+allPosts.forEach(post => {
+  post.data.tags?.forEach(t => {
+    allTags.set(t, (allTags.get(t) || 0) + 1);
+  });
+});
 ---
 
-<BaseLayout title="文章" description="探索技术文章和创作">
+<BaseLayout title={`标签：${tag}`} description={`查看所有包含「${tag}」标签的文章`}>
   <div class="pt-32 pb-24 px-6">
     <div class="container-narrow">
       <!-- Header -->
       <header class="mb-12">
+        <div class="flex items-center gap-3 mb-4">
+          <a 
+            href="/tags" 
+            class="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            所有标签
+          </a>
+          <span class="text-muted-foreground">/</span>
+          <span class="text-sm text-foreground">{tag}</span>
+        </div>
+        
         <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2">
-          所有文章
+          #{tag}
         </h1>
         <p class="text-sm text-muted-foreground">
-          共 {allPosts.length} 篇，记录学习与思考
+          共 {taggedPosts.length} 篇文章
         </p>
       </header>
       
       <!-- Posts List -->
       <div class="space-y-1">
-        {posts.map((post) => (
+        {taggedPosts.map((post) => (
           <article class="group">
             <a href={`/blog/${post.slug}/`} class="block">
               <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 py-5 border-b border-border transition-colors hover:border-foreground/30">
@@ -57,14 +86,15 @@ const posts = allPosts.slice(0, POSTS_PER_PAGE);
                 <!-- Tags -->
                 {post.data.tags && post.data.tags.length > 0 && (
                   <div class="hidden lg:flex items-center gap-1.5 shrink-0">
-                    {post.data.tags.slice(0, 2).map(tag => (
-                      <a 
-                        href={`/tags/${tag}/`}
-                        class="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground hover:bg-foreground hover:text-background transition-colors"
-                        onclick="event.stopPropagation();"
-                      >
-                        {tag}
-                      </a>
+                    {post.data.tags.slice(0, 2).map(t => (
+                      <span class:list={[
+                        "px-2 py-0.5 text-xs rounded-full",
+                        t === tag 
+                          ? "bg-foreground text-background" 
+                          : "bg-muted text-muted-foreground"
+                      ]}>
+                        {t}
+                      </span>
                     ))}
                   </div>
                 )}
@@ -82,21 +112,31 @@ const posts = allPosts.slice(0, POSTS_PER_PAGE);
       </div>
       
       <!-- Empty State -->
-      {posts.length === 0 && (
+      {taggedPosts.length === 0 && (
         <div class="text-center py-24">
-          <p class="text-muted-foreground">暂无文章，敬请期待...</p>
+          <p class="text-muted-foreground">该标签下暂无文章</p>
         </div>
       )}
       
-      <!-- Pagination -->
-      {totalPages > 1 && (
-        <div class="mt-12">
-          <Pagination
-            section="blog"
-            currentPage={currentPage}
-            totalPages={totalPages}
-            basePath="/page"
-          />
+      <!-- Other Tags -->
+      {allTags.size > 1 && (
+        <div class="mt-16 pt-8 border-t border-border">
+          <h2 class="text-sm font-medium text-foreground mb-4">其他标签</h2>
+          <div class="flex flex-wrap gap-2">
+            {Array.from(allTags.entries())
+              .filter(([t]) => t !== tag)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 15)
+              .map(([t, count]) => (
+                <a
+                  href={`/tags/${t}/`}
+                  class="px-3 py-1.5 text-sm rounded-lg bg-muted text-muted-foreground hover:bg-foreground hover:text-background transition-colors"
+                >
+                  {t} ({count})
+                </a>
+              ))
+            }
+          </div>
         </div>
       )}
     </div>

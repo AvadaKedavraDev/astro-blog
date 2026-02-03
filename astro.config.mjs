@@ -6,7 +6,6 @@ import {pluginCollapsibleSections} from '@expressive-code/plugin-collapsible-sec
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import swup, {Theme} from '@swup/astro';
-
 import react from '@astrojs/react';
 
 // https://astro.build/config
@@ -22,7 +21,12 @@ export default defineConfig({
 
     integrations: [
         swup({
-            theme: [Theme.fade, {}]
+            theme: [Theme.fade, {
+                duration: 100,
+                delay: 0,
+                easing: 'ease-in-out',
+                factor: 1
+            }]
         }),
         expressiveCode({
             themes: ['catppuccin-latte', 'dracula'], // 1. 关闭自动媒体查询，完全交给下面的手动选择器控制

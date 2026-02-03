@@ -1,0 +1,64 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+const posts = await getCollection("blog");
+
+const tagCounts = new Map<string, number>();
+posts.forEach(post => {
+  post.data.tags?.forEach(tag => {
+    tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+  });
+});
+
+const sortedTags = Array.from(tagCounts.entries())
+  .sort((a, b) => b[1] - a[1]);
+
+const totalTags = sortedTags.length;
+const totalPosts = posts.length;
+---
+
+<BaseLayout title="标签" description="按标签浏览文章">
+  <div class="pt-32 pb-24 px-6">
+    <div class="container-narrow">
+      <!-- Header -->
+      <header class="mb-12">
+        <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2">
+          标签
+        </h1>
+        <p class="text-sm text-muted-foreground">
+          共 {totalTags} 个标签，{totalPosts} 篇文章
+        </p>
+      </header>
+      
+      <!-- Tag Cloud -->
+      <div class="flex flex-wrap gap-3">
+        {sortedTags.map(([tag, count]) => {
+          const size = count >= 5 ? 'text-lg px-5 py-2.5' : 
+                       count >= 3 ? 'text-base px-4 py-2' : 
+                       'text-sm px-3 py-1.5';
+          
+          return (
+            <a
+              href={`/tags/${tag}/`}
+              class:list={[
+                "rounded-lg bg-muted text-muted-foreground hover:bg-foreground hover:text-background transition-all duration-200 hover:scale-105",
+                size
+              ]}
+            >
+              <span class="font-medium">{tag}</span>
+              <span class="opacity-60 ml-1">{count}</span>
+            </a>
+          );
+        })}
+      </div>
+      
+      <!-- Empty State -->
+      {sortedTags.length === 0 && (
+        <div class="text-center py-24">
+          <p class="text-muted-foreground">暂无标签</p>
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

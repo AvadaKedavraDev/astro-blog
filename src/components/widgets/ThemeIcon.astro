@@ -86,7 +86,7 @@ const iconSizes = {
   document.addEventListener('astro:after-swap', initThemeToggle);
   
   // 兼容 Swup
-  if (window.swup) {
-    window.swup.hooks?.on('page:view', initThemeToggle);
-  }
+  document.addEventListener('swup:enable', () => {
+    window.swup?.hooks?.on('page:view', initThemeToggle);
+  });
 </script>

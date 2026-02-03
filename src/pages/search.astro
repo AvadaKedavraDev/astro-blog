@@ -1,0 +1,403 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+// 开发环境：获取文章列表用于简单搜索
+const posts = await getCollection("blog");
+const sortedPosts = posts.sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+---
+
+<BaseLayout title="搜索" description="搜索文章">
+  <div class="pt-32 pb-24 px-6">
+    <div class="container-narrow">
+      <!-- Header -->
+      <header class="mb-12 text-center">
+        <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2">
+          搜索
+        </h1>
+        <p class="text-sm text-muted-foreground">
+          查找感兴趣的文章
+        </p>
+      </header>
+      
+      <!-- Search Box -->
+      <div class="max-w-xl mx-auto mb-12">
+        <div class="relative">
+          <input
+            type="text"
+            id="search-input"
+            placeholder="搜索文章..."
+            class="w-full px-5 py-4 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-foreground/30 focus:ring-2 focus:ring-foreground/5"
+            autocomplete="off"
+          />
+          <div class="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+        </div>
+        
+        <!-- Dev Mode Notice -->
+        <div id="dev-notice" class="hidden mt-4 p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-sm text-amber-800 dark:text-amber-200">
+          <p class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            开发模式：仅支持标题搜索。完整搜索请运行 <code class="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 font-mono text-xs">npm run build</code> 后预览
+          </p>
+        </div>
+      </div>
+      
+      <!-- Search Results -->
+      <div id="search-results" class="max-w-3xl mx-auto">
+        <!-- Pagefind Results -->
+        <div id="pagefind-container" class="hidden"></div>
+        
+        <!-- Dev Mode Results -->
+        <div id="dev-results" class="hidden space-y-1">
+          {sortedPosts.map((post) => (
+            <article class="search-item group" data-title={post.data.title.toLowerCase()} data-description={(post.data.description || '').toLowerCase()}>
+              <a href={`/blog/${post.slug}/`} class="block">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 py-5 border-b border-border transition-colors hover:border-foreground/30">
+                  <time class="text-sm text-muted-foreground font-mono shrink-0 w-24">
+                    {post.data.pubDate.toLocaleDateString('zh-CN', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit'
+                    }).replace(/\//g, '.')}
+                  </time>
+                  <div class="flex-1 min-w-0">
+                    <h2 class="text-base md:text-lg font-medium text-foreground group-hover:text-muted-foreground transition-colors">
+                      {post.data.title}
+                    </h2>
+                    {post.data.description && (
+                      <p class="text-sm text-muted-foreground line-clamp-1 mt-0.5">
+                        {post.data.description}
+                      </p>
+                    )}
+                  </div>
+                  {post.data.tags && post.data.tags.length > 0 && (
+                    <div class="hidden lg:flex items-center gap-1.5 shrink-0">
+                      {post.data.tags.slice(0, 2).map(tag => (
+                        <span class="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </a>
+            </article>
+          ))}
+        </div>
+        
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden text-center py-12">
+          <p class="text-muted-foreground">输入关键词开始搜索</p>
+        </div>
+        
+        <!-- No Results -->
+        <div id="no-results" class="hidden text-center py-12">
+          <p class="text-muted-foreground">未找到相关结果</p>
+        </div>
+      </div>
+      
+      <!-- Tips -->
+      <div class="text-center text-sm text-muted-foreground mt-8">
+        <p>支持中文内容搜索</p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style is:global>
+  /* Pagefind UI Customization */
+  .pagefind-ui {
+    --pagefind-ui-scale: 1;
+    --pagefind-ui-primary: var(--foreground);
+    --pagefind-ui-text: var(--foreground);
+    --pagefind-ui-background: var(--background);
+    --pagefind-ui-border: var(--border);
+    --pagefind-ui-tag: var(--muted);
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-border-radius: 0.75rem;
+    --pagefind-ui-image-border-radius: 0.5rem;
+    --pagefind-ui-image-box-ratio: 3 / 2;
+    --pagefind-ui-font: var(--font-sans);
+  }
+  
+  .pagefind-ui .pagefind-ui__search-input {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    color: var(--foreground);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  }
+  
+  .pagefind-ui .pagefind-ui__search-input::placeholder {
+    color: var(--muted-foreground);
+  }
+  
+  .pagefind-ui .pagefind-ui__search-input:focus {
+    outline: none;
+    border-color: var(--foreground);
+  }
+  
+  .pagefind-ui .pagefind-ui__search-clear {
+    background: var(--muted);
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    transition: all 0.2s;
+  }
+  
+  .pagefind-ui .pagefind-ui__search-clear:hover {
+    background: var(--foreground);
+    color: var(--background);
+  }
+  
+  .pagefind-ui .pagefind-ui__result {
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+    background: var(--card);
+    transition: border-color 0.2s;
+  }
+  
+  .pagefind-ui .pagefind-ui__result:hover {
+    border-color: var(--foreground);
+  }
+  
+  .pagefind-ui .pagefind-ui__result-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin-bottom: 0.5rem;
+  }
+  
+  .pagefind-ui .pagefind-ui__result-link {
+    color: var(--foreground);
+    text-decoration: none;
+  }
+  
+  .pagefind-ui .pagefind-ui__result-link:hover {
+    text-decoration: underline;
+  }
+  
+  .pagefind-ui .pagefind-ui__result-excerpt {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    line-height: 1.6;
+  }
+  
+  .pagefind-ui .pagefind-ui__result-excerpt mark {
+    background: color-mix(in oklch, var(--foreground) 15%, transparent);
+    color: var(--foreground);
+    border-radius: 0.25rem;
+    padding: 0 0.25rem;
+  }
+  
+  .pagefind-ui .pagefind-ui__button {
+    background: var(--foreground);
+    color: var(--background);
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  
+  .pagefind-ui .pagefind-ui__button:hover {
+    opacity: 0.9;
+  }
+  
+  .pagefind-ui .pagefind-ui__message {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    padding: 1rem 0;
+  }
+  
+  .pagefind-ui .pagefind-ui__result-thumb {
+    display: none;
+  }
+  
+  .dark .pagefind-ui .pagefind-ui__search-input {
+    background: var(--card);
+    border-color: var(--border);
+    color: var(--foreground);
+  }
+  
+  .dark .pagefind-ui .pagefind-ui__result {
+    background: var(--card);
+    border-color: var(--border);
+  }
+  
+  /* Highlight for dev mode search */
+  .search-highlight {
+    background: color-mix(in oklch, var(--foreground) 15%, transparent);
+    border-radius: 0.25rem;
+    padding: 0 0.25rem;
+  }
+</style>
+
+<script is:inline>
+  (function() {
+    const searchInput = document.getElementById('search-input');
+    const devNotice = document.getElementById('dev-notice');
+    const devResults = document.getElementById('dev-results');
+    const pagefindContainer = document.getElementById('pagefind-container');
+    const emptyState = document.getElementById('empty-state');
+    const noResults = document.getElementById('no-results');
+    
+    let usePagefind = false;
+    let pagefindUI = null;
+    
+    // 检查是否是开发环境
+    function isDev() {
+      return location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    }
+    
+    // 开发模式：简单标题搜索
+    function initDevSearch() {
+      devNotice.classList.remove('hidden');
+      
+      const searchItems = document.querySelectorAll('.search-item');
+      
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        
+        if (!query) {
+          devResults.classList.add('hidden');
+          emptyState.classList.remove('hidden');
+          noResults.classList.add('hidden');
+          return;
+        }
+        
+        emptyState.classList.add('hidden');
+        devResults.classList.remove('hidden');
+        
+        let hasResults = false;
+        searchItems.forEach(item => {
+          const title = item.dataset.title || '';
+          const description = item.dataset.description || '';
+          
+          if (title.includes(query) || description.includes(query)) {
+            item.classList.remove('hidden');
+            hasResults = true;
+            
+            // 高亮匹配文本
+            const titleEl = item.querySelector('h2');
+            if (titleEl && title.includes(query)) {
+              const regex = new RegExp(`(${query})`, 'gi');
+              titleEl.innerHTML = titleEl.textContent.replace(regex, '<span class="search-highlight">$1</span>');
+            }
+          } else {
+            item.classList.add('hidden');
+          }
+        });
+        
+        if (!hasResults) {
+          noResults.classList.remove('hidden');
+        } else {
+          noResults.classList.add('hidden');
+        }
+      });
+      
+      // 初始状态
+      emptyState.classList.remove('hidden');
+    }
+    
+    // 生产模式：Pagefind
+    function initPagefind() {
+      usePagefind = true;
+      
+      // 隐藏自定义输入框，使用 Pagefind 的
+      searchInput.parentElement.classList.add('hidden');
+      pagefindContainer.classList.remove('hidden');
+      
+      // 加载 Pagefind CSS
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/pagefind/pagefind-ui.css';
+      document.head.appendChild(link);
+      
+      // 加载 Pagefind JS
+      const script = document.createElement('script');
+      script.src = '/pagefind/pagefind-ui.js';
+      script.onload = function() {
+        if (typeof window.PagefindUI !== 'undefined') {
+          pagefindUI = new window.PagefindUI({
+            element: "#pagefind-container",
+            showSubResults: false,
+            showImages: false,
+            excerptLength: 15,
+            translations: {
+              placeholder: "搜索文章...",
+              clear_search: "清除",
+              load_more: "加载更多结果",
+              search_label: "搜索本站",
+              filters_label: "筛选",
+              zero_results: "未找到「{search_query}」相关结果",
+              many_results: "找到 {count} 个结果",
+              one_result: "找到 1 个结果",
+              alt_search: "未找到「{search_query}」的结果，显示「{alt_search_query}」的结果",
+              search_suggestion: "未找到「{search_query}」的结果，建议搜索：",
+              searching: "搜索中..."
+            }
+          });
+        }
+      };
+      script.onerror = function() {
+        // 加载失败，回退到开发模式
+        searchInput.parentElement.classList.remove('hidden');
+        pagefindContainer.classList.add('hidden');
+        devNotice.classList.remove('hidden');
+        devNotice.querySelector('p').textContent = '搜索索引加载失败，已启用基础搜索模式';
+        initDevSearch();
+      };
+      document.head.appendChild(script);
+    }
+    
+    // 检查 Pagefind 是否可用
+    function checkPagefind() {
+      fetch('/pagefind/pagefind-ui.js', { method: 'HEAD' })
+        .then(response => {
+          if (response.ok) {
+            initPagefind();
+          } else {
+            initDevSearch();
+          }
+        })
+        .catch(() => {
+          initDevSearch();
+        });
+    }
+    
+    // 初始化
+    function init() {
+      checkPagefind();
+    }
+    
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+    
+    // Swup 兼容
+    document.addEventListener('swup:enable', () => {
+      window.swup?.hooks?.on('page:view', init);
+    });
+    
+    // Astro View Transitions 兼容
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

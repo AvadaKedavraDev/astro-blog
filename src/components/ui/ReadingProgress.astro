@@ -53,8 +53,8 @@
     document.addEventListener('astro:page-load', initProgress);
     
     // 兼容 Swup
-    if (window.swup) {
-      window.swup.hooks?.on('page:view', initProgress);
-    }
+    document.addEventListener('swup:enable', () => {
+      window.swup?.hooks?.on('page:view', initProgress);
+    });
   })();
 </script>

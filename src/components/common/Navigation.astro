@@ -37,13 +37,33 @@ const currentPath = Astro.url.pathname;
           <span class="nav-indicator absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-indigo-500 opacity-0 transition-opacity"></span>
         </a>
       ))}
-      <div class="pl-3 ml-2 border-l border-border">
+      <div class="pl-3 ml-2 border-l border-border flex items-center gap-2">
+        <!-- Search Button -->
+        <a 
+          href="/search" 
+          class="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+          aria-label="搜索"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </a>
         <ThemeIcon size="sm" variant="icon" />
       </div>
     </div>
     
     <!-- Mobile Menu Button -->
     <div class="flex items-center gap-3 md:hidden">
+      <!-- Search Button Mobile -->
+      <a 
+        href="/search" 
+        class="p-2 text-muted-foreground hover:text-foreground transition-colors"
+        aria-label="搜索"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </a>
       <ThemeIcon size="sm" variant="icon" />
       <button
         id="mobile-menu-btn"
@@ -67,6 +87,18 @@ const currentPath = Astro.url.pathname;
     class="hidden md:hidden border-t border-border bg-background"
   >
     <div class="container-wide py-3 space-y-1" id="mobile-nav-items">
+      <!-- Search in mobile menu -->
+      <a
+        href="/search"
+        data-mobile-nav-item
+        data-href="/search"
+        class="mobile-nav-link block px-4 py-3 rounded-lg text-base transition-colors text-muted-foreground hover:text-foreground hover:bg-muted/50"
+      >
+        <div class="flex items-center gap-3">
+          <span class="nav-dot w-1.5 h-1.5 rounded-full bg-indigo-500 opacity-0 transition-opacity"></span>
+          <span class="nav-label pl-3.5">搜索</span>
+        </div>
+      </a>
       {navItems.map((item) => (
         <a
           href={item.href}
@@ -181,9 +213,9 @@ const currentPath = Astro.url.pathname;
     init();
     
     // 兼容 Swup - 页面过渡完成后重新初始化
-    if (window.swup) {
-      window.swup.hooks.on('page:view', init);
-    }
+    document.addEventListener('swup:enable', () => {
+      window.swup?.hooks?.on('page:view', init);
+    });
     
     // 兼容 Astro View Transitions
     document.addEventListener('astro:page-load', init);
