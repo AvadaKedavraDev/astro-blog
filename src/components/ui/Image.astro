@@ -1,0 +1,31 @@
+---
+interface Props {
+  src: string;
+  alt: string;
+  width?: string;
+  height?: string;
+  class?: string;
+}
+
+const { src, alt, width, height, class: className = '' } = Astro.props;
+
+// 判断是否是完整 URL
+const isFullUrl = src.startsWith('http://') || src.startsWith('https://');
+
+// 如果不是完整 URL，且以 / 开头，则认为是本地图片
+// 如果不是完整 URL，且不以 / 开头，则拼接图床域名
+const imageSrc = isFullUrl 
+  ? src 
+  : src.startsWith('/') 
+    ? src 
+    : `https://cdn.image.moonpeak.cn/${src}`;
+---
+
+<img 
+  src={imageSrc} 
+  alt={alt} 
+  width={width} 
+  height={height}
+  class={className}
+  loading="lazy"
+/>

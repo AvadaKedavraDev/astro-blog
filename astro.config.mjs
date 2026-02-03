@@ -5,6 +5,9 @@ import tailwindcss from '@tailwindcss/vite';
 import {pluginCollapsibleSections} from '@expressive-code/plugin-collapsible-sections'
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
+import remarkCallouts from 'remark-callouts';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import swup, {Theme} from '@swup/astro';
 import react from '@astrojs/react';
 
@@ -16,7 +19,8 @@ export default defineConfig({
 
     markdown: {
         // 解决MD 换行被破坏、注释挤在一起的问题
-        remarkPlugins: [remarkGfm, remarkBreaks],
+        remarkPlugins: [remarkGfm, remarkBreaks, remarkCallouts, remarkMath],
+        rehypePlugins: [rehypeKatex],
     },
 
     integrations: [

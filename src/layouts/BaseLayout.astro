@@ -30,6 +30,10 @@ const fullTitle = title === "首页" ? "Moonpeak" : `${title} — Moonpeak`;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     
+    {/* ===== 字体加载（本地优先 + 系统后备） ===== */}
+    {/* 使用本地字体文件，不依赖外部 CDN */}
+    <link rel="stylesheet" href="/fonts/fonts.css">
+    
     {/* 主题初始化 - 必须在最前面执行，防止闪烁 */}
     <script is:inline>
       (function() {

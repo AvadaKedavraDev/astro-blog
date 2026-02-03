@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
+    "@chinese-fonts/lxgwwenkai": "^3.0.0",
     "@expressive-code/plugin-collapsible-sections": "^0.41.5",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
     "@swup/astro": "^1.7.0",
     "@tailwindcss/vite": "^4.1.18",
     "@types/react": "^19.2.7",
@@ -25,9 +28,12 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "rehype-autolink-headings": "^7.1.0",
+    "rehype-katex": "^7.0.1",
     "rehype-slug": "^6.0.0",
     "remark-breaks": "^4.0.0",
+    "remark-callouts": "^2.0.0",
     "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18"
   },

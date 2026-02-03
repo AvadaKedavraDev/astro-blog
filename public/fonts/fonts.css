@@ -1,0 +1,22 @@
+/* ===== 系统字体配置（无需下载） ===== */
+
+/* 
+ * 说明：本项目使用操作系统内置字体，不引入任何外部字体文件
+ * 优势：零加载时间、跨平台兼容、用户体验一致
+ */
+
+/* UI/界面字体：系统无衬线字体 */
+/* - macOS: SF Pro Display / Helvetica Neue */
+/* - Windows: Segoe UI */
+/* - Android: Roboto */
+/* - iOS: SF Pro */
+
+/* 文章正文字体：系统中文优化字体 */
+/* - macOS/iOS: 苹方 (PingFang SC) */
+/* - Windows: 微软雅黑 (Microsoft YaHei) */
+/* - Android/Linux: Noto Sans CJK / Source Han Sans */
+
+/* 代码字体：系统等宽字体 */
+/* - macOS: SF Mono / Menlo / Monaco */
+/* - Windows: Consolas / Courier New */
+/* - Linux: DejaVu Sans Mono */

@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* ===== 字体配置 ===== */
+/* 注意：字体通过 CDN 在 BaseLayout.astro 中加载，避免打包大文件 */
+
 @plugin "@tailwindcss/typography";
 @plugin 'tailwind-scrollbar';
 
@@ -24,6 +27,44 @@
   --code-bg: #f5f5f5;
   --code-text: #ea580c;
   --ec-theme-active-index: 0;
+  
+  /* ===== 字体变量（纯系统字体） ===== */
+  /* UI/界面字体 - 系统无衬线 */
+  --font-ui: 
+    -apple-system,              /* macOS/iOS SF Pro */
+    BlinkMacSystemFont,         /* Safari */
+    "Segoe UI",                 /* Windows */
+    Roboto,                     /* Android */
+    "Helvetica Neue",           /* macOS 旧版 */
+    Arial,                      /* 通用后备 */
+    "Noto Sans",                /* Linux */
+    sans-serif;
+  
+  /* 文章正文字体 - 系统中文优化 */
+  --font-body: 
+    /* 苹方 - macOS/iOS (最优雅的中文界面字体) */
+    "PingFang SC",
+    "Hiragino Sans GB",         /* macOS 旧版 */
+    /* 微软雅黑 - Windows (清晰现代) */
+    "Microsoft YaHei",
+    /* 思源黑体 - Android/Linux */
+    "Noto Sans CJK SC",
+    "Source Han Sans SC",
+    "WenQuanYi Micro Hei",
+    /* 后备 */
+    "SimHei",
+    "STHeiti",
+    sans-serif;
+  
+  /* 代码字体 - 系统等宽 */
+  --font-code: 
+    "SF Mono",                  /* macOS/iOS */
+    Menlo,                      /* macOS 旧版 */
+    Monaco,                     /* macOS 经典 */
+    Consolas,                   /* Windows */
+    "Liberation Mono",          /* Linux */
+    "Courier New",              /* 通用后备 */
+    monospace;
 }
 
 /* ===== 深色模式变量 ===== */
@@ -61,8 +102,16 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: "Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif";
-  --font-mono: "JetBrains Mono", "Fira Code", "Monaco", "Consolas", "monospace";
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-code);
+}
+
+/* ===== 字体加载优化 ===== */
+/* 使用 font-display: swap 避免字体加载阻塞渲染 */
+@font-face {
+  font-family: 'LXGWWenKai';
+  font-display: swap;
+  src: local('LXGWWenKai'), local('LXGW WenKai');
 }
 
 /* ===== 基础样式 ===== */
@@ -76,7 +125,13 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    font-family: var(--font-sans), serif;
+    font-family: var(--font-ui);
+  }
+  
+  /* 文章正文字体优化加载 */
+  .prose-custom {
+    font-family: var(--font-body);
+    font-display: swap;
   }
 
   body {
@@ -114,10 +169,11 @@
 
 /* ===== 组件样式 ===== */
 @layer components {
-  /* 文章正文样式 - 针对 Card 内显示优化 */
+  /* 文章正文样式 - 使用霞鹜文楷 */
   .prose-custom {
-    font-size: 1rem;
-    line-height: 1.8;
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    line-height: 1.9;
     max-width: none;
     color: var(--foreground);
   }
@@ -221,13 +277,13 @@
     color: var(--muted-foreground);
   }
 
-  /* 代码样式 */
+  /* 代码样式 - 使用 JetBrains Mono */
   .prose-custom :where(code):not(:where(pre code)) {
-    padding: 0.2rem 0.4rem;
+    padding: 0.15rem 0.4rem;
     border-radius: 0.25rem;
-    font-size: 0.875em;
+    font-size: 0.85em;
     font-weight: 500;
-    font-family: var(--font-mono);
+    font-family: var(--font-code);
     background-color: var(--code-bg);
     color: var(--code-text);
   }
@@ -501,3 +557,140 @@
           0 1px 2px 0 rgba(0, 0, 0, 0.15);
 }
 
+
+/* ===== Remark Callouts Styles ===== */
+.callout {
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  background: var(--card);
+}
+
+.callout-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  color: var(--foreground);
+}
+
+.callout-content {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--foreground);
+}
+
+.callout-content > *:first-child {
+  margin-top: 0;
+}
+
+.callout-content > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Callout Types */
+.callout-note {
+  border-left: 3px solid #3b82f6;
+  background: color-mix(in oklch, #3b82f6 5%, var(--card));
+}
+
+.callout-note .callout-title::before {
+  content: "ℹ️";
+}
+
+.callout-tip {
+  border-left: 3px solid #22c55e;
+  background: color-mix(in oklch, #22c55e 5%, var(--card));
+}
+
+.callout-tip .callout-title::before {
+  content: "💡";
+}
+
+.callout-info {
+  border-left: 3px solid #0ea5e9;
+  background: color-mix(in oklch, #0ea5e9 5%, var(--card));
+}
+
+.callout-info .callout-title::before {
+  content: "ℹ️";
+}
+
+.callout-warning {
+  border-left: 3px solid #f59e0b;
+  background: color-mix(in oklch, #f59e0b 5%, var(--card));
+}
+
+.callout-warning .callout-title::before {
+  content: "⚠️";
+}
+
+.callout-danger {
+  border-left: 3px solid #ef4444;
+  background: color-mix(in oklch, #ef4444 5%, var(--card));
+}
+
+.callout-danger .callout-title::before {
+  content: "🚨";
+}
+
+.callout-important {
+  border-left: 3px solid #a855f7;
+  background: color-mix(in oklch, #a855f7 5%, var(--card));
+}
+
+.callout-important .callout-title::before {
+  content: "❗";
+}
+
+/* Dark mode adjustments */
+.dark .callout {
+  background: var(--card);
+}
+
+/* ===== KaTeX Math Styles ===== */
+.katex {
+  font-size: 1.1em;
+}
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1rem 0;
+  margin: 1.5rem 0;
+}
+
+.katex-display .katex {
+  font-size: 1.21em;
+}
+
+/* Dark mode adjustments for math */
+.dark .katex {
+  color: var(--foreground);
+}
+
+.dark .katex .katex-mathml {
+  color: var(--foreground);
+}
+
+/* Ensure math renders properly in callouts */
+.callout .katex {
+  font-size: 1em;
+}
+
+/* Scrollbar for long equations */
+.katex-display::-webkit-scrollbar {
+  height: 4px;
+}
+
+.katex-display::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.katex-display::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 2px;
+}

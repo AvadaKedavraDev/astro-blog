@@ -78,7 +78,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                     <!-- Meta Info -->
                     <div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                         <div class="flex items-center gap-2">
-                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                            <div class="w-7 h-7 rounded-full bg-linear-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
                                 {author.charAt(0)}
                             </div>
                             <span class="font-medium text-foreground">{author}</span>
@@ -204,7 +204,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                     
                     {/* ========== 中间主内容 - 文章 Card ========== */}
                     <main class="flex-1 min-w-0">
-                        <article class="bg-background rounded-xl shadow-sm border border-border min-h-[600px]">
+                        <article class="bg-background rounded-xl shadow-sm border border-border min-h-150">
                             {/* 文章内容区 */}
                             <div class="p-6 md:p-8 lg:p-10">
                                 <div class="prose-custom max-w-none">
