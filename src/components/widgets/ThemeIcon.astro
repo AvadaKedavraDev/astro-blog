@@ -23,6 +23,7 @@ const iconSizes = {
 
 <button
   id="theme-toggle"
+  data-theme-toggle
   class:list={[
     sizeClasses[size],
     "rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all group",
@@ -44,15 +45,14 @@ const iconSizes = {
   
   {variant === "button" && (
     <span class="text-sm font-medium">
-      <span class="dark:hidden">深色</span>
-      <span class="hidden dark:block">浅色</span>
+      <span class="dark:hidden">深色模式</span>
+      <span class="hidden dark:block">浅色模式</span>
     </span>
   )}
 </button>
 
-{/* 主题初始化脚本 - 在页面加载前执行 */}
+{/* 主题初始化脚本 - 在页面加载前执行，防止闪烁 */}
 <script is:inline>
-  // 立即执行，避免闪烁
   (function() {
     const theme = localStorage.getItem('theme') || 
       (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -65,32 +65,83 @@ const iconSizes = {
   })();
 </script>
 
-{/* 主题切换事件处理 */}
+{/* 主题切换事件处理 - 修复移动端事件解绑问题 */}
 <script>
-  function initThemeToggle() {
-    const toggle = document.getElementById('theme-toggle');
-    if (!toggle) return;
+  // 使用 WeakSet 跟踪已初始化的按钮，防止重复绑定
+  const initializedButtons = new WeakSet();
+  
+  // 切换主题的核心逻辑
+  function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    const theme = isDark ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
     
-    // 移除旧的事件监听器（如果存在）
-    const newToggle = toggle.cloneNode(true);
-    toggle.parentNode?.replaceChild(newToggle, toggle);
+    // 移动端触觉反馈（如果支持）
+    if (window.navigator?.vibrate && navigator.vibrate(10)) {
+      navigator.vibrate(10);
+    }
     
-    // 添加新的事件监听器
-    newToggle.addEventListener('click', () => {
-      const isDark = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    });
+    // 触发自定义事件，供其他组件监听
+    window.dispatchEvent(new CustomEvent('themechange', { 
+      detail: { theme, isDark } 
+    }));
   }
   
-  // 初始化
+  // 初始化单个按钮
+  function initButton(button: HTMLElement) {
+    if (initializedButtons.has(button)) return;
+    
+    // 移动端优化：pointerdown 比 click 响应更快（减少 300ms 延迟）
+    button.addEventListener('pointerdown', (e) => {
+      // 防止与 click 事件重复触发
+      e.preventDefault();
+      toggleTheme();
+    });
+    
+    // 保留 click 事件确保键盘可访问性（Enter/Space）
+    button.addEventListener('click', (e) => {
+      // 如果已经通过 pointerdown 处理，跳过
+      if (e.detail === 0) return;
+      toggleTheme();
+    });
+    
+    initializedButtons.add(button);
+  }
+  
+  // 全局初始化函数
+  function initThemeToggle() {
+    // 查找所有主题切换按钮（支持页面上多个实例）
+    const buttons = document.querySelectorAll<HTMLElement>('[data-theme-toggle]');
+    buttons.forEach(initButton);
+  }
+  
+  // 初始化当前页面
   initThemeToggle();
   
-  // 兼容 Astro View Transitions
+  // Astro View Transitions 兼容
+  // astro:page-load: 每次页面加载完成（包括首次）
   document.addEventListener('astro:page-load', initThemeToggle);
+  
+  // astro:after-swap: DOM 替换后（过渡动画前）
   document.addEventListener('astro:after-swap', initThemeToggle);
   
-  // 兼容 Swup
-  document.addEventListener('swup:enable', () => {
-    window.swup?.hooks?.on('page:view', initThemeToggle);
+  // 备用：标准 DOM 加载事件（兼容非 VT 页面）
+  document.addEventListener('DOMContentLoaded', initThemeToggle);
+  
+  // 移动端特殊处理：页面从后台恢复时重新绑定
+  // 某些浏览器（如 iOS Safari）在后台冻结核页面后恢复时可能需要重新初始化
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      // 使用 setTimeout 确保 DOM 已完全恢复
+      setTimeout(initThemeToggle, 0);
+    }
+  });
+  
+  // 监听 storage 事件（多标签页同步）
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'theme' && e.newValue) {
+      const isDark = e.newValue === 'dark';
+      document.documentElement.classList.toggle('dark', isDark);
+    }
   });
 </script>
