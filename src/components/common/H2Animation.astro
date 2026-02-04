@@ -1,0 +1,40 @@
+---
+// H2 标题动画组件 - 滚动时触发动画
+---
+
+<script is:inline>
+  (function() {
+    function initH2Animation() {
+      const h2Elements = document.querySelectorAll('.prose-custom h2');
+      if (h2Elements.length === 0) return;
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            // 只触发一次动画
+            observer.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.2,
+        rootMargin: '-50px 0px'
+      });
+
+      h2Elements.forEach(h2 => observer.observe(h2));
+    }
+
+    // 初始化
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initH2Animation);
+    } else {
+      initH2Animation();
+    }
+
+    // Swup 兼容
+    document.addEventListener('astro:page-load', initH2Animation);
+    document.addEventListener('swup:enable', () => {
+      window.swup?.hooks?.on('page:view', initH2Animation);
+    });
+  })();
+</script>

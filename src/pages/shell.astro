@@ -1,0 +1,372 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import TypeWriter from "@components/ui/TypeWriter.astro";
+
+// 服务器配置
+const SERVER_CONFIG = {
+  host: "moonpeak.cn",
+  idServer: "moonpeak.cn:21116",
+  relayServer: "moonpeak.cn:21117",
+  key: "wqselgGrSikeex3pCUtvsKVIr9F2dvPmoq44TZQN2Jw=", // 替换为实际 Key
+  psScript: "https://moonpeak.cn/install.ps1",
+  shellScript: "https://moonpeak.cn/install.sh"
+};
+---
+
+<BaseLayout title="远程桌面 - MoonPeak">
+  <!-- Hero Section -->
+  <section class="min-h-[80vh] flex flex-col justify-center items-center relative px-6 pt-20">
+    <!-- 背景装饰（与首页一致） -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-linear-to-br from-neutral-200/50 to-transparent dark:from-neutral-800/30 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-linear-to-tl from-neutral-200/30 to-transparent dark:from-neutral-800/20 rounded-full blur-3xl"></div>
+    </div>
+    
+    <div class="relative z-10 text-center max-w-3xl mx-auto">
+      <!-- 标签 -->
+      <div class="mb-6 animate-fade-in" style="animation-delay: 0.1s">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border">
+          私有化部署
+        </span>
+      </div>
+      
+      <!-- 主标题 -->
+      <h1 class="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight mb-6 animate-fade-in-up" style="animation-delay: 0.2s">
+        <span class="gradient-text">
+          <TypeWriter text="远程桌面，一键部署" speed={120} delay={300} />
+        </span>
+      </h1>
+      
+      <!-- 副标题 -->
+      <p class="text-base md:text-lg text-muted-foreground max-w-lg mx-auto mb-10 leading-relaxed animate-fade-in" style="animation-delay: 0.8s">
+        基于 RustDesk 的开源方案，数据完全自主可控。一条命令，即刻连接。
+      </p>
+      
+      <!-- CTA -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in" style="animation-delay: 1s">
+        <a href="#install" class="btn px-8 py-3 text-base rounded-full">
+          立即安装
+        </a>
+        <a href="#config" class="btn-ghost px-8 py-3 text-base rounded-full">
+          查看配置
+        </a>
+      </div>
+    </div>
+    
+    <!-- 滚动提示 -->
+    <div class="absolute bottom-12 left-1/2 -translate-x-1/2 animate-bounce">
+      <a href="#install" class="text-muted-foreground hover:text-foreground transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- Install Section -->
+  <section id="install" class="py-24 px-6 border-t border-border">
+    <div class="container-narrow">
+      <!-- Section Header -->
+      <div class="text-center mb-16">
+        <h2 class="text-2xl md:text-3xl font-semibold tracking-tight mb-3">选择您的系统</h2>
+        <p class="text-muted-foreground">复制命令到终端运行，自动完成安装与配置</p>
+      </div>
+
+      <!-- Platform Tabs -->
+      <div class="flex justify-center gap-2 mb-8 p-1 bg-muted rounded-xl max-w-md mx-auto">
+        <button onclick="switchPlatform('windows')" id="tab-windows" class="platform-tab flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-background shadow-sm text-foreground">
+          Windows
+        </button>
+        <button onclick="switchPlatform('macos')" id="tab-macos" class="platform-tab flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-foreground">
+          macOS
+        </button>
+        <button onclick="switchPlatform('linux')" id="tab-linux" class="platform-tab flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all text-muted-foreground hover:text-foreground">
+          Linux
+        </button>
+      </div>
+
+      <!-- Terminal Window -->
+      <div class="bg-card rounded-2xl border border-border shadow-sm overflow-hidden animate-fade-in-up" style="animation-delay: 0.2s">
+        <!-- Window Header -->
+        <div class="flex items-center justify-between px-4 py-3 bg-muted/50 border-b border-border">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+          </div>
+          <span class="text-xs text-muted-foreground font-mono" id="terminal-label">PowerShell</span>
+          <button onclick="copyCurrentCode()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-background hover:bg-muted text-xs font-medium transition-colors border border-border">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            <span id="copy-text">复制</span>
+          </button>
+        </div>
+
+        <!-- Code Content -->
+        <div class="p-6 md:p-8 bg-card">
+          <div id="code-windows" class="code-block font-mono text-sm md:text-base text-foreground break-all">
+            <span class="text-blue-600 dark:text-blue-400">irm</span> <span class="text-green-600 dark:text-green-400">https://moonpeak.cn/install.ps1</span> <span class="text-muted-foreground">|</span> <span class="text-blue-600 dark:text-blue-400">iex</span>
+          </div>
+          <div id="code-macos" class="code-block hidden font-mono text-sm md:text-base text-foreground break-all">
+            <span class="text-blue-600 dark:text-blue-400">curl</span> <span class="text-muted-foreground">-fsSL</span> <span class="text-green-600 dark:text-green-400">https://moonpeak.cn/install.sh</span> <span class="text-muted-foreground">|</span> <span class="text-blue-600 dark:text-blue-400">bash</span>
+          </div>
+          <div id="code-linux" class="code-block hidden font-mono text-sm md:text-base text-foreground break-all">
+            <span class="text-blue-600 dark:text-blue-400">wget</span> <span class="text-muted-foreground">-qO-</span> <span class="text-green-600 dark:text-green-400">https://moonpeak.cn/install.sh</span> <span class="text-muted-foreground">|</span> <span class="text-blue-600 dark:text-blue-400">bash</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features List -->
+      <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+        <div class="flex items-start gap-2">
+          <svg class="w-4 h-4 text-green-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span>自动下载最新版客户端</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <svg class="w-4 h-4 text-green-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span>预配置 MoonPeak 服务器</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <svg class="w-4 h-4 text-green-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span>生成随机安全密码</span>
+        </div>
+      </div>
+
+      <!-- Security Notice -->
+      <div class="mt-10 p-4 rounded-xl bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-900/50 flex items-start gap-3">
+        <svg class="w-5 h-5 text-yellow-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <div class="text-sm text-yellow-800 dark:text-yellow-200">
+          <p class="font-medium mb-1">安全提示</p>
+          <p class="text-yellow-700 dark:text-yellow-300/80">脚本需要管理员权限运行。建议您在执行前审查脚本内容：
+            <a href={SERVER_CONFIG.psScript} class="underline hover:text-yellow-900 dark:hover:text-yellow-100">install.ps1</a> / 
+            <a href={SERVER_CONFIG.shellScript} class="underline hover:text-yellow-900 dark:hover:text-yellow-100">install.sh</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Config Section -->
+  <section id="config" class="py-24 px-6 bg-muted/30 border-t border-border">
+    <div class="container-narrow">
+      <div class="flex items-end justify-between mb-10">
+        <div>
+          <h2 class="text-2xl md:text-3xl font-semibold tracking-tight mb-1">服务器配置</h2>
+          <p class="text-sm text-muted-foreground">手动配置客户端时使用以下参数</p>
+        </div>
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium border border-green-200 dark:border-green-800">
+          <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+          在线
+        </div>
+      </div>
+
+      <div class="bg-card rounded-2xl border border-border shadow-sm divide-y divide-border">
+        <!-- ID Server -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-2">
+          <div>
+            <div class="text-xs text-muted-foreground mb-1 uppercase tracking-wider">ID 服务器</div>
+            <div class="font-mono text-foreground">{SERVER_CONFIG.idServer}</div>
+          </div>
+          <button onclick="copyText('{SERVER_CONFIG.idServer}')" class="self-start sm:self-center text-xs px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors text-muted-foreground">
+            复制
+          </button>
+        </div>
+
+        <!-- Relay Server -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-2">
+          <div>
+            <div class="text-xs text-muted-foreground mb-1 uppercase tracking-wider">中继服务器</div>
+            <div class="font-mono text-foreground">{SERVER_CONFIG.relayServer}</div>
+          </div>
+          <button onclick="copyText('{SERVER_CONFIG.relayServer}')" class="self-start sm:self-center text-xs px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors text-muted-foreground">
+            复制
+          </button>
+        </div>
+
+        <!-- API Server -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-5 gap-2">
+          <div>
+            <div class="text-xs text-muted-foreground mb-1 uppercase tracking-wider">API 服务器</div>
+            <div class="font-mono text-foreground">https://{SERVER_CONFIG.host}:21114</div>
+          </div>
+          <button onclick="copyText('https://{SERVER_CONFIG.host}:21114')" class="self-start sm:self-center text-xs px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 transition-colors text-muted-foreground">
+            复制
+          </button>
+        </div>
+
+        <!-- Key -->
+        <div class="p-5">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs text-muted-foreground uppercase tracking-wider">Key（公钥）</div>
+            <button onclick="toggleKey()" class="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+              <svg id="eye-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              <span id="key-toggle-text">显示</span>
+            </button>
+          </div>
+          <div class="font-mono text-sm text-foreground break-all bg-muted/50 p-3 rounded-lg border border-border" id="key-value">
+            ••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
+          </div>
+        </div>
+      </div>
+
+      <!-- Download Links -->
+      <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/downloads/rustdesk-host=moonpeak.cn,key=YOURKEY.exe" download class="btn-secondary inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Windows 安装包
+        </a>
+        <a href="https://github.com/rustdesk/rustdesk/releases/latest" target="_blank" rel="noopener" class="btn-ghost inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+          </svg>
+          其他系统（GitHub）
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ / Help -->
+  <section class="py-24 px-6 border-t border-border">
+    <div class="container-narrow max-w-2xl">
+      <h2 class="text-2xl font-semibold tracking-tight mb-8 text-center">常见问题</h2>
+      
+      <div class="space-y-4">
+        <details class="group bg-card rounded-xl border border-border overflow-hidden">
+          <summary class="flex items-center justify-between p-5 cursor-pointer list-none hover:bg-muted/50 transition-colors">
+            <span class="font-medium text-sm">安装后如何获取我的 ID 和密码？</span>
+            <svg class="w-4 h-4 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-5 pb-5 text-sm text-muted-foreground leading-relaxed border-t border-border pt-3">
+            脚本运行完成后会自动显示您的设备 ID 和随机生成的密码。您也可以在 RustDesk 主界面左侧查看 ID，点击"密码"区域查看或修改连接密码。
+          </div>
+        </details>
+
+        <details class="group bg-card rounded-xl border border-border overflow-hidden">
+          <summary class="flex items-center justify-between p-5 cursor-pointer list-none hover:bg-muted/50 transition-colors">
+            <span class="font-medium text-sm">是否支持移动端？</span>
+            <svg class="w-4 h-4 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-5 pb-5 text-sm text-muted-foreground leading-relaxed border-t border-border pt-3">
+            支持。您可以在 App Store 或 Google Play 搜索 "RustDesk" 下载移动端应用，然后手动输入上述服务器配置信息即可连接。
+          </div>
+        </details>
+
+        <details class="group bg-card rounded-xl border border-border overflow-hidden">
+          <summary class="flex items-center justify-between p-5 cursor-pointer list-none hover:bg-muted/50 transition-colors">
+            <span class="font-medium text-sm">数据是否安全？</span>
+            <svg class="w-4 h-4 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </summary>
+          <div class="px-5 pb-5 text-sm text-muted-foreground leading-relaxed border-t border-border pt-3">
+            MoonPeak 使用 RustDesk 开源方案，采用端到端加密（TLS 1.3 + NaCl 加密），所有数据流经您自己的服务器，不经过任何第三方云服务。
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script is:inline>
+  let currentPlatform = 'windows';
+  let keyVisible = false;
+
+  function switchPlatform(platform) {
+    currentPlatform = platform;
+    
+    // Hide all code blocks
+    document.querySelectorAll('.code-block').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`code-${platform}`).classList.remove('hidden');
+    
+    // Update terminal label
+    const labels = {
+      windows: 'PowerShell',
+      macos: 'Terminal',
+      linux: 'Bash'
+    };
+    document.getElementById('terminal-label').textContent = labels[platform];
+    
+    // Reset tabs
+    document.querySelectorAll('.platform-tab').forEach(el => {
+      el.classList.remove('bg-background', 'shadow-sm', 'text-foreground');
+      el.classList.add('text-muted-foreground');
+    });
+    
+    // Activate current tab
+    const activeTab = document.getElementById(`tab-${platform}`);
+    activeTab.classList.remove('text-muted-foreground');
+    activeTab.classList.add('bg-background', 'shadow-sm', 'text-foreground');
+  }
+
+  function copyCurrentCode() {
+    const code = document.getElementById(`code-${currentPlatform}`).innerText;
+    copyText(code, 'copy-text');
+  }
+
+  function copyText(text, elementId = null) {
+    navigator.clipboard.writeText(text).then(() => {
+      if (elementId) {
+        const el = document.getElementById(elementId);
+        const original = el.textContent;
+        el.textContent = '已复制';
+        setTimeout(() => el.textContent = original, 2000);
+      }
+    });
+  }
+
+  function toggleKey() {
+    const keyValue = document.getElementById('key-value');
+    const keyText = document.getElementById('key-toggle-text');
+    const actualKey = 'AAAAC3NzaC1lZDI1NTE5AAAAIB...'; // 替换为实际 Key
+    
+    if (!keyVisible) {
+      keyValue.textContent = actualKey;
+      keyText.textContent = '隐藏';
+      keyVisible = true;
+    } else {
+      keyValue.textContent = '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••';
+      keyText.textContent = '显示';
+      keyVisible = false;
+    }
+  }
+</script>
+
+<style>
+  .code-block {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+  
+  /* 确保动画初始状态正确 */
+  .animate-fade-in,
+  .animate-fade-in-up {
+    opacity: 0;
+  }
+  
+  /* Details 动画 */
+  details[open] summary ~ * {
+    animation: sweep 0.3s ease-in-out;
+  }
+  
+  @keyframes sweep {
+    0%    {opacity: 0; transform: translateY(-10px)}
+    100%  {opacity: 1; transform: translateY(0)}
+  }
+</style>

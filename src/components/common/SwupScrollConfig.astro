@@ -1,0 +1,53 @@
+---
+// Swup 滚动配置组件
+// 配置 Swup Scroll Plugin 的 offset，解决锚点被导航栏遮挡的问题
+---
+
+<script is:inline>
+  (function() {
+    // 导航栏高度 64px + 额外间距 32px = 96px
+    const SCROLL_OFFSET = 96;
+    
+    function configureSwupScroll() {
+      // 检查 Swup 是否已初始化
+      if (!window.swup) {
+        return false;
+      }
+      
+      // 检查 plugins 是否存在（Swup 可能尚未完全初始化）
+      if (!window.swup.plugins || !Array.isArray(window.swup.plugins)) {
+        return false;
+      }
+      
+      // 获取 Scroll Plugin 实例
+      const scrollPlugin = window.swup.plugins.find(p => p && p.name === 'SwupScrollPlugin');
+      if (!scrollPlugin) {
+        return false;
+      }
+      
+      // 配置 offset
+      if (scrollPlugin.options) {
+        scrollPlugin.options.offset = SCROLL_OFFSET;
+      }
+      
+      return true;
+    }
+    
+    // 尝试配置，如果失败则重试
+    function tryConfigure() {
+      if (!configureSwupScroll()) {
+        setTimeout(tryConfigure, 100);
+      }
+    }
+    
+    // 页面加载完成后尝试配置
+    if (document.readyState === 'complete') {
+      tryConfigure();
+    } else {
+      window.addEventListener('load', tryConfigure);
+    }
+    
+    // 每次页面视图更新后重新配置（Swup 页面切换后）
+    document.addEventListener('astro:page-load', tryConfigure);
+  })();
+</script>
