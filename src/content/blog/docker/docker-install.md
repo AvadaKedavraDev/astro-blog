@@ -2,7 +2,7 @@
 title: "Docker 完全安装指南"
 pubDate: 2024-01-15
 description: "涵盖 CentOS、Ubuntu 常见系统的 Docker 安装教程，包含详细步骤和常见问题排查"
-tags: ["docker", "教程", "DevOps", "容器化"]
+tags: [ "docker", "教程", "DevOps", "容器化" ]
 #coverImage: "/images/docker-cover.jpg"
 readingTime: 15
 pinned: true
@@ -13,10 +13,10 @@ series:
   order: 1
 ---
 
-
 # Docker 安装指南
 
-Docker 是一个开源的应用容器引擎，让开发者可以打包他们的应用以及依赖包到一个可移植的容器中。本文将详细介绍在各种主流操作系统上安装 Docker 的方法。
+Docker 是一个开源的应用容器引擎，让开发者可以打包他们的应用以及依赖包到一个可移植的容器中。本文将详细介绍在各种主流操作系统上安装
+Docker 的方法。
 
 > [!info] 安装前须知
 > - **系统要求**：64 位操作系统，内核版本 3.10 以上
@@ -317,9 +317,9 @@ sudo rm -rf /var/lib/containerd
 
 本文详细介绍了在主流操作系统上安装 Docker 的方法，包括：
 
-| 系统 | 推荐安装方式 |
-|------|-------------|
-| CentOS 7/8 | yum + 阿里云镜像源 |
+| 系统            | 推荐安装方式       |
+|---------------|--------------|
+| CentOS 7/8    | yum + 阿里云镜像源 |
 | Ubuntu/Debian | apt + 阿里云镜像源 |
 
 安装完成后，建议配置镜像加速以获得更好的使用体验。如果在安装过程中遇到问题，可以参考本文的常见问题排查章节。

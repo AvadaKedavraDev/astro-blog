@@ -1452,3 +1452,6 @@
   cursor: not-allowed;
   pointer-events: none;
 }
+.btn-secondary {
+  @apply inline-flex items-center justify-center px-4 py-2 bg-muted text-foreground rounded-lg font-medium hover:bg-muted/80 transition-colors border border-border;
+}
