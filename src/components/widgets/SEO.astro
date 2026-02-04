@@ -6,7 +6,7 @@ interface Props {
   ogImage?: string;
 }
 
-const { title, description, canonicalUrl, ogImage = '/favicon.png' } = Astro.props;
+const { title, description, canonicalUrl, ogImage = '/favicon.svg' } = Astro.props;
 
 const siteName = "Moonpeak";
 const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;

@@ -1,7 +1,9 @@
 // @ts-check
 import {defineConfig} from 'astro/config';
 import expressiveCode from 'astro-expressive-code';
+// Tailwind CSS Vite 插件 - 用于处理样式
 import tailwindcss from '@tailwindcss/vite';
+// Expressive Code 的折叠代码块插件（这是 Expressive Code 插件，不是 Vite 插件！）
 import {pluginCollapsibleSections} from '@expressive-code/plugin-collapsible-sections'
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
@@ -10,6 +12,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import swup, {Theme} from '@swup/astro';
 import react from '@astrojs/react';
+import icon from 'astro-icon';
 
 // https://astro.build/config
 export default defineConfig({
@@ -30,7 +33,13 @@ export default defineConfig({
                 delay: 0,
                 easing: 'ease-in-out',
                 factor: 1
-            }]
+            }],
+
+            // @ts-ignore
+            animateHistoryBrowsing: false,
+            linkSelector: 'a[href]:not([data-no-swup]):not([href^="#"])',
+            // 启用全局实例，以便配置 Scroll Plugin
+            globalInstance: true,
         }),
         expressiveCode({
             themes: ['catppuccin-latte', 'dracula'], // 1. 关闭自动媒体查询，完全交给下面的手动选择器控制
@@ -58,5 +67,5 @@ export default defineConfig({
                 codeFontSize: '0.85rem',// 稍微调小字号
             },
 
-        }), react()],
+        }), react(), icon()],
 });

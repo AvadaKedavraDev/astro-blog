@@ -4,6 +4,7 @@ import ReadingProgress from "@components/ui/ReadingProgress.astro";
 import TableOfContents from "@components/common/TableOfContents.astro";
 import ArticleNavigation from "@components/article/ArticleNavigation.astro";
 import RelatedPostsByTag from "@components/article/RelatedPostsByTag.astro";
+import { Icon } from "astro-icon/components";
 
 import { getAdjacentPosts, getRelatedPostsByTags } from "@lib/post";
 import { type CollectionEntry } from "astro:content";
@@ -46,11 +47,9 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                 <!-- Back Link -->
                 <a 
                     href="/blog" 
-                    class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+                    class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4 group"
                 >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                    </svg>
+                    <Icon name="lucide:arrow-left" class="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
                     返回文章列表
                 </a>
                 
@@ -62,7 +61,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                             {tags.map(tag => (
                                 <a 
                                     href={`/tags/${tag}/`}
-                                    class="px-2.5 py-0.5 text-xs font-medium rounded-md bg-muted/50 text-muted-foreground hover:bg-foreground hover:text-background transition-colors"
+                                    class="tag-base"
                                 >
                                     {tag}
                                 </a>
@@ -84,14 +83,15 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                             <span class="font-medium text-foreground">{author}</span>
                         </div>
                         <span class="text-border">|</span>
-                        <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+                        <time datetime={pubDate.toISOString()} class="flex items-center gap-1">
+                            <Icon name="lucide:calendar" class="w-3.5 h-3.5" />
+                            {formattedDate}
+                        </time>
                         {readingTime && (
                             <>
                                 <span class="text-border">|</span>
                                 <span class="flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
+                                    <Icon name="lucide:clock" class="w-4 h-4" />
                                     {readingTime} 分钟
                                 </span>
                             </>
@@ -136,9 +136,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                                 {/* Card Header */}
                                 <div class="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
                                     <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                        </svg>
+                                        <Icon name="lucide:files" class="w-4 h-4 text-indigo-500" />
                                         <span class="text-sm font-semibold text-foreground">相关文章</span>
                                     </div>
                                     <button 
@@ -147,9 +145,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                                         aria-label="收起"
                                         title="收起侧边栏"
                                     >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                                        </svg>
+                                        <Icon name="lucide:chevron-left" class="w-4 h-4" />
                                     </button>
                                 </div>
                                 {/* Card Body */}
@@ -174,7 +170,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                                             {tags.map(tag => (
                                                 <a 
                                                     href={`/tags/${tag}/`}
-                                                    class="px-2 py-1 text-xs rounded-md bg-muted/50 text-muted-foreground hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400 transition-colors"
+                                                    class="tag-base hover:text-indigo-600 dark:hover:text-indigo-400"
                                                 >
                                                     {tag}
                                                 </a>
@@ -191,20 +187,18 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                     {relatedPosts.length > 0 && (
                         <button
                             id="expand-left-sidebar"
-                            class="hidden flex-col items-center gap-1 fixed left-0 top-1/2 -translate-y-1/2 z-40 px-2 py-3 rounded-r-lg bg-card border border-l-0 border-border/80 dark:border-border shadow-lg transition-all duration-300 hover:pl-3"
+                            class="hidden flex-col items-center gap-1 fixed left-0 top-1/2 -translate-y-1/2 z-40 px-2 py-3 rounded-r-lg card-base !rounded-l-none !border-l-0 transition-all duration-300 hover:pl-3"
                             aria-label="展开相关文章"
                             title="相关文章"
                         >
-                            <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                            </svg>
+                            <Icon name="lucide:files" class="w-4 h-4 text-muted-foreground" />
                             <span class="text-[10px] text-muted-foreground writing-vertical">相关文章</span>
                         </button>
                     )}
                     
                     {/* ========== 中间主内容 - 文章 Card ========== */}
                     <main class="flex-1 min-w-0">
-                        <article class="bg-background rounded-xl shadow-sm border border-border min-h-150">
+                        <article class="card-base min-h-150">
                             {/* 文章内容区 */}
                             <div class="p-6 md:p-8 lg:p-10">
                                 <div class="prose-custom max-w-none">
@@ -233,13 +227,11 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                         >
                             <div class="sticky top-20">
                                 {/* 目录 Card */}
-                                <div class="bg-background rounded-xl shadow-sm border border-border overflow-hidden">
+                                <div class="card-base overflow-hidden">
                                     {/* Card Header */}
                                     <div class="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
                                         <div class="flex items-center gap-2">
-                                            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
-                                            </svg>
+                                            <Icon name="lucide:list" class="w-4 h-4 text-emerald-500" />
                                             <span class="text-sm font-semibold text-foreground">目录</span>
                                         </div>
                                         <button 
@@ -248,9 +240,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                                             aria-label="收起"
                                             title="收起目录"
                                         >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                            </svg>
+                                            <Icon name="lucide:chevron-right" class="w-4 h-4" />
                                         </button>
                                     </div>
                                     {/* Card Body */}
@@ -260,26 +250,22 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                                 </div>
                                 
                                 {/* 可以添加更多 Card，比如：工具 */}
-                                <div class="mt-4 bg-background rounded-xl shadow-sm border border-border overflow-hidden">
+                                <div class="card-base overflow-hidden mt-4">
                                     <div class="px-4 py-3 border-b border-border bg-muted/30">
                                         <div class="flex items-center gap-2">
-                                            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                            </svg>
+                                            <Icon name="lucide:zap" class="w-4 h-4 text-amber-500" />
                                             <span class="text-sm font-semibold text-foreground">快捷操作</span>
                                         </div>
                                     </div>
                                     <div class="p-3 space-y-2">
                                         <button 
                                             onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
-                                            class="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                                            class="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors group"
                                         >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-                                            </svg>
+                                            <Icon name="lucide:arrow-up" class="w-4 h-4 transition-transform duration-300 group-hover:-translate-y-1" />
                                             回到顶部
                                         </button>
-                                        <a 
+                                        {/* <a 
                                             href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(Astro.url.href)}`}
                                             target="_blank"
                                             rel="noopener"
@@ -289,7 +275,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                                                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                                             </svg>
                                             分享文章
-                                        </a>
+                                        </a> */}
                                     </div>
                                 </div>
                             </div>
@@ -300,13 +286,11 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                     {hasTOC && (
                         <button
                             id="expand-right-sidebar"
-                            class="hidden flex-col items-center gap-1 fixed right-0 top-1/2 -translate-y-1/2 z-40 px-2 py-3 rounded-l-lg bg-card border border-r-0 border-border/80 dark:border-border shadow-lg transition-all duration-300 hover:pr-3"
+                            class="hidden flex-col items-center gap-1 fixed right-0 top-1/2 -translate-y-1/2 z-40 px-2 py-3 rounded-l-lg card-base !rounded-r-none !border-r-0 transition-all duration-300 hover:pr-3"
                             aria-label="展开目录"
                             title="目录"
                         >
-                            <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
-                            </svg>
+                            <Icon name="lucide:list" class="w-4 h-4 text-muted-foreground" />
                             <span class="text-[10px] text-muted-foreground writing-vertical">目录</span>
                         </button>
                     )}
@@ -318,11 +302,9 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
         {/* Mobile: 底部相关文章 */}
         {relatedPosts.length > 0 && (
             <div class="lg:hidden px-4 sm:px-6 pb-12">
-                <div class="bg-background rounded-xl shadow-sm border border-border p-4">
+                <div class="card-base p-4">
                     <div class="flex items-center gap-2 mb-4 pb-3 border-b border-border">
-                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
+                        <Icon name="lucide:files" class="w-4 h-4 text-indigo-500" />
                         <span class="text-sm font-semibold text-foreground">相关文章</span>
                     </div>
                     <div class="grid gap-3 sm:grid-cols-2">

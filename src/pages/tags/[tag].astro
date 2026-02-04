@@ -61,7 +61,7 @@ allPosts.forEach(post => {
         {taggedPosts.map((post) => (
           <article class="group">
             <a href={`/blog/${post.slug}/`} class="block">
-              <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 py-5 border-b border-border transition-colors hover:border-foreground/30">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 py-5 list-item-base">
                 <!-- Date -->
                 <time class="text-sm text-muted-foreground font-mono shrink-0 w-24">
                   {post.data.pubDate.toLocaleDateString('zh-CN', {

@@ -1,4 +1,6 @@
 ---
+import { Icon } from "astro-icon/components";
+
 interface Article {
   title: string;
   slug: string;
@@ -19,21 +21,22 @@ const { prevArticle, nextArticle } = Astro.props;
       {prevArticle ? (
         <a
           href={`/blog/${prevArticle.slug}/`}
-          class="group block p-6 rounded-2xl border border-border hover:border-foreground/30 hover:bg-muted/30 transition-all"
+          class="group block p-6 card-base !no-underline interactive-item"
         >
-          <div class="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
+          <div class="flex items-center gap-2 text-sm text-muted-foreground mb-2 group-hover:text-foreground transition-colors">
+            <Icon name="lucide:arrow-left" class="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
             上一篇
           </div>
-          <div class="font-medium text-foreground group-hover:text-muted-foreground transition-colors line-clamp-2">
+          <div class="font-medium text-foreground transition-colors line-clamp-2">
             {prevArticle.title}
           </div>
         </a>
       ) : (
-        <div class="hidden md:block p-6 rounded-2xl border border-dashed border-border">
-          <div class="text-sm text-muted-foreground">没有更多了</div>
+        <div class="hidden md:block p-6 rounded-2xl border border-dashed border-border/60 bg-muted/20">
+          <div class="text-sm text-muted-foreground flex items-center gap-2">
+            <Icon name="lucide:file-x" class="w-4 h-4" />
+            没有更多了
+          </div>
         </div>
       )}
     </div>
@@ -43,21 +46,22 @@ const { prevArticle, nextArticle } = Astro.props;
       {nextArticle ? (
         <a
           href={`/blog/${nextArticle.slug}/`}
-          class="group block p-6 rounded-2xl border border-border hover:border-foreground/30 hover:bg-muted/30 transition-all text-right"
+          class="group block p-6 card-base !no-underline interactive-item text-right"
         >
-          <div class="flex items-center justify-end gap-2 text-sm text-muted-foreground mb-2">
+          <div class="flex items-center justify-end gap-2 text-sm text-muted-foreground mb-2 group-hover:text-foreground transition-colors">
             下一篇
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-            </svg>
+            <Icon name="lucide:arrow-right" class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
           </div>
-          <div class="font-medium text-foreground group-hover:text-muted-foreground transition-colors line-clamp-2">
+          <div class="font-medium text-foreground transition-colors line-clamp-2">
             {nextArticle.title}
           </div>
         </a>
       ) : (
         <div class="hidden md:block p-6 rounded-2xl border border-dashed border-border text-right">
-          <div class="text-sm text-muted-foreground">没有更多了</div>
+          <div class="text-sm text-muted-foreground flex items-center justify-end gap-2">
+            没有更多了
+            <Icon name="lucide:file-x" class="w-4 h-4" />
+          </div>
         </div>
       )}
     </div>

@@ -1,101 +1,308 @@
 ---
-// 打字机效果组件
 interface Props {
-  text: string;
-  class?: string;
-  speed?: number;
-  delay?: number;
+    text: string;
+    class?: string;
+    speed?: number;
+    delay?: number;
 }
 
-const { text, class: className = '', speed = 100, delay = 500 } = Astro.props;
+const {text, class: className = '', speed = 100, delay = 500} = Astro.props;
+const uid = Math.random().toString(36).substring(2, 11);
 ---
 
-<span class={`type-writer ${className}`} data-text={text} data-speed={speed} data-delay={delay}>
-  <span class="type-text"></span><span class="cursor">|</span>
+<span
+        id={`tw-${uid}`}
+        class={`type-writer ${className}`}
+        data-text={text}
+        data-speed={speed}
+        data-delay={delay}
+        data-uid={uid}
+>
+  <span class="type-text"></span>
+  <span class="cursor">|</span>
 </span>
 
 <style>
-  .type-writer {
-    display: inline;
-  }
-  
-  .cursor {
-    animation: blink 1s step-end infinite;
-  }
-  
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-  }
-  
-  .cursor.typing {
-    animation: none;
-    opacity: 1;
-  }
-  
-  .cursor.finished {
-    animation: blink 1.5s step-end infinite;
-  }
+    .type-writer {
+        display: inline;
+    }
+
+    .cursor {
+        animation: blink 1s step-end infinite;
+        display: inline-block;
+    }
+
+    @keyframes blink {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0;
+        }
+    }
+
+    .cursor.typing {
+        animation: none;
+        opacity: 1;
+    }
+
+    .cursor.finished {
+        animation: blink 1.5s step-end infinite;
+    }
 </style>
 
 <script>
-  class TypeWriter {
-    element: HTMLElement;
-    text: string;
-    speed: number;
-    delay: number;
-    textElement: HTMLElement;
-    cursorElement: HTMLElement;
-    
-    constructor(element: HTMLElement) {
-      this.element = element;
-      this.text = element.dataset.text || '';
-      this.speed = parseInt(element.dataset.speed || '100');
-      this.delay = parseInt(element.dataset.delay || '500');
-      this.textElement = element.querySelector('.type-text') as HTMLElement;
-      this.cursorElement = element.querySelector('.cursor') as HTMLElement;
-      
-      this.init();
+    // 先定义 TypeWriter 类，再声明全局类型
+    class TypeWriter {
+        element: HTMLElement;
+        uid: string = '';
+        text: string = '';
+        speed: number = 100;
+        delay: number = 500;
+        textEl: HTMLElement | null = null;
+        cursorEl: HTMLElement | null = null;
+        timeouts: number[] = [];
+        dead: boolean = false;
+
+        constructor(element: HTMLElement) {
+            this.element = element;
+            this.uid = element.dataset.uid || '';
+            this.text = element.dataset.text || '';
+            this.speed = parseInt(element.dataset.speed || '100');
+            this.delay = parseInt(element.dataset.delay || '500');
+            this.textEl = element.querySelector('.type-text');
+            this.cursorEl = element.querySelector('.cursor');
+
+            // 防止重复初始化
+            if (element.dataset.initialized === 'true') {
+                return;
+            }
+            element.dataset.initialized = 'true';
+
+            // 清理同 ID 旧实例
+            if (window.__TW_GLOBAL?.instances.has(this.uid)) {
+                window.__TW_GLOBAL.instances.get(this.uid)?.kill();
+            }
+
+            window.__TW_GLOBAL?.instances.set(this.uid, this);
+            this.start();
+        }
+
+        async start(): Promise<void> {
+            await this.wait(this.delay + 300);
+
+            if (this.dead) return;
+
+            this.cursorEl?.classList.add('typing');
+
+            for (let i = 0; i < this.text.length; i++) {
+                if (this.dead) break;
+
+                if (this.textEl) {
+                    this.textEl.textContent += this.text.charAt(i);
+                }
+                await this.wait(this.speed);
+            }
+
+            if (!this.dead) {
+                this.cursorEl?.classList.remove('typing');
+                this.cursorEl?.classList.add('finished');
+            }
+        }
+
+        wait(ms: number): Promise<void> {
+            return new Promise((resolve) => {
+                const t = window.setTimeout(() => {
+                    resolve();
+                }, ms);
+                this.timeouts.push(t);
+                window.__TW_GLOBAL?.timeouts.add(t);
+            });
+        }
+
+        kill(): void {
+            this.dead = true;
+            this.timeouts.forEach(t => {
+                clearTimeout(t);
+                window.__TW_GLOBAL?.timeouts.delete(t);
+            });
+            this.timeouts = [];
+
+            if (this.textEl) {
+                this.textEl.textContent = '';
+                this.textEl.innerHTML = '';
+            }
+            if (this.cursorEl) {
+                this.cursorEl.className = 'cursor';
+            }
+
+            window.__TW_GLOBAL?.instances.delete(this.uid);
+        }
     }
-    
-    async init() {
-      await this.wait(this.delay);
-      this.cursorElement.classList.add('typing');
-      await this.type();
-      this.cursorElement.classList.remove('typing');
-      this.cursorElement.classList.add('finished');
+
+    // 全局类型声明放在类定义之后
+    declare global {
+        interface Window {
+            __TW_GLOBAL?: {
+                instances: Map<string, InstanceType<typeof TypeWriter>>;
+                timeouts: Set<number>;
+                observer: MutationObserver | null;
+                isCleaning: boolean;
+                reinitTimer?: number;
+            };
+            fixTypewriter?: () => void;
+            swup?: {
+                hooks?: {
+                    on: (event: string, callback: () => void) => void;
+                    off: (event: string, callback: () => void) => void;
+                };
+                options?: {
+                    cache?: boolean;
+                };
+            };
+        }
     }
-    
-    type(): Promise<void> {
-      return new Promise((resolve) => {
-        let i = 0;
-        const typeChar = () => {
-          if (i < this.text.length) {
-            this.textElement.textContent += this.text.charAt(i);
-            i++;
-            setTimeout(typeChar, this.speed);
-          } else {
-            resolve();
-          }
-        };
-        typeChar();
-      });
-    }
-    
-    wait(ms: number): Promise<void> {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-  }
-  
-  // 初始化所有打字机
-  document.querySelectorAll('.type-writer').forEach(el => {
-    new TypeWriter(el as HTMLElement);
-  });
-  
-  // 兼容 Astro View Transitions
-  document.addEventListener('astro:page-load', () => {
-    document.querySelectorAll('.type-writer').forEach(el => {
-      new TypeWriter(el as HTMLElement);
-    });
-  });
+
+    (function () {
+        'use strict';
+
+        // 初始化全局状态
+        if (!window.__TW_GLOBAL) {
+            window.__TW_GLOBAL = {
+                instances: new Map(),
+                timeouts: new Set(),
+                observer: null,
+                isCleaning: false
+            };
+        }
+
+        const G = window.__TW_GLOBAL;
+
+        // 强制清理所有打字机
+        function nukeAllTypewriters(): void {
+            if (G.isCleaning) return;
+            G.isCleaning = true;
+
+            // 销毁所有实例
+            G.instances.forEach((inst) => {
+                try {
+                    inst.kill();
+                } catch (e) {
+                    // 忽略销毁错误
+                }
+            });
+            G.instances.clear();
+
+            // 清除所有定时器
+            G.timeouts.forEach(id => clearTimeout(id));
+            G.timeouts.clear();
+
+            // 重置所有 DOM 元素
+            document.querySelectorAll('.type-writer').forEach(el => {
+                const textEl = el.querySelector('.type-text');
+                const cursorEl = el.querySelector('.cursor');
+                if (textEl) {
+                    textEl.textContent = '';
+                    (textEl as HTMLElement).innerHTML = '';
+                }
+                if (cursorEl) {
+                    cursorEl.className = 'cursor';
+                    (cursorEl as HTMLElement).style.cssText = '';
+                }
+                el.removeAttribute('data-initialized');
+            });
+
+            // 兜底清理
+            for (let i = 1; i < 9999; i++) {
+                clearTimeout(i);
+            }
+
+            window.setTimeout(() => {
+                G.isCleaning = false;
+            }, 50);
+        }
+
+        // 初始化函数
+        function init(): void {
+            nukeAllTypewriters();
+
+            const t = window.setTimeout(() => {
+                document.querySelectorAll('.type-writer:not([data-initialized])').forEach(el => {
+                    new TypeWriter(el as HTMLElement);
+                });
+            }, 100);
+            G.timeouts.add(t);
+        }
+
+        // 绑定 Swup 事件
+        function bindSwupHooks(): boolean {
+            if (window.swup && window.swup.hooks) {
+                window.swup.hooks.off('content:replace', nukeAllTypewriters);
+                window.swup.hooks.off('page:view', init);
+                window.swup.hooks.on('content:replace', nukeAllTypewriters);
+                window.swup.hooks.on('page:view', init);
+                return true;
+            }
+            return false;
+        }
+
+        // Swup 标准事件（兼容旧版）
+        document.addEventListener('swup:contentReplaced', init);
+        document.addEventListener('swup:beforeContentReplace', nukeAllTypewriters);
+
+        // 延迟绑定（如果 Swup 还没加载）
+        if (!bindSwupHooks()) {
+            const checkSwup = window.setInterval(() => {
+                if (bindSwupHooks()) {
+                    clearInterval(checkSwup);
+                }
+            }, 100);
+            G.timeouts.add(checkSwup);
+
+            // 10秒后停止检查
+            window.setTimeout(() => {
+                clearInterval(checkSwup);
+            }, 10000);
+        }
+
+        // MutationObserver 监视 DOM 变化
+        if (!G.observer) {
+            G.observer = new MutationObserver((mutations) => {
+                let shouldReinit = false;
+
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) {
+                            const el = node as HTMLElement;
+                            if (el.classList?.contains('type-writer') ||
+                                el.querySelector?.('.type-writer')) {
+                                shouldReinit = true;
+                            }
+                        }
+                    });
+                });
+
+                if (shouldReinit && !G.isCleaning) {
+                    clearTimeout(G.reinitTimer);
+                    G.reinitTimer = window.setTimeout(init, 50);
+                }
+            });
+
+            G.observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        // 首次加载
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // 暴露全局清理函数
+        window.fixTypewriter = nukeAllTypewriters;
+
+    })();
 </script>

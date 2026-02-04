@@ -108,11 +108,11 @@
 
 /* ===== 字体加载优化 ===== */
 /* 使用 font-display: swap 避免字体加载阻塞渲染 */
-@font-face {
+/* @font-face {
   font-family: 'LXGWWenKai';
   font-display: swap;
   src: local('LXGWWenKai'), local('LXGW WenKai');
-}
+} */
 
 /* ===== 基础样式 ===== */
 @layer base {
@@ -122,16 +122,17 @@
 
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 8rem!important; /* 固定导航栏高度 + 留白 */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-family: var(--font-ui);
   }
   
-  /* 文章正文字体优化加载 */
+  /* 文章正文字体 */
   .prose-custom {
     font-family: var(--font-body);
-    font-display: swap;
+     font-display: swap;
   }
 
   body {
@@ -199,6 +200,7 @@
     color: var(--foreground);
     padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--border);
+    scroll-margin-top: 8rem;
   }
 
   .prose-custom :where(h3) {
@@ -209,6 +211,7 @@
     font-size: 1.125rem;
     line-height: 1.4;
     color: var(--foreground);
+    scroll-margin-top: 8rem;
   }
 
   .prose-custom :where(h4) {
@@ -440,6 +443,12 @@
     will-change: transform;
     transform: translateZ(0);
   }
+  
+  /* 暗黑模式：玻璃态边框更明显 */
+  .dark .glass {
+    background-color: color-mix(in oklch, var(--background) 85%, transparent);
+    border-bottom: 1px solid color-mix(in oklch, var(--border) 60%, #333333);
+  }
 }
 
 /* Expressive Code 样式 */
@@ -553,8 +562,9 @@
 
 .dark .shadow-card {
   box-shadow:
-          0 1px 3px 0 rgba(0, 0, 0, 0.2),
-          0 1px 2px 0 rgba(0, 0, 0, 0.15);
+          0 2px 4px 0 rgba(0, 0, 0, 0.4),
+          0 1px 2px 0 rgba(0, 0, 0, 0.25),
+          0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 
@@ -649,6 +659,10 @@
 /* Dark mode adjustments */
 .dark .callout {
   background: var(--card);
+  border-color: color-mix(in oklch, var(--border) 75%, #3a3a3a);
+  box-shadow: 
+    0 1px 3px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
 }
 
 /* ===== KaTeX Math Styles ===== */
@@ -693,4 +707,420 @@
 .katex-display::-webkit-scrollbar-thumb {
   background: var(--muted-foreground);
   border-radius: 2px;
+}
+
+/* ===== Icon Animations ===== */
+/* 图标悬浮缩放 */
+.icon-hover-scale {
+  transition: transform 0.3s ease;
+}
+.icon-hover-scale:hover {
+  transform: scale(1.1);
+}
+
+/* 图标悬浮弹跳 */
+.icon-hover-bounce {
+  transition: transform 0.3s ease;
+}
+.icon-hover-bounce:hover {
+  animation: icon-bounce 0.6s ease;
+}
+
+@keyframes icon-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* 图标旋转 */
+.icon-hover-rotate {
+  transition: transform 0.5s ease;
+}
+.icon-hover-rotate:hover {
+  transform: rotate(15deg);
+}
+
+/* 图标摇摆 */
+.icon-hover-wiggle {
+  transition: transform 0.3s ease;
+}
+.icon-hover-wiggle:hover {
+  animation: icon-wiggle 0.5s ease;
+}
+
+@keyframes icon-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+
+/* 图标脉冲 */
+.icon-hover-pulse {
+  transition: transform 0.3s ease;
+}
+.icon-hover-pulse:hover {
+  animation: icon-pulse 1s ease infinite;
+}
+
+@keyframes icon-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+/* 图标滑动 */
+.icon-hover-slide-right {
+  transition: transform 0.3s ease;
+}
+.icon-hover-slide-right:hover {
+  transform: translateX(4px);
+}
+
+.icon-hover-slide-left {
+  transition: transform 0.3s ease;
+}
+.icon-hover-slide-left:hover {
+  transform: translateX(-4px);
+}
+
+.icon-hover-slide-up {
+  transition: transform 0.3s ease;
+}
+.icon-hover-slide-up:hover {
+  transform: translateY(-4px);
+}
+
+/* ===== 统一设计系统 - 边框与阴影 ===== */
+
+/* 
+ * 暗黑模式边框策略：
+ * 浅色模式：边框与背景对比度低（柔和）
+ * 暗黑模式：边框需要更明显，使用比 --border 变量稍亮的颜色
+ */
+
+/* 极淡阴影 - 用于卡片 */
+.shadow-subtle {
+  box-shadow: 
+    0 1px 2px 0 rgba(0, 0, 0, 0.04),
+    0 1px 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+.dark .shadow-subtle {
+  /* 暗黑模式下使用带蓝色/紫色调的阴影，与深色背景形成对比 */
+  box-shadow: 
+    0 1px 3px 0 rgba(0, 0, 0, 0.4),
+    0 1px 2px 0 rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* 标签统一样式 */
+.tag-base {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  border-radius: 0.375rem;
+  /* 浅色模式：使用主题边框色 */
+  border: 1px solid var(--border);
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  transition: all 0.2s ease;
+}
+
+.tag-base:hover {
+  border-color: color-mix(in oklch, var(--foreground) 25%, var(--border));
+  background-color: var(--card);
+  color: var(--foreground);
+}
+
+/* 暗黑模式下标签边框更明显 */
+.dark .tag-base {
+  border-color: color-mix(in oklch, var(--border) 70%, #525252);
+  background-color: color-mix(in oklch, var(--muted) 90%, #1a1a1a);
+}
+
+.dark .tag-base:hover {
+  border-color: color-mix(in oklch, var(--muted-foreground) 50%, var(--border));
+  background-color: var(--card);
+}
+
+/* 卡片统一样式 */
+.card-base {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: 
+    0 1px 2px 0 rgba(0, 0, 0, 0.04),
+    0 1px 1px 0 rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.card-base:hover {
+  border-color: color-mix(in oklch, var(--foreground) 12%, var(--border));
+  box-shadow: 
+    0 2px 4px 0 rgba(0, 0, 0, 0.05),
+    0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+/* 暗黑模式：卡片边框更明显，带轻微发光效果 */
+.dark .card-base {
+  border-color: color-mix(in oklch, var(--border) 80%, #404040);
+  box-shadow: 
+    0 2px 4px 0 rgba(0, 0, 0, 0.4),
+    0 1px 2px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+}
+
+.dark .card-base:hover {
+  border-color: color-mix(in oklch, var(--muted-foreground) 40%, var(--border));
+  box-shadow: 
+    0 4px 8px 0 rgba(0, 0, 0, 0.5),
+    0 2px 4px 0 rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+/* 列表项统一样式 */
+.list-item-base {
+  border-bottom: 1px solid var(--border);
+  transition: border-color 0.2s ease;
+}
+
+.list-item-base:hover {
+  border-color: color-mix(in oklch, var(--foreground) 15%, var(--border));
+}
+
+/* 暗黑模式：列表项边框更明显 */
+.dark .list-item-base {
+  border-color: color-mix(in oklch, var(--border) 75%, #3a3a3a);
+}
+
+.dark .list-item-base:hover {
+  border-color: color-mix(in oklch, var(--muted-foreground) 35%, var(--border));
+}
+
+/* 按钮/链接统一样式 */
+.link-hover-border {
+  position: relative;
+}
+
+.link-hover-border::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: currentColor;
+  transition: width 0.2s ease;
+}
+
+.link-hover-border:hover::after {
+  width: 100%;
+}
+
+/* 分隔线统一样式 */
+.divider-subtle {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--border) 20%,
+    var(--border) 80%,
+    transparent
+  );
+}
+
+/* 暗黑模式：分隔线更明显 */
+.dark .divider-subtle {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklch, var(--border) 70%, #444444) 20%,
+    color-mix(in oklch, var(--border) 70%, #444444) 80%,
+    transparent
+  );
+}
+
+/* 输入框统一样式 */
+.input-base {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  color: var(--foreground);
+  transition: all 0.2s ease;
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: color-mix(in oklch, var(--foreground) 30%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--foreground) 5%, transparent);
+}
+
+.input-base::placeholder {
+  color: var(--muted-foreground);
+}
+
+/* 暗黑模式：输入框边框更明显 */
+.dark .input-base {
+  border-color: color-mix(in oklch, var(--border) 75%, #404040);
+  background-color: color-mix(in oklch, var(--card) 95%, #000000);
+}
+
+.dark .input-base:focus {
+  border-color: color-mix(in oklch, var(--muted-foreground) 50%, var(--border));
+  box-shadow: 
+    0 0 0 3px color-mix(in oklch, var(--foreground) 8%, transparent),
+    0 0 0 1px color-mix(in oklch, var(--muted-foreground) 20%, var(--border));
+}
+
+/* ===== 人机交互设计系统 - 悬停效果规范 ===== */
+
+/*
+ * 设计原则：
+ * 1. 功能性元素悬停时应该高亮，而不是变暗
+ * 2. 链接悬停时应该有明确的视觉反馈
+ * 3. 背景色变化应该微妙但可感知
+ * 4. 保持足够的对比度
+ */
+
+/* 交互式文字链接 - 从 muted 到 foreground */
+.interactive-text {
+  color: var(--muted-foreground);
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.interactive-text:hover {
+  color: var(--foreground);
+}
+
+/* 卡片内链接 - 保持前景色高亮 */
+.interactive-link {
+  color: var(--foreground);
+  transition: all 0.2s ease;
+}
+
+.interactive-link:hover {
+  color: var(--foreground);
+  opacity: 0.8;
+}
+
+/* 列表项悬停 - 背景高亮 */
+.interactive-item {
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.interactive-item:hover {
+  background-color: var(--muted);
+}
+
+.dark .interactive-item:hover {
+  background-color: color-mix(in oklch, var(--muted) 80%, #ffffff 5%);
+}
+
+/* 按钮/可点击元素 - 清晰的悬停状态 */
+.interactive-btn {
+  transition: all 0.2s ease;
+}
+
+.interactive-btn:hover {
+  background-color: var(--muted);
+  transform: translateY(-1px);
+}
+
+.interactive-btn:active {
+  transform: translateY(0);
+}
+
+/* 导航链接 - 高亮效果 */
+.nav-link-interactive {
+  color: var(--muted-foreground);
+  transition: all 0.2s ease;
+}
+
+.nav-link-interactive:hover {
+  color: var(--foreground);
+  background-color: var(--muted);
+}
+
+.dark .nav-link-interactive:hover {
+  background-color: color-mix(in oklch, var(--muted) 70%, #ffffff 8%);
+}
+
+/* 文章标题链接 - 悬停时高亮或添加下划线 */
+.article-title-link {
+  color: var(--foreground);
+  transition: all 0.2s ease;
+}
+
+.article-title-link:hover {
+  color: var(--foreground);
+  opacity: 0.85;
+}
+
+/* 标签链接 - 悬停时反转颜色 */
+.tag-interactive {
+  transition: all 0.2s ease;
+}
+
+.tag-interactive:hover {
+  background-color: var(--foreground);
+  color: var(--background);
+  border-color: var(--foreground);
+}
+
+/* 分页按钮 - 清晰的悬停反馈 */
+.pagination-btn {
+  color: var(--muted-foreground);
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover {
+  color: var(--foreground);
+  background-color: var(--muted);
+}
+
+.pagination-btn.active {
+  color: var(--foreground);
+  background-color: var(--muted);
+  font-weight: 500;
+}
+
+/* 侧边栏切换按钮 - 悬停高亮 */
+.sidebar-toggle {
+  color: var(--muted-foreground);
+  transition: all 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+  color: var(--foreground);
+  background-color: var(--muted);
+}
+
+/* 快捷操作按钮 - 悬停高亮 */
+.action-btn {
+  color: var(--muted-foreground);
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  color: var(--foreground);
+  background-color: color-mix(in oklch, var(--muted) 80%, transparent);
+}
+
+.dark .action-btn:hover {
+  background-color: color-mix(in oklch, var(--muted) 70%, #ffffff 5%);
+}
+
+/* 焦点状态 - 键盘导航 */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--foreground);
+}
+
+/* 禁用状态 */
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }

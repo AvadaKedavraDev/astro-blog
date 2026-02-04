@@ -1,4 +1,6 @@
 ---
+import { Icon } from "astro-icon/components";
+
 interface Props {
   size?: "sm" | "md" | "lg";
   variant?: "icon" | "button";
@@ -23,20 +25,22 @@ const iconSizes = {
   id="theme-toggle"
   class:list={[
     sizeClasses[size],
-    "rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all",
+    "rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all group",
     variant === 'button' && 'px-4 gap-2'
   ]}
   aria-label="切换主题"
 >
   {/* Sun Icon - 在暗黑模式下显示 */}
-  <svg class:list={["sun-icon", iconSizes[size], "hidden dark:block"]} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-  </svg>
+  <Icon 
+    name="lucide:sun" 
+    class:list={["sun-icon", iconSizes[size], "hidden dark:block transition-transform duration-500 group-hover:rotate-45"]} 
+  />
   
   {/* Moon Icon - 在浅色模式下显示 */}
-  <svg class:list={["moon-icon", iconSizes[size], "block dark:hidden"]} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-  </svg>
+  <Icon 
+    name="lucide:moon" 
+    class:list={["moon-icon", iconSizes[size], "block dark:hidden transition-transform duration-500 group-hover:-rotate-12"]} 
+  />
   
   {variant === "button" && (
     <span class="text-sm font-medium">

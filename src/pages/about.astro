@@ -36,7 +36,7 @@ import BaseLayout from "@layouts/BaseLayout.astro";
           正在做
         </h2>
         <div class="space-y-4">
-          <div class="p-4 rounded-xl bg-card border border-border">
+          <div class="card-base p-4">
             <div class="flex items-start gap-3">
               <span class="text-2xl">📝</span>
               <div>
@@ -45,7 +45,7 @@ import BaseLayout from "@layouts/BaseLayout.astro";
               </div>
             </div>
           </div>
-          <div class="p-4 rounded-xl bg-card border border-border">
+          <div class="card-base p-4">
             <div class="flex items-start gap-3">
               <span class="text-2xl">🌱</span>
               <div>
@@ -66,7 +66,7 @@ import BaseLayout from "@layouts/BaseLayout.astro";
         
         <div class="grid gap-6 sm:grid-cols-2">
           <!-- Frontend -->
-          <div class="p-5 rounded-xl bg-card border border-border">
+          <div class="card-base p-5">
             <h3 class="font-medium text-foreground mb-4 flex items-center gap-2">
               <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -74,16 +74,16 @@ import BaseLayout from "@layouts/BaseLayout.astro";
               前端
             </h3>
             <div class="flex flex-wrap gap-2">
-              <span class="px-2.5 py-1 text-xs rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">React 18</span>
-              <span class="px-2.5 py-1 text-xs rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">TypeScript</span>
-              <span class="px-2.5 py-1 text-xs rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">Astro</span>
-              <span class="px-2.5 py-1 text-xs rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">Tailwind CSS</span>
-              <span class="px-2.5 py-1 text-xs rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">Next.js</span>
+              <span class="tag-base bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">React 18</span>
+              <span class="tag-base bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">TypeScript</span>
+              <span class="tag-base bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">Astro</span>
+              <span class="tag-base bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">Tailwind CSS</span>
+              <span class="tag-base bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">Next.js</span>
             </div>
           </div>
           
           <!-- Backend -->
-          <div class="p-5 rounded-xl bg-card border border-border">
+          <div class="card-base p-5">
             <h3 class="font-medium text-foreground mb-4 flex items-center gap-2">
               <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
@@ -91,11 +91,11 @@ import BaseLayout from "@layouts/BaseLayout.astro";
               后端 & Java 生态
             </h3>
             <div class="flex flex-wrap gap-2">
-              <span class="px-2.5 py-1 text-xs rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">Spring Boot</span>
-              <span class="px-2.5 py-1 text-xs rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">Java</span>
-              <span class="px-2.5 py-1 text-xs rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">MySQL</span>
-              <span class="px-2.5 py-1 text-xs rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">Redis</span>
-              <span class="px-2.5 py-1 text-xs rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">Netty</span>
+              <span class="tag-base bg-emerald-50/50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">Spring Boot</span>
+              <span class="tag-base bg-emerald-50/50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">Java</span>
+              <span class="tag-base bg-emerald-50/50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">MySQL</span>
+              <span class="tag-base bg-emerald-50/50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">Redis</span>
+              <span class="tag-base bg-emerald-50/50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">Netty</span>
             </div>
           </div>
         </div>
@@ -110,7 +110,7 @@ import BaseLayout from "@layouts/BaseLayout.astro";
         <div class="flex flex-wrap gap-4">
           <a 
             href="mailto:moonpeak1999@gmail.com" 
-            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:border-foreground/30 transition-colors"
+            class="card-base flex items-center gap-2 px-4 py-2 !no-underline"
           >
             <svg class="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -121,7 +121,7 @@ import BaseLayout from "@layouts/BaseLayout.astro";
             href="https://github.com/AvadaKedavraDev" 
             target="_blank"
             rel="noopener"
-            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:border-foreground/30 transition-colors"
+            class="card-base flex items-center gap-2 px-4 py-2 !no-underline"
           >
             <svg class="w-5 h-5 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24">
               <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>

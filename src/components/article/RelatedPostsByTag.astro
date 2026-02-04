@@ -26,15 +26,15 @@ function getCommonTags(post: CollectionEntry<'blog'>): string[] {
             return (
                 <a
                     href={`/blog/${post.slug}/`}
-                    class="group block py-2 px-2 -mx-2 rounded-lg transition-colors hover:bg-muted"
+                    class="group block py-2 px-2 -mx-2 rounded-lg transition-all interactive-item"
                 >
-                    <div class="text-sm text-foreground group-hover:text-muted-foreground transition-colors line-clamp-2 leading-snug">
+                    <div class="text-sm text-foreground transition-colors line-clamp-2 leading-snug">
                         {post.data.title}
                     </div>
                     {commonTags.length > 0 && (
                         <div class="flex flex-wrap gap-1 mt-1.5">
                             {commonTags.slice(0, 2).map(tag => (
-                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-muted/70 text-muted-foreground border border-border/70">
                                     {tag}
                                 </span>
                             ))}

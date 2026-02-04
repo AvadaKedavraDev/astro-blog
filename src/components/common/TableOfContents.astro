@@ -41,6 +41,8 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
       
       if (headings.length === 0) return;
       
+      // 点击事件由 Swup 处理滚动，配置在 SwupScrollConfig 组件中
+      
       const visibleHeadings = new Map();
       
       // 使用 IntersectionObserver 优化性能

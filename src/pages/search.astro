@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
+import { Icon } from "astro-icon/components";
 
 // 开发环境：获取文章列表用于简单搜索
 const posts = await getCollection("blog");
@@ -14,6 +15,9 @@ const sortedPosts = posts.sort(
     <div class="container-narrow">
       <!-- Header -->
       <header class="mb-12 text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-950/50 mb-4">
+          <Icon name="lucide:search" class="w-8 h-8 text-indigo-500" />
+        </div>
         <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2">
           搜索
         </h1>
@@ -29,22 +33,18 @@ const sortedPosts = posts.sort(
             type="text"
             id="search-input"
             placeholder="搜索文章..."
-            class="w-full px-5 py-4 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-foreground/30 focus:ring-2 focus:ring-foreground/5"
+            class="input-base w-full"
             autocomplete="off"
           />
           <div class="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
+            <Icon name="lucide:search" class="w-5 h-5" />
           </div>
         </div>
         
         <!-- Dev Mode Notice -->
         <div id="dev-notice" class="hidden mt-4 p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-sm text-amber-800 dark:text-amber-200">
           <p class="flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+            <Icon name="lucide:alert-circle" class="w-4 h-4" />
             开发模式：仅支持标题搜索。完整搜索请运行 <code class="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/50 font-mono text-xs">npm run build</code> 后预览
           </p>
         </div>
@@ -60,7 +60,7 @@ const sortedPosts = posts.sort(
           {sortedPosts.map((post) => (
             <article class="search-item group" data-title={post.data.title.toLowerCase()} data-description={(post.data.description || '').toLowerCase()}>
               <a href={`/blog/${post.slug}/`} class="block">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 py-5 border-b border-border transition-colors hover:border-foreground/30">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 py-5 list-item-base">
                   <time class="text-sm text-muted-foreground font-mono shrink-0 w-24">
                     {post.data.pubDate.toLocaleDateString('zh-CN', {
                       year: 'numeric',
@@ -95,17 +95,20 @@ const sortedPosts = posts.sort(
         
         <!-- Empty State -->
         <div id="empty-state" class="hidden text-center py-12">
+          <Icon name="lucide:search" class="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
           <p class="text-muted-foreground">输入关键词开始搜索</p>
         </div>
         
         <!-- No Results -->
         <div id="no-results" class="hidden text-center py-12">
+          <Icon name="lucide:file-x" class="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
           <p class="text-muted-foreground">未找到相关结果</p>
         </div>
       </div>
       
       <!-- Tips -->
-      <div class="text-center text-sm text-muted-foreground mt-8">
+      <div class="text-center text-sm text-muted-foreground mt-8 flex items-center justify-center gap-2">
+        <Icon name="lucide:info" class="w-4 h-4" />
         <p>支持中文内容搜索</p>
       </div>
     </div>
@@ -135,7 +138,8 @@ const sortedPosts = posts.sort(
     padding: 0.875rem 1rem;
     font-size: 1rem;
     color: var(--foreground);
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
   }
   
   .pagefind-ui .pagefind-ui__search-input::placeholder {
@@ -144,7 +148,8 @@ const sortedPosts = posts.sort(
   
   .pagefind-ui .pagefind-ui__search-input:focus {
     outline: none;
-    border-color: var(--foreground);
+    border-color: color-mix(in oklch, var(--foreground) 30%, var(--border));
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--foreground) 5%, transparent);
   }
   
   .pagefind-ui .pagefind-ui__search-clear {
@@ -167,11 +172,13 @@ const sortedPosts = posts.sort(
     padding: 1.25rem;
     margin-bottom: 0.75rem;
     background: var(--card);
-    transition: border-color 0.2s;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
   }
   
   .pagefind-ui .pagefind-ui__result:hover {
-    border-color: var(--foreground);
+    border-color: color-mix(in oklch, var(--foreground) 12%, var(--border));
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
   }
   
   .pagefind-ui .pagefind-ui__result-title {

@@ -84,7 +84,7 @@ const posts = (await getCollection("blog"))
             style={`animation-delay: ${index * 0.1}s`}
           >
             <a href={`/blog/${post.slug}/`} class="block">
-              <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 py-5 border-b border-border transition-colors hover:border-foreground/20">
+              <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 py-5 list-item-base">
                 <!-- Date -->
                 <time class="text-sm text-muted-foreground font-mono shrink-0 w-20">
                   {post.data.pubDate.toLocaleDateString('zh-CN', { 
@@ -95,7 +95,7 @@ const posts = (await getCollection("blog"))
                 
                 <!-- Content -->
                 <div class="flex-1 min-w-0">
-                  <h3 class="text-base md:text-lg font-medium text-foreground group-hover:text-muted-foreground transition-colors truncate">
+                  <h3 class="text-base md:text-lg font-medium text-foreground transition-colors truncate group-hover:opacity-80">
                     {post.data.title}
                   </h3>
                   {post.data.description && (
