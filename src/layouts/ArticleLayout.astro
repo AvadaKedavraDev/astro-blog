@@ -141,7 +141,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                                     </div>
                                     <button 
                                         id="toggle-left-sidebar"
-                                        class="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                        class="p-1 rounded sidebar-toggle"
                                         aria-label="收起"
                                         title="收起侧边栏"
                                     >
@@ -187,7 +187,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                     {relatedPosts.length > 0 && (
                         <button
                             id="expand-left-sidebar"
-                            class="hidden flex-col items-center gap-1 fixed left-0 top-1/2 -translate-y-1/2 z-40 px-2 py-3 rounded-r-lg card-base !rounded-l-none !border-l-0 transition-all duration-300 hover:pl-3"
+                            class="hidden flex-col items-center gap-1 fixed left-0 top-1/2 -translate-y-1/2 z-40 px-2 py-3 rounded-r-lg card-base rounded-l-none! border-l-0! transition-all duration-300 hover:pl-3"
                             aria-label="展开相关文章"
                             title="相关文章"
                         >
@@ -236,7 +236,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                                         </div>
                                         <button 
                                             id="toggle-right-sidebar"
-                                            class="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                            class="p-1 rounded sidebar-toggle"
                                             aria-label="收起"
                                             title="收起目录"
                                         >
@@ -260,7 +260,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                                     <div class="p-3 space-y-2">
                                         <button 
                                             onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
-                                            class="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors group"
+                                            class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg action-btn group"
                                         >
                                             <Icon name="lucide:arrow-up" class="w-4 h-4 transition-transform duration-300 group-hover:-translate-y-1" />
                                             回到顶部
@@ -286,7 +286,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                     {hasTOC && (
                         <button
                             id="expand-right-sidebar"
-                            class="hidden flex-col items-center gap-1 fixed right-0 top-1/2 -translate-y-1/2 z-40 px-2 py-3 rounded-l-lg card-base !rounded-r-none !border-r-0 transition-all duration-300 hover:pr-3"
+                            class="hidden flex-col items-center gap-1 fixed right-0 top-1/2 -translate-y-1/2 z-40 px-2 py-3 rounded-l-lg card-base rounded-r-none! border-r-0! transition-all duration-300 hover:pr-3"
                             aria-label="展开目录"
                             title="目录"
                         >
@@ -311,11 +311,11 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                         {relatedPosts.slice(0, 4).map(post => (
                             <a
                                 href={`/blog/${post.slug}/`}
-                                class="group flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                                class="group flex items-start gap-3 p-3 rounded-lg interactive-item"
                             >
                                 <div class="w-1 h-1 rounded-full bg-indigo-500 mt-2 shrink-0"></div>
                                 <div>
-                                    <div class="text-sm text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
+                                    <div class="text-sm text-foreground transition-colors line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                                         {post.data.title}
                                     </div>
                                     <div class="text-xs text-muted-foreground mt-1">

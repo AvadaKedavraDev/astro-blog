@@ -46,7 +46,7 @@ const pageNumbers = getPageNumbers();
   {currentPage > 1 ? (
     <a
       href={currentPage === 2 ? `/${section}/` : `/${section}${basePath}/${currentPage - 1}/`}
-      class="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      class="p-2 rounded-lg pagination-btn"
       aria-label="上一页"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,10 +69,10 @@ const pageNumbers = getPageNumbers();
       ) : (
         <a
           href={page === 1 ? `/${section}/` : `/${section}${basePath}/${page}/`}
-          class={`min-w-[2.5rem] h-10 px-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center ${
+          class={`min-w-[2.5rem] h-10 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center ${
             currentPage === page
               ? 'bg-foreground text-background'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              : 'pagination-btn'
           }`}
         >
           {page}
@@ -85,7 +85,7 @@ const pageNumbers = getPageNumbers();
   {currentPage < totalPages ? (
     <a
       href={`/${section}${basePath}/${currentPage + 1}/`}
-      class="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      class="p-2 rounded-lg pagination-btn"
       aria-label="下一页"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -58,13 +58,21 @@ export default defineConfig({
             },
 
             styleOverrides: {
-                borderRadius: '0.5rem', // 调小框架上方的内边距
+                borderRadius: '0.625rem',
+                codePaddingInline: '1.25rem',
+                codePaddingBlock: '1rem',
+                codeFontSize: '0.8125rem',
+                // 隐藏终端框架的标题栏
                 frames: {
-                    editorActiveTabIndicatorHeight: '2px', // 标签下方横线高度
-                    editorTabBarBackground: 'transparent', // 标签栏透明
+                    terminalTitleBarDotsForeground: 'transparent',
+                    terminalTitleBarDotsOpacity: '0',
+                    tooltipSuccessBackground: 'var(--foreground)',
+                    tooltipSuccessForeground: 'var(--background)',
                 },
-                uiPaddingBlock: '0.2rem',// 增加底部内边距，确保滚动条不遮挡代码
-                codeFontSize: '0.85rem',// 稍微调小字号
+            },
+            defaultProps: {
+                wrap: true,
+                showLineNumbers: false,
             },
 
         }), react(), icon()],

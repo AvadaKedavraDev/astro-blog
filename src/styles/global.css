@@ -179,14 +179,14 @@
     color: var(--foreground);
   }
 
-  /* 标题样式 */
+  /* ===== 优化后的标题样式 ===== */
   .prose-custom :where(h1) {
     font-weight: 700;
     letter-spacing: -0.02em;
     margin-top: 0;
-    margin-bottom: 1.25rem;
-    font-size: 1.625rem;
-    line-height: 1.3;
+    margin-bottom: 1.5rem;
+    font-size: 1.75rem;
+    line-height: 1.25;
     color: var(--foreground);
   }
 
@@ -198,9 +198,45 @@
     font-size: 1.375rem;
     line-height: 1.35;
     color: var(--foreground);
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);
     scroll-margin-top: 8rem;
+    position: relative;
+  }
+
+  /* h2 装饰线 - 丝流动画效果 */
+  .prose-custom :where(h2)::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      var(--indigo-500, #6366f1) 0%,
+      color-mix(in oklch, var(--indigo-500, #6366f1) 70%, var(--indigo-400, #818cf8)) 50%,
+      transparent 100%
+    );
+    border-radius: 0 1px 1px 0;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* 滚动到视口时触发动画 */
+  .prose-custom :where(h2).is-visible::after,
+  .prose-custom :where(h2):hover::after {
+    width: 5rem;
+  }
+
+  /* 暗色模式下更柔和的发光效果 */
+  .dark .prose-custom :where(h2)::after {
+    background: linear-gradient(
+      90deg,
+      var(--indigo-400, #818cf8) 0%,
+      color-mix(in oklch, var(--indigo-400, #818cf8) 60%, transparent) 70%,
+      transparent 100%
+    );
+    box-shadow: 0 0 12px color-mix(in oklch, var(--indigo-500, #6366f1) 30%, transparent);
   }
 
   .prose-custom :where(h3) {
@@ -212,6 +248,19 @@
     line-height: 1.4;
     color: var(--foreground);
     scroll-margin-top: 8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* h3 装饰 */
+  .prose-custom :where(h3)::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--indigo-500, #6366f1);
+    border-radius: 50%;
   }
 
   .prose-custom :where(h4) {
@@ -223,10 +272,34 @@
     color: var(--foreground);
   }
 
+  /* ===== 优化后的段落样式 ===== */
   .prose-custom :where(p) {
     margin-bottom: 1.25rem;
-    line-height: 1.8;
+    line-height: 1.85;
     color: var(--foreground);
+  }
+
+  /* 强调文字 */
+  .prose-custom :where(strong) {
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  /* 链接样式增强 */
+  .prose-custom :where(a) {
+    text-decoration: none;
+    color: var(--indigo-600, #4f46e5);
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s ease;
+  }
+
+  .dark .prose-custom :where(a) {
+    color: var(--indigo-400, #818cf8);
+  }
+
+  .prose-custom :where(a):hover {
+    border-bottom-color: currentColor;
+    opacity: 0.9;
   }
 
   .prose-custom :where(a) {
@@ -250,45 +323,75 @@
     margin: 1.5rem 0;
   }
 
+  /* ===== 优化后的引用块 ===== */
   .prose-custom :where(blockquote) {
     border-left: 3px solid var(--indigo-500, #6366f1);
-    padding: 0.75rem 1rem;
+    padding: 1rem 1.25rem;
     margin: 1.5rem 0;
-    background-color: var(--muted);
+    background-color: color-mix(in oklch, var(--muted) 60%, var(--card));
     border-radius: 0 0.5rem 0.5rem 0;
     font-style: normal;
     color: var(--muted-foreground);
+    position: relative;
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
   }
 
   .prose-custom :where(blockquote) p {
     margin: 0;
+    line-height: 1.75;
   }
 
+  .dark .prose-custom :where(blockquote) {
+    background-color: color-mix(in oklch, var(--muted) 80%, #ffffff 2%);
+    border-color: color-mix(in oklch, var(--indigo-500, #6366f1) 80%, #444444);
+  }
+
+  /* ===== 优化后的列表样式 ===== */
   .prose-custom :where(ul), .prose-custom :where(ol) {
     margin-top: 1rem;
     margin-bottom: 1rem;
-    padding-left: 1.5rem;
+    padding-left: 1.75rem;
   }
 
   .prose-custom :where(li) {
-    margin-top: 0.375rem;
-    margin-bottom: 0.375rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
     color: var(--foreground);
+    line-height: 1.75;
+    padding-left: 0.25rem;
   }
 
   .prose-custom :where(li)::marker {
     color: var(--muted-foreground);
   }
 
-  /* 代码样式 - 使用 JetBrains Mono */
+  /* 嵌套列表 */
+  .prose-custom :where(li) > ul,
+  .prose-custom :where(li) > ol {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* 任务列表 */
+  .prose-custom :where(li)[class*="task-list-item"] {
+    list-style: none;
+    padding-left: 0;
+    margin-left: -1.5rem;
+  }
+
+  /* ===== 优化后的代码样式 ===== */
+  
+  /* 行内代码 - 更精致的样式 */
   .prose-custom :where(code):not(:where(pre code)) {
-    padding: 0.15rem 0.4rem;
-    border-radius: 0.25rem;
-    font-size: 0.85em;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.825em;
     font-weight: 500;
     font-family: var(--font-code);
     background-color: var(--code-bg);
     color: var(--code-text);
+    border: 1px solid color-mix(in oklch, var(--border) 70%, transparent);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
   }
 
   .prose-custom :where(code)::before,
@@ -296,60 +399,136 @@
     content: none !important;
   }
 
+  /* 代码块容器 - 更清晰的层次 */
   .prose-custom :where(pre) {
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
-    border-radius: 0.5rem;
+    border-radius: 0.625rem;
     overflow: hidden;
     background-color: var(--muted);
     border: 1px solid var(--border);
+    box-shadow: 
+      0 1px 3px 0 rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
   }
 
+  /* Expressive Code 代码块优化 */
   .prose-custom .expressive-code {
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
-    border-radius: 0.5rem;
+    border-radius: 0.625rem;
     overflow: hidden;
     border: 1px solid var(--border);
+    box-shadow: 
+      0 1px 3px 0 rgba(0, 0, 0, 0.05),
+      0 1px 2px 0 rgba(0, 0, 0, 0.03);
   }
 
-  /* 表格样式 */
+  /* 暗黑模式代码块 */
+  .dark .prose-custom :where(pre),
+  .dark .prose-custom .expressive-code {
+    border-color: color-mix(in oklch, var(--border) 75%, #3a3a3a);
+    box-shadow: 
+      0 2px 4px 0 rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  }
+  
+  /* 行内代码暗黑模式 */
+  .dark .prose-custom :where(code):not(:where(pre code)) {
+    border-color: color-mix(in oklch, var(--border) 60%, #444444);
+    background-color: color-mix(in oklch, var(--code-bg) 90%, #000000);
+  }
+
+  /* ===== 优化后的表格样式 ===== */
   .prose-custom :where(table) {
     width: 100%;
     font-size: 0.875rem;
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     border: 1px solid var(--border);
-    border-radius: 0.5rem;
+    border-radius: 0.625rem;
     overflow: hidden;
+    box-shadow: 
+      0 1px 3px 0 rgba(0, 0, 0, 0.04),
+      0 1px 2px 0 rgba(0, 0, 0, 0.02);
   }
 
   .prose-custom :where(th), .prose-custom :where(td) {
-    padding: 0.75rem 1rem;
+    padding: 0.875rem 1.125rem;
     text-align: left;
     border-bottom: 1px solid var(--border);
   }
 
   .prose-custom :where(th) {
     font-weight: 600;
-    background-color: var(--muted);
+    background-color: color-mix(in oklch, var(--muted) 70%, var(--card));
     color: var(--foreground);
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
   }
 
   .prose-custom :where(tr):last-child td {
     border-bottom: none;
   }
 
-  .prose-custom :where(tr):hover {
-    background-color: var(--muted);
+  .prose-custom :where(tr):hover td {
+    background-color: color-mix(in oklch, var(--muted) 50%, transparent);
   }
 
-  /* 分隔线 */
+  /* 暗黑模式表格 */
+  .dark .prose-custom :where(table) {
+    border-color: color-mix(in oklch, var(--border) 75%, #3a3a3a);
+    box-shadow: 
+      0 2px 4px 0 rgba(0, 0, 0, 0.3),
+      0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .dark .prose-custom :where(th) {
+    background-color: color-mix(in oklch, var(--muted) 85%, #ffffff 3%);
+  }
+
+  .dark .prose-custom :where(tr):hover td {
+    background-color: color-mix(in oklch, var(--muted) 70%, #ffffff 2%);
+  }
+
+  /* ===== 优化后的分隔线 ===== */
   .prose-custom :where(hr) {
     border: 0;
-    border-top: 1px solid var(--border);
-    margin: 2rem 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--border) 10%,
+      var(--border) 90%,
+      transparent
+    );
+    margin: 2.5rem 0;
+    position: relative;
+  }
+
+  .prose-custom :where(hr)::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: var(--border);
+    border-radius: 50%;
+  }
+
+  .dark .prose-custom :where(hr) {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklch, var(--border) 70%, #444444) 10%,
+      color-mix(in oklch, var(--border) 70%, #444444) 90%,
+      transparent
+    );
   }
 
   /* 容器样式 */
@@ -451,13 +630,41 @@
   }
 }
 
-/* Expressive Code 样式 */
+/* Expressive Code 样式 - 隐藏标题栏（三个点） */
 .expressive-code {
   transition: all 0.3s ease;
 }
 
+/* 只隐藏标题栏，不隐藏整个框架 */
+.expressive-code .frame .header,
+.expressive-code .frame [class*="header"],
+.expressive-code .frame-title,
+.expressive-code [class*="title-bar"],
+.expressive-code [class*="editor-tab"] {
+  display: none !important;
+}
+
+/* 确保代码区域没有因为隐藏标题栏而产生的间距问题 */
 .expressive-code pre {
   transition: background-color 0.3s ease, color 0.3s ease;
+  border-radius: 0.625rem !important;
+  margin: 0 !important;
+}
+
+/* 代码块容器 */
+.expressive-code figure,
+.expressive-code [class*="figure"] {
+  margin: 0 !important;
+}
+
+/* 复制按钮样式优化 */
+.expressive-code .copy-button {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.expressive-code:hover .copy-button {
+  opacity: 1;
 }
 
 /* 动画关键帧 */
@@ -568,13 +775,27 @@
 }
 
 
-/* ===== Remark Callouts Styles ===== */
+/* ===== 优化后的 Remark Callouts Styles ===== */
+
+/* 基础 Callout 样式 - 更简约现代 */
 .callout {
-  border-radius: 0.75rem;
+  border-radius: 0.625rem;
   border: 1px solid var(--border);
   padding: 1rem 1.25rem;
   margin: 1.5rem 0;
   background: var(--card);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 左侧色条装饰 */
+.callout::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
 }
 
 .callout-title {
@@ -582,14 +803,15 @@
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   margin-bottom: 0.5rem;
   color: var(--foreground);
+  letter-spacing: -0.01em;
 }
 
 .callout-content {
-  font-size: 0.95rem;
-  line-height: 1.7;
+  font-size: 0.925rem;
+  line-height: 1.75;
   color: var(--foreground);
 }
 
@@ -601,68 +823,169 @@
   margin-bottom: 0;
 }
 
-/* Callout Types */
+/* Callout Types - 统一风格，更柔和的背景色 */
 .callout-note {
-  border-left: 3px solid #3b82f6;
-  background: color-mix(in oklch, #3b82f6 5%, var(--card));
+  background: color-mix(in oklch, #3b82f6 4%, var(--card));
+  border-color: color-mix(in oklch, #3b82f6 25%, var(--border));
+}
+
+.callout-note::before {
+  background: #3b82f6;
+}
+
+.callout-note .callout-title {
+  color: color-mix(in oklch, #3b82f6 70%, var(--foreground));
 }
 
 .callout-note .callout-title::before {
   content: "ℹ️";
+  font-size: 0.9em;
 }
 
 .callout-tip {
-  border-left: 3px solid #22c55e;
-  background: color-mix(in oklch, #22c55e 5%, var(--card));
+  background: color-mix(in oklch, #22c55e 4%, var(--card));
+  border-color: color-mix(in oklch, #22c55e 25%, var(--border));
+}
+
+.callout-tip::before {
+  background: #22c55e;
+}
+
+.callout-tip .callout-title {
+  color: color-mix(in oklch, #22c55e 70%, var(--foreground));
 }
 
 .callout-tip .callout-title::before {
   content: "💡";
+  font-size: 0.9em;
 }
 
 .callout-info {
-  border-left: 3px solid #0ea5e9;
-  background: color-mix(in oklch, #0ea5e9 5%, var(--card));
+  background: color-mix(in oklch, #0ea5e9 4%, var(--card));
+  border-color: color-mix(in oklch, #0ea5e9 25%, var(--border));
+}
+
+.callout-info::before {
+  background: #0ea5e9;
+}
+
+.callout-info .callout-title {
+  color: color-mix(in oklch, #0ea5e9 70%, var(--foreground));
 }
 
 .callout-info .callout-title::before {
   content: "ℹ️";
+  font-size: 0.9em;
 }
 
 .callout-warning {
-  border-left: 3px solid #f59e0b;
-  background: color-mix(in oklch, #f59e0b 5%, var(--card));
+  background: color-mix(in oklch, #f59e0b 4%, var(--card));
+  border-color: color-mix(in oklch, #f59e0b 25%, var(--border));
+}
+
+.callout-warning::before {
+  background: #f59e0b;
+}
+
+.callout-warning .callout-title {
+  color: color-mix(in oklch, #f59e0b 70%, var(--foreground));
 }
 
 .callout-warning .callout-title::before {
   content: "⚠️";
+  font-size: 0.9em;
 }
 
 .callout-danger {
-  border-left: 3px solid #ef4444;
-  background: color-mix(in oklch, #ef4444 5%, var(--card));
+  background: color-mix(in oklch, #ef4444 4%, var(--card));
+  border-color: color-mix(in oklch, #ef4444 25%, var(--border));
+}
+
+.callout-danger::before {
+  background: #ef4444;
+}
+
+.callout-danger .callout-title {
+  color: color-mix(in oklch, #ef4444 70%, var(--foreground));
 }
 
 .callout-danger .callout-title::before {
   content: "🚨";
+  font-size: 0.9em;
 }
 
 .callout-important {
-  border-left: 3px solid #a855f7;
-  background: color-mix(in oklch, #a855f7 5%, var(--card));
+  background: color-mix(in oklch, #a855f7 4%, var(--card));
+  border-color: color-mix(in oklch, #a855f7 25%, var(--border));
+}
+
+.callout-important::before {
+  background: #a855f7;
+}
+
+.callout-important .callout-title {
+  color: color-mix(in oklch, #a855f7 70%, var(--foreground));
 }
 
 .callout-important .callout-title::before {
   content: "❗";
+  font-size: 0.9em;
 }
 
-/* Dark mode adjustments */
+/* Dark mode adjustments - 更明显的边框和微妙发光 */
 .dark .callout {
   background: var(--card);
-  border-color: color-mix(in oklch, var(--border) 75%, #3a3a3a);
   box-shadow: 
-    0 1px 3px 0 rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+    0 1px 3px 0 rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.02);
+}
+
+.dark .callout-note {
+  border-color: color-mix(in oklch, #3b82f6 35%, #2a2a2a);
+  background: color-mix(in oklch, #3b82f6 8%, var(--card));
+  box-shadow: 
+    0 1px 3px 0 rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 0 rgba(59, 130, 246, 0.05);
+}
+
+.dark .callout-tip {
+  border-color: color-mix(in oklch, #22c55e 35%, #2a2a2a);
+  background: color-mix(in oklch, #22c55e 8%, var(--card));
+  box-shadow: 
+    0 1px 3px 0 rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 0 rgba(34, 197, 94, 0.05);
+}
+
+.dark .callout-info {
+  border-color: color-mix(in oklch, #0ea5e9 35%, #2a2a2a);
+  background: color-mix(in oklch, #0ea5e9 8%, var(--card));
+  box-shadow: 
+    0 1px 3px 0 rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 0 rgba(14, 165, 233, 0.05);
+}
+
+.dark .callout-warning {
+  border-color: color-mix(in oklch, #f59e0b 35%, #2a2a2a);
+  background: color-mix(in oklch, #f59e0b 8%, var(--card));
+  box-shadow: 
+    0 1px 3px 0 rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 0 rgba(245, 158, 11, 0.05);
+}
+
+.dark .callout-danger {
+  border-color: color-mix(in oklch, #ef4444 35%, #2a2a2a);
+  background: color-mix(in oklch, #ef4444 8%, var(--card));
+  box-shadow: 
+    0 1px 3px 0 rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 0 rgba(239, 68, 68, 0.05);
+}
+
+.dark .callout-important {
+  border-color: color-mix(in oklch, #a855f7 35%, #2a2a2a);
+  background: color-mix(in oklch, #a855f7 8%, var(--card));
+  box-shadow: 
+    0 1px 3px 0 rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 0 rgba(168, 85, 247, 0.05);
 }
 
 /* ===== KaTeX Math Styles ===== */
@@ -1078,12 +1401,17 @@
 .pagination-btn:hover {
   color: var(--foreground);
   background-color: var(--muted);
+  transform: translateY(-1px);
 }
 
 .pagination-btn.active {
   color: var(--foreground);
   background-color: var(--muted);
   font-weight: 500;
+}
+
+.dark .pagination-btn:hover {
+  background-color: color-mix(in oklch, var(--muted) 70%, #ffffff 8%);
 }
 
 /* 侧边栏切换按钮 - 悬停高亮 */
