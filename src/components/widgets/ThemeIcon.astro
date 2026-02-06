@@ -1,147 +1,180 @@
 ---
-import { Icon } from "astro-icon/components";
+// 暗黑切换组件
+import {Icon} from "astro-icon/components";
 
 interface Props {
-  size?: "sm" | "md" | "lg";
-  variant?: "icon" | "button";
+    size?: "sm" | "md" | "lg";
+    variant?: "icon" | "button";
 }
 
-const { size = "md", variant = "icon" } = Astro.props;
+const {size = "md", variant = "icon"} = Astro.props;
 
 const sizeClasses = {
-  sm: "w-8 h-8",
-  md: "w-10 h-10",
-  lg: "w-12 h-12",
+    sm: "w-8 h-8",
+    md: "w-10 h-10",
+    lg: "w-12 h-12",
 };
 
 const iconSizes = {
-  sm: "w-4 h-4",
-  md: "w-5 h-5",
-  lg: "w-6 h-6",
+    sm: "w-4 h-4",
+    md: "w-5 h-5",
+    lg: "w-6 h-6",
 };
 ---
 
 <button
-  id="theme-toggle"
-  data-theme-toggle
-  class:list={[
-    sizeClasses[size],
-    "rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all group",
-    variant === 'button' && 'px-4 gap-2'
-  ]}
-  aria-label="切换主题"
+        data-theme-toggle
+        class:list={[
+            sizeClasses[size],
+            "rounded-full flex items-center justify-center",
+            "text-muted-foreground hover:text-foreground hover:bg-muted",
+            "transition-all duration-200 ease-out",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "group",
+            variant === "button" && "px-4 gap-2 w-auto",
+        ]}
+        aria-label="切换主题"
+        type="button"
 >
-  {/* Sun Icon - 在暗黑模式下显示 */}
-  <Icon 
-    name="lucide:sun" 
-    class:list={["sun-icon", iconSizes[size], "hidden dark:block transition-transform duration-500 group-hover:rotate-45"]} 
-  />
-  
-  {/* Moon Icon - 在浅色模式下显示 */}
-  <Icon 
-    name="lucide:moon" 
-    class:list={["moon-icon", iconSizes[size], "block dark:hidden transition-transform duration-500 group-hover:-rotate-12"]} 
-  />
-  
-  {variant === "button" && (
-    <span class="text-sm font-medium">
-      <span class="dark:hidden">深色模式</span>
-      <span class="hidden dark:block">浅色模式</span>
-    </span>
-  )}
+    {/* Sun - 暗黑模式下显示 */}
+    <Icon
+            name="lucide:sun"
+            class:list={[
+                "sun-icon",
+                iconSizes[size],
+                "hidden dark:block",
+                "transition-transform duration-500 ease-spring",
+                "group-hover:rotate-45",
+            ]}
+            aria-hidden="true"
+    />
+
+    <Icon
+            name="lucide:moon"
+            class:list={[
+                "moon-icon",
+                iconSizes[size],
+                "block dark:hidden",
+                "transition-transform duration-500 ease-spring",
+                "group-hover:-rotate-12",
+            ]}
+            aria-hidden="true"
+    />
+
+    {
+        variant === "button" && (
+                    <span class="text-sm font-medium select-none">
+                <span class="dark:hidden">深色模式</span>
+                <span class="hidden dark:block">浅色模式</span>
+            </span>
+        )
+    }
 </button>
 
-{/* 主题初始化脚本 - 在页面加载前执行，防止闪烁 */}
-<script is:inline>
-  (function() {
-    const theme = localStorage.getItem('theme') || 
-      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  })();
-</script>
-
-{/* 主题切换事件处理 - 修复移动端事件解绑问题 */}
+{/* 主题管理逻辑 - 使用全局单例模式 */}
 <script>
-  // 使用 WeakSet 跟踪已初始化的按钮，防止重复绑定
-  const initializedButtons = new WeakSet();
-  
-  // 切换主题的核心逻辑
-  function toggleTheme() {
-    const isDark = document.documentElement.classList.toggle('dark');
-    const theme = isDark ? 'dark' : 'light';
-    localStorage.setItem('theme', theme);
-    
-    // 移动端触觉反馈（如果支持）
-    if (window.navigator?.vibrate && navigator.vibrate(10)) {
-      navigator.vibrate(10);
+    // 类型定义（在 .astro 文件中可省略，但有助于 IDE 提示）
+    interface ThemeManager {
+        initialized: boolean;
+        toggle: () => void;
+        init: () => void;
+        destroy: () => void;
     }
-    
-    // 触发自定义事件，供其他组件监听
-    window.dispatchEvent(new CustomEvent('themechange', { 
-      detail: { theme, isDark } 
-    }));
-  }
-  
-  // 初始化单个按钮
-  function initButton(button: HTMLElement) {
-    if (initializedButtons.has(button)) return;
-    
-    // 移动端优化：pointerdown 比 click 响应更快（减少 300ms 延迟）
-    button.addEventListener('pointerdown', (e) => {
-      // 防止与 click 事件重复触发
-      e.preventDefault();
-      toggleTheme();
+
+    // 全局单例，确保即使脚本被多次执行（View Transitions）也不会重复绑定
+    if (!window.themeManager) {
+        window.themeManager = {
+            initialized: false,
+
+            toggle() {
+                const isDark = document.documentElement.classList.toggle("dark");
+                const theme = isDark ? "dark" : "light";
+
+                // 持久化
+                localStorage.setItem("theme", theme);
+
+                // 触觉反馈（移动端）
+                if (window.navigator?.vibrate) {
+                    navigator.vibrate(10);
+                }
+
+                // 触发自定义事件供其他组件监听
+                window.dispatchEvent(
+                    new CustomEvent("themechange", {
+                        detail: {theme, isDark},
+                    })
+                );
+            },
+
+            init() {
+                if (this.initialized) return;
+
+                // 使用事件委托，无论按钮何时被添加到 DOM 都有效
+                this.handleClick = (e: MouseEvent) => {
+                    const btn = (e.target as HTMLElement).closest(
+                        "[data-theme-toggle]"
+                    );
+                    if (!btn) return;
+
+                    e.preventDefault();
+                    this.toggle();
+                };
+
+                this.handleKeydown = (e: KeyboardEvent) => {
+                    if (e.key !== "Enter" && e.key !== " ") return;
+
+                    const btn = (e.target as HTMLElement).closest(
+                        "[data-theme-toggle]"
+                    );
+                    if (!btn) return;
+
+                    e.preventDefault();
+                    this.toggle();
+                };
+
+                this.handleStorage = (e: StorageEvent) => {
+                    if (e.key !== "theme" || !e.newValue) return;
+
+                    const isDark = e.newValue === "dark";
+                    document.documentElement.classList.toggle("dark", isDark);
+                };
+
+                // 绑定事件
+                document.addEventListener("click", this.handleClick);
+                document.addEventListener("keydown", this.handleKeydown);
+                window.addEventListener("storage", this.handleStorage);
+
+                this.initialized = true;
+            },
+
+            destroy() {
+                if (!this.initialized) return;
+
+                document.removeEventListener("click", this.handleClick);
+                document.removeEventListener("keydown", this.handleKeydown);
+                window.removeEventListener("storage", this.handleStorage);
+
+                this.initialized = false;
+            },
+        } as ThemeManager & {
+            handleClick?: (e: MouseEvent) => void;
+            handleKeydown?: (e: KeyboardEvent) => void;
+            handleStorage?: (e: StorageEvent) => void;
+        };
+    }
+
+    // 立即初始化
+    window.themeManager.init();
+
+    // Astro View Transitions 生命周期兼容
+    // 注意：如果使用 View Transitions，需要在页面切换后重新确认初始化状态
+    document.addEventListener("astro:page-load", () => {
+        window.themeManager.init();
     });
-    
-    // 保留 click 事件确保键盘可访问性（Enter/Space）
-    button.addEventListener('click', (e) => {
-      // 如果已经通过 pointerdown 处理，跳过
-      if (e.detail === 0) return;
-      toggleTheme();
+
+    // 清理（可选，防止内存泄漏）
+    document.addEventListener("astro:before-swap", () => {
+        // 实际上不需要 destroy，因为我们希望事件委托一直生效
+        // 但如果需要完全清理，可以在这里调用
     });
-    
-    initializedButtons.add(button);
-  }
-  
-  // 全局初始化函数
-  function initThemeToggle() {
-    // 查找所有主题切换按钮（支持页面上多个实例）
-    const buttons = document.querySelectorAll<HTMLElement>('[data-theme-toggle]');
-    buttons.forEach(initButton);
-  }
-  
-  // 初始化当前页面
-  initThemeToggle();
-  
-  // Astro View Transitions 兼容
-  // astro:page-load: 每次页面加载完成（包括首次）
-  document.addEventListener('astro:page-load', initThemeToggle);
-  
-  // astro:after-swap: DOM 替换后（过渡动画前）
-  document.addEventListener('astro:after-swap', initThemeToggle);
-  
-  // 备用：标准 DOM 加载事件（兼容非 VT 页面）
-  document.addEventListener('DOMContentLoaded', initThemeToggle);
-  
-  // 移动端特殊处理：页面从后台恢复时重新绑定
-  // 某些浏览器（如 iOS Safari）在后台冻结核页面后恢复时可能需要重新初始化
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      // 使用 setTimeout 确保 DOM 已完全恢复
-      setTimeout(initThemeToggle, 0);
-    }
-  });
-  
-  // 监听 storage 事件（多标签页同步）
-  window.addEventListener('storage', (e) => {
-    if (e.key === 'theme' && e.newValue) {
-      const isDark = e.newValue === 'dark';
-      document.documentElement.classList.toggle('dark', isDark);
-    }
-  });
 </script>

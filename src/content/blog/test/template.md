@@ -133,20 +133,30 @@ def fibonacci(n):
 for i in range(10):
     print(f"F({i}) = {fibonacci(i)}")
 ```
+::: code-group labels=[js, vue, svelte]
 
-**代码组（标签页）：
-```astro
----
-// 这是 Astro 组件代码
-const { title, description } = Astro.props;
----
-
-<article class="prose-custom">
-  <h1>{title}</h1>
-  <p>{description}</p>
-  <slot />
-</article>
+```js 
+export function Button() {
+  return <button>Click me</button>;
+}
 ```
+
+```vue 
+<template>
+  <button @click="handleClick">Click me</button>
+</template>
+
+<script setup>
+const handleClick = () => console.log('clicked');
+</script>
+```
+
+```svelte 
+<button on:click={() => console.log('clicked')}>
+  Click me
+</button>
+```
+:::
 
 ### 代码折叠
 

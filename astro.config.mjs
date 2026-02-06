@@ -5,6 +5,7 @@ import expressiveCode from 'astro-expressive-code';
 import tailwindcss from '@tailwindcss/vite';
 // Expressive Code 的折叠代码块插件（这是 Expressive Code 插件，不是 Vite 插件！）
 import {pluginCollapsibleSections} from '@expressive-code/plugin-collapsible-sections'
+import rehypeCodeGroup from 'rehype-code-group';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import remarkCallouts from 'remark-callouts';
@@ -13,6 +14,26 @@ import rehypeKatex from 'rehype-katex';
 import swup, {Theme} from '@swup/astro';
 import react from '@astrojs/react';
 import icon from 'astro-icon';
+
+// 导入原始主题（Shiki 格式）
+import latte from 'shiki/themes/catppuccin-latte.mjs';
+
+// 创建自定义主题（深拷贝并覆盖颜色）
+const customLatte = {
+  ...latte,
+  name: 'catppuccin-latte-custom', // 改名避免与内置冲突（可选）
+  colors: {
+    ...latte.colors,
+    // 核心背景色（代码块背景）
+    'editor.background': '#f6f6fa',  
+    // 各种边框色
+    'panel.border': '#e1e1e8',           // 面板边框
+    'editorGroup.border': '#e1e1e8',     // 编辑器组边框
+    'sideBar.border': '#e1e1e8',         // 侧边栏边框（如果有）
+    // 如果需要调整行号栏背景等
+    'editorLineNumber.foreground': '#9ca0b0',
+  }
+};
 
 // https://astro.build/config
 export default defineConfig({
@@ -23,7 +44,7 @@ export default defineConfig({
     markdown: {
         // 解决MD 换行被破坏、注释挤在一起的问题
         remarkPlugins: [remarkGfm, remarkBreaks, remarkCallouts, remarkMath],
-        rehypePlugins: [rehypeKatex],
+        rehypePlugins: [rehypeKatex, rehypeCodeGroup],
     },
 
     integrations: [
@@ -42,7 +63,7 @@ export default defineConfig({
             globalInstance: true,
         }),
         expressiveCode({
-            themes: ['catppuccin-latte', 'dracula'], // 1. 关闭自动媒体查询，完全交给下面的手动选择器控制
+            themes: [customLatte, 'houston'], // 1. 关闭自动媒体查询，完全交给下面的手动选择器控制
             useDarkModeMediaQuery: false,
 
             // 2. 修正逻辑：暗色主题挂在 .dark 下，亮色主题挂在非 .dark 下
@@ -74,6 +95,7 @@ export default defineConfig({
                 wrap: true,
                 showLineNumbers: false,
             },
+        
 
         }), react(), icon()],
 });

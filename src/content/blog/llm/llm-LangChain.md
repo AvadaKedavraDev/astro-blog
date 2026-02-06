@@ -2,7 +2,7 @@
 title: "LangChain手册"
 pubDate: 2024-02-15
 description: "LangChain速查"
-tags: ["LLM", "教程", "LangChin"]
+tags: ["LLM", "LangChin"]
 #coverImage: "/images/docker-cover.jpg"
 readingTime: 15
 pinned: true
