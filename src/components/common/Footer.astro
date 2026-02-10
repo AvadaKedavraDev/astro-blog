@@ -1,7 +1,8 @@
 ---
-// 极简页脚
 import { Icon } from "astro-icon/components";
 const currentYear = new Date().getFullYear();
+// 建站时间（请修改为你的实际建站日期）
+const SITE_BIRTH = "2025-03-31T00:00:00";
 ---
 
 <footer class="border-t border-border mt-24">
@@ -13,7 +14,7 @@ const currentYear = new Date().getFullYear();
         <span class="font-medium text-foreground">Moonpeak</span>
         <span>— 记录与分享</span>
       </div>
-      
+
       <!-- Center - Links -->
       <div class="flex items-center gap-6 text-sm">
         <a href="/blog" class="interactive-text flex items-center gap-1.5 group py-1 px-2 rounded">
@@ -33,18 +34,29 @@ const currentYear = new Date().getFullYear();
           <Icon name="lucide:github" class="w-5 h-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" />
         </a>
       </div>
-      
-      <!-- Right - ICP -->
-      <div class="flex items-center gap-4 text-sm text-muted-foreground">
+
+      <!-- Right - ICP & Runtime -->
+      <div class="flex flex-col sm:flex-row items-center gap-4 text-sm text-muted-foreground">
         <span class="flex items-center gap-1.5">
           <Icon name="lucide:copyright" class="w-3.5 h-3.5" />
           {currentYear}
         </span>
-        <a 
-          href="https://beian.miit.gov.cn/" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          class="interactive-text flex items-center gap-1.5 group py-1 px-2 rounded"
+
+        <!-- 建站时间统计 -->
+        <span
+            class="flex items-center gap-1.5 tabular-nums tracking-tight"
+            id="runtime-badge"
+            title={`建站于 ${SITE_BIRTH.split('T')[0]}`}
+        >
+          <Icon name="lucide:clock" class="w-3.5 h-3.5 text-indigo-400" />
+          <span id="runtime-text" data-birth={SITE_BIRTH}>计算中...</span>
+        </span>
+
+        <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="interactive-text flex items-center gap-1.5 group py-1 px-2 rounded"
         >
           <Icon name="lucide:shield" class="w-3.5 h-3.5 transition-transform duration-300 group-hover:scale-110" />
           <span>蒙ICP备2025024213号-1</span>
@@ -53,3 +65,64 @@ const currentYear = new Date().getFullYear();
     </div>
   </div>
 </footer>
+
+<!-- 性能优化：使用 is:inline 避免打包开销，直接运行在浏览器 -->
+<script is:inline>
+  (function() {
+    const textEl = document.getElementById('runtime-text');
+    if (!textEl) return;
+
+    const birth = new Date(textEl.dataset.birth);
+    if (isNaN(birth)) {
+      textEl.textContent = '时间错误';
+      return;
+    }
+
+    let rafId;
+    let lastSecond = -1;
+
+    function update() {
+      const now = Date.now();
+      const diff = now - birth.getTime();
+
+      // 计算时间单位
+      const days = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const minutes = Math.floor((diff % 3600000) / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+
+      // 每秒只更新一次 DOM（即使 RAF 回调更频繁）
+      if (seconds !== lastSecond) {
+        lastSecond = seconds;
+
+        // 智能格式化：超过一年显示年月，否则显示天
+        let display;
+        if (days >= 365) {
+          const years = Math.floor(days / 365);
+          const remDays = days % 365;
+          display = `${years}年${remDays}天 ${hours}时`;
+        } else if (days > 0) {
+          display = `${days}天 ${hours}时${minutes}分`;
+        } else {
+          display = `${hours}时${minutes}分${seconds}秒`;
+        }
+
+        textEl.textContent = display;
+      }
+
+      rafId = requestAnimationFrame(update);
+    }
+
+    // 启动，页面不可见时自动节流（requestAnimationFrame 特性）
+    update();
+
+    // 清理（防止内存泄漏，虽然 footer 通常不卸载）
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        cancelAnimationFrame(rafId);
+      } else {
+        update();
+      }
+    });
+  })();
+</script>

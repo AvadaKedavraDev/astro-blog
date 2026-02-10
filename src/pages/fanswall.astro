@@ -1,0 +1,96 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import FansWall from "@components/common/FansWall.astro";
+// 示例数据 - 实际使用时可以从 API 获取
+
+const allFans = [
+    // 核心粉丝（会单独全屏展示）
+    {
+        id: "1",
+        username: "元",
+        avatar: "/images/fans/yuan.jpg",
+        myMessage: "子涵的拥有者",
+        joinDate: "2023-01-15",
+        daysSince: 420,
+        highlight: "灯牌终结者",
+        isCore: true  // 标记为核心粉丝
+    },
+    {
+        id: "2",
+        username: "子涵",
+        avatar: "/images/fans/zihan.jpg",
+        myMessage: "元的宝贝",
+        joinDate: "2023-03-20",
+        daysSince: 325,
+        highlight: "无能的丈夫",
+        isCore: true
+    },
+    {
+        id: "3",
+        username: "༺༒༻",
+        avatar: "/images/fans/mm.jpg",
+        myMessage: "不多说，榜一大哥，年度魅魔。",
+        joinDate: "2023-06-01",
+        daysSince: 253,
+        highlight: "榜一大哥",
+        isCore: true
+    },
+
+    // 其他粉丝（只出现在瀑布流）
+    {
+        id: "4",
+        username: "来年雪",
+        avatar: "/images/fans/lnx.jpg",
+        myMessage: "不时念叨我的一只",
+        joinDate: "2024-01-01",
+        highlight: "雪儿~",
+        daysSince: 30,
+        isCore: true  // 非核心，只进瀑布流
+    },
+    {
+        id: "5",
+        username: "猛踹瘸子那条好腿",
+        avatar: "/images/fans/qzht.jpg",
+        myMessage: "嘴一个代表",
+        joinDate: "2024-02-01",
+        highlight: "嘴一个~",
+        daysSince: 10,
+        isCore: false
+    },
+    {
+        id: "6",
+        username: "小兔",
+        avatar: "/images/fans/xt.jpg",
+        myMessage: "史上最好好好好好好好好好好好好好好好好小兔",
+        joinDate: "2024-02-01",
+        highlight: "史上最好好好好好好好好好好好好好好好好小兔",
+        daysSince: 10,
+        isCore: false
+    },
+    {
+        id: "6",
+        username: "zzz",
+        avatar: "/images/fans/zzz.png",
+        myMessage: "困倦之王zzz",
+        joinDate: "2024-02-01",
+        highlight: "什么？这是我的反成都粉丝？代号直直直直(zzzz)",
+        daysSince: 10,
+        isCore: false
+    }
+    // ... 更多粉丝
+];
+---
+
+
+<BaseLayout title="粉丝墙">
+    <!-- 全屏展示，不需要额外容器 -->
+    <!-- 关键：给 main 标签添加特殊类名，取消 BaseLayout 的默认 padding/margin 限制 -->
+    <main class="!p-0 !m-0 !max-w-none">
+        <FansWall fans={allFans}
+                  openingTitle="致星光下的你们"
+                  openingSubtitle="有些陪伴，值得被单独铭记；有些名字，想一个一个念给你听"
+                  wallTitle="以及，每一位幕后的你"
+        />
+    </main>
+
+</BaseLayout>

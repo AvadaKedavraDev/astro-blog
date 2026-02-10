@@ -1,0 +1,951 @@
+---
+interface Memory {
+    date: string;
+    text: string;
+    type?: 'chat' | 'gift' | 'milestone';
+}
+
+interface Fan {
+    id: string;
+    username: string;
+    avatar: string;
+    myMessage: string;
+    joinDate: string;
+    daysSince: number;
+    highlight?: string;
+    memories?: Memory[];
+}
+
+interface Props {
+    fans: Fan[];
+    openingTitle?: string;
+    openingSubtitle?: string;
+    wallTitle?: string;
+}
+
+const {
+    fans,
+    openingTitle = "致每一位陪伴的你",
+    openingSubtitle = "排名不分先后，每一份陪伴都同样珍贵",
+    wallTitle = "全员名册"
+} = Astro.props;
+
+const shuffledFans = [...fans].sort(() => Math.random() - 0.5);
+const coreFans = shuffledFans.slice(0, 12);
+const wallFans = shuffledFans;
+
+const enrichedFans = coreFans.map(fan => ({
+    ...fan,
+    memories: fan.memories || [
+        { date: fan.joinDate, text: "我们相遇了", type: "milestone" },
+        { date: `第${Math.floor(fan.daysSince * 0.3)}天`, text: "渐渐熟悉", type: "chat" },
+        { date: `第${fan.daysSince}天`, text: "此刻，写下这段话", type: "chat" }
+    ]
+}));
+
+const totalSections = 1 + enrichedFans.length + 1;
+---
+
+<div id="fanswall-container" class="fanswall-container" data-total-sections={totalSections}>
+    <!-- 进度指示器 -->
+    <div class="progress-indicator" id="progress-indicator">
+        {Array.from({ length: totalSections }).map((_, i) => (
+            <div class="progress-dot" data-index={i}></div>
+        ))}
+    </div>
+
+    <!-- 开屏 -->
+    <section class="section-fullscreen" data-index="0">
+        <div class="opening-bg">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+            <div class="blob blob-3"></div>
+            <div class="particles" id="particles"></div>
+        </div>
+
+        <div class="opening-content">
+            <div class="opening-icon">
+                <span>💌</span>
+            </div>
+            <h1 class="opening-title">{openingTitle}</h1>
+            <p class="opening-subtitle">{openingSubtitle}</p>
+            <div class="scroll-hint">
+                <div class="mouse-icon">
+                    <div class="mouse-wheel"></div>
+                </div>
+                <span class="scroll-text">向下滚动</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心粉丝 -->
+    {enrichedFans.map((fan, index) => (
+        <section class="section-fullscreen fan-section" data-index={index + 1}>
+            <div class="fan-bg-glow"></div>
+            <div class="fan-content">
+                <div class="fan-avatar-wrapper">
+                    <div class="fan-avatar-glow"></div>
+                    <img src={fan.avatar} alt={fan.username} class="fan-avatar" loading="lazy" />
+                    {fan.highlight && <div class="fan-highlight">{fan.highlight}</div>}
+                </div>
+                <h2 class="fan-name">{fan.username}</h2>
+                <div class="fan-meta">
+                    <span>于 {fan.joinDate} 相遇</span>
+                    <span class="meta-dot"></span>
+                    <span class="meta-days">陪伴 {fan.daysSince} 天</span>
+                </div>
+                <div class="fan-message">
+                    <svg class="quote quote-left" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                    </svg>
+                    <p class="message-text">{fan.myMessage}</p>
+                    <svg class="quote quote-right" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                    </svg>
+                </div>
+                <div class="fan-timeline">
+                    {fan.memories.map((mem) => (
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <span class="timeline-date">{mem.date}</span>
+                            <span class="timeline-text">{mem.text}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+    ))}
+
+    <!-- 全员瀑布流 -->
+    <section class="section-wall" data-index={enrichedFans.length + 1}>
+        <div class="wall-header">
+            <h2 class="wall-title">{wallTitle}</h2>
+            <p class="wall-subtitle">感谢每一位 · 共 {wallFans.length} 位</p>
+        </div>
+        <div class="wall-grid" id="wall-grid">
+            {wallFans.map((fan) => (
+                <div class="wall-card">
+                    <div class="wall-card-image">
+                        <img src={fan.avatar} alt={fan.username} loading="lazy" />
+                        <div class="wall-card-overlay">
+                            <p class="wall-card-message">"{fan.myMessage}"</p>
+                        </div>
+                    </div>
+                    <div class="wall-card-info">
+                        <h3 class="wall-card-name">{fan.username}</h3>
+                        <div class="wall-card-meta">
+                            <span>{fan.joinDate}</span>
+                            <span class="wall-card-days">{fan.daysSince}天</span>
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+        <div class="wall-footer">
+            <button id="back-to-top" class="back-to-top">
+                <span>↑</span>
+                回到顶部
+            </button>
+            <p class="wall-footer-text">排名不分先后 · 感谢相遇</p>
+        </div>
+    </section>
+</div>
+
+<script>
+    // 全屏滚动控制器
+    class FullPageScroll {
+        private container: HTMLElement;
+        private sections: HTMLElement[];
+        private currentIndex: number = 0;
+        private isScrolling: boolean = false;
+        private scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+        private touchStartY: number = 0;
+        private readonly scrollCooldown: number = 800;
+        private isInFreeScroll: boolean = false;
+
+        constructor(containerId: string) {
+            this.container = document.getElementById(containerId) as HTMLElement;
+            if (!this.container) return;
+
+            this.sections = Array.from(this.container.querySelectorAll('.section-fullscreen, .section-wall'));
+            
+            this.init();
+        }
+
+        private init() {
+            // 初始化粒子
+            this.initParticles();
+            
+            // 绑定事件
+            this.bindWheel();
+            this.bindKeyboard();
+            this.bindTouch();
+            this.bindIndicators();
+            
+            // 回到顶部
+            const backBtn = document.getElementById('back-to-top');
+            backBtn?.addEventListener('click', () => this.scrollTo(0));
+            
+            // 初始化当前位置
+            this.updateIndicators();
+        }
+
+        private initParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        private bindWheel() {
+            this.container.addEventListener('wheel', (e: WheelEvent) => {
+                e.preventDefault();
+                
+                if (this.isScrolling) return;
+                
+                // 检查是否在全员墙自由滚动区域
+                if (this.isInFreeScrollArea()) {
+                    // 在全员墙顶部或底部时才能切换
+                    if (!this.canLeaveWallArea(e.deltaY > 0)) {
+                        // 允许正常滚动
+                        this.container.scrollTop += e.deltaY;
+                        return;
+                    }
+                }
+
+                const direction = e.deltaY > 0 ? 1 : -1;
+                this.navigate(direction);
+            }, { passive: false });
+        }
+
+        private isInFreeScrollArea(): boolean {
+            const wallSection = this.sections[this.sections.length - 1];
+            if (!wallSection) return false;
+            
+            const rect = wallSection.getBoundingClientRect();
+            return rect.top <= 0 && rect.bottom > window.innerHeight;
+        }
+
+        private canLeaveWallArea(goingDown: boolean): boolean {
+            const wallSection = this.sections[this.sections.length - 1] as HTMLElement;
+            if (!wallSection) return true;
+
+            if (goingDown) {
+                // 向下：检查是否到达底部
+                const scrollBottom = wallSection.scrollHeight - wallSection.clientHeight - wallSection.scrollTop;
+                return scrollBottom <= 10;
+            } else {
+                // 向上：检查是否在顶部
+                return wallSection.scrollTop <= 10;
+            }
+        }
+
+        private bindKeyboard() {
+            document.addEventListener('keydown', (e: KeyboardEvent) => {
+                if (this.isScrolling) return;
+
+                switch(e.key) {
+                    case 'ArrowDown':
+                    case 'PageDown':
+                    case ' ':
+                        e.preventDefault();
+                        this.navigate(1);
+                        break;
+                    case 'ArrowUp':
+                    case 'PageUp':
+                        e.preventDefault();
+                        this.navigate(-1);
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        this.scrollTo(0);
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        this.scrollTo(this.sections.length - 1);
+                        break;
+                }
+            });
+        }
+
+        private bindTouch() {
+            this.container.addEventListener('touchstart', (e: TouchEvent) => {
+                this.touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            this.container.addEventListener('touchend', (e: TouchEvent) => {
+                if (this.isScrolling) return;
+
+                const touchEndY = e.changedTouches[0].clientY;
+                const diff = this.touchStartY - touchEndY;
+                const threshold = 50;
+
+                if (Math.abs(diff) > threshold) {
+                    // 在全员墙区域需要额外检查
+                    if (this.isInFreeScrollArea()) {
+                        if (diff > 0 && !this.canLeaveWallArea(true)) return;
+                        if (diff < 0 && !this.canLeaveWallArea(false)) return;
+                    }
+                    
+                    const direction = diff > 0 ? 1 : -1;
+                    this.navigate(direction);
+                }
+            }, { passive: true });
+        }
+
+        private bindIndicators() {
+            const dots = this.container.querySelectorAll('.progress-dot');
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => this.scrollTo(index));
+            });
+        }
+
+        private navigate(direction: number) {
+            const targetIndex = this.currentIndex + direction;
+            
+            if (targetIndex >= 0 && targetIndex < this.sections.length) {
+                this.scrollTo(targetIndex);
+            }
+        }
+
+        private scrollTo(index: number) {
+            if (this.isScrolling || index === this.currentIndex) return;
+            
+            this.isScrolling = true;
+            this.currentIndex = index;
+
+            const targetSection = this.sections[index];
+            if (targetSection) {
+                targetSection.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            this.updateIndicators();
+
+            // 冷却时间
+            if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
+            this.scrollTimeout = setTimeout(() => {
+                this.isScrolling = false;
+            }, this.scrollCooldown);
+        }
+
+        private updateIndicators() {
+            const dots = this.container.querySelectorAll('.progress-dot');
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === this.currentIndex);
+            });
+        }
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+        new FullPageScroll('fanswall-container');
+    });
+</script>
+
+<style>
+    /* ===== 基础容器 ===== */
+    .fanswall-container {
+        width: 100%;
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+        background: #0f172a;
+        position: relative;
+    }
+
+    /* 隐藏滚动条但保留功能 */
+    .fanswall-container {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .fanswall-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* ===== 进度指示器 ===== */
+    .progress-indicator {
+        position: fixed;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .progress-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .progress-dot::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 1px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .progress-dot:hover {
+        background: rgba(255, 255, 255, 0.5);
+        transform: scale(1.2);
+    }
+
+    .progress-dot.active {
+        background: #ec4899;
+        transform: scale(1.3);
+    }
+
+    .progress-dot.active::before {
+        border-color: rgba(236, 72, 153, 0.3);
+    }
+
+    @media (max-width: 768px) {
+        .progress-indicator {
+            right: 10px;
+            gap: 8px;
+        }
+        .progress-dot {
+            width: 6px;
+            height: 6px;
+        }
+    }
+
+    /* ===== 全屏区域 ===== */
+    .section-fullscreen {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        overflow: hidden;
+        background: #0f172a;
+    }
+
+    /* ===== 开屏 ===== */
+    .opening-bg {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+    }
+
+    .blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(120px);
+        opacity: 0.4;
+        animation: blob-float 10s ease-in-out infinite;
+    }
+
+    .blob-1 {
+        width: 600px;
+        height: 600px;
+        background: linear-gradient(135deg, #a855f7, #ec4899);
+        top: 10%;
+        left: 10%;
+    }
+
+    .blob-2 {
+        width: 500px;
+        height: 500px;
+        background: linear-gradient(135deg, #ec4899, #8b5cf6);
+        bottom: 10%;
+        right: 10%;
+        animation-delay: -5s;
+    }
+
+    .blob-3 {
+        width: 400px;
+        height: 400px;
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation-delay: -3s;
+        opacity: 0.25;
+    }
+
+    @keyframes blob-float {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(40px, -40px) scale(1.1); }
+        66% { transform: translate(-30px, 30px) scale(0.95); }
+    }
+
+    .particles {
+        position: absolute;
+        inset: 0;
+    }
+
+    :global(.particle) {
+        position: absolute;
+        width: 3px;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 50%;
+        animation: particle-float 8s ease-in-out infinite;
+    }
+
+    @keyframes particle-float {
+        0%, 100% { opacity: 0; transform: translateY(0) scale(0); }
+        50% { opacity: 1; transform: translateY(-120px) scale(1); }
+    }
+
+    .opening-content {
+        position: relative;
+        z-index: 10;
+        text-align: center;
+        padding: 2rem;
+        max-width: 800px;
+        animation: fade-in-up 1s ease-out;
+    }
+
+    @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .opening-icon {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 2rem;
+        background: linear-gradient(135deg, #ec4899, #a855f7);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        box-shadow: 0 25px 80px rgba(236, 72, 153, 0.4);
+        animation: icon-float 3s ease-in-out infinite;
+    }
+
+    @keyframes icon-float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-12px); }
+    }
+
+    .opening-title {
+        font-size: clamp(2.5rem, 8vw, 5rem);
+        font-weight: 700;
+        color: white;
+        margin-bottom: 1rem;
+        letter-spacing: -0.02em;
+    }
+
+    .opening-subtitle {
+        font-size: clamp(1rem, 3vw, 1.25rem);
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 300;
+        line-height: 1.6;
+        max-width: 500px;
+        margin: 0 auto 3rem;
+    }
+
+    /* 鼠标滚动提示 */
+    .scroll-hint {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        animation: fade-in 1s ease-out 0.8s both;
+    }
+
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .mouse-icon {
+        width: 26px;
+        height: 40px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 13px;
+        position: relative;
+    }
+
+    .mouse-wheel {
+        width: 4px;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 2px;
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: mouse-scroll 2s ease-in-out infinite;
+    }
+
+    @keyframes mouse-scroll {
+        0%, 100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+        50% { transform: translateX(-50%) translateY(8px); opacity: 0.3; }
+    }
+
+    .scroll-text {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+    }
+
+    /* ===== 粉丝区域 ===== */
+    .fan-bg-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 1200px;
+        height: 1200px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.08) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    .fan-content {
+        position: relative;
+        z-index: 10;
+        text-align: center;
+        padding: 2rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .fan-avatar-wrapper {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 1.5rem;
+    }
+
+    .fan-avatar-glow {
+        position: absolute;
+        inset: -8px;
+        background: linear-gradient(135deg, #ec4899, #a855f7);
+        border-radius: 50%;
+        opacity: 0.25;
+        filter: blur(25px);
+        animation: glow-pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes glow-pulse {
+        0%, 100% { opacity: 0.25; transform: scale(1); }
+        50% { opacity: 0.45; transform: scale(1.08); }
+    }
+
+    .fan-avatar {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    @media (min-width: 768px) {
+        .fan-avatar {
+            width: 160px;
+            height: 160px;
+        }
+    }
+
+    .fan-highlight {
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        color: #f9a8d4;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        white-space: nowrap;
+    }
+
+    .fan-name {
+        font-size: clamp(1.75rem, 5vw, 3rem);
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .fan-meta {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 0.9375rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .meta-dot {
+        width: 4px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+    }
+
+    .meta-days {
+        color: #f472b6;
+        font-weight: 500;
+    }
+
+    .fan-message {
+        position: relative;
+        max-width: 650px;
+        margin: 0 auto 2rem;
+        padding: 0 2.5rem;
+    }
+
+    .quote {
+        position: absolute;
+        width: 1.5rem;
+        height: 1.5rem;
+        color: rgba(236, 72, 153, 0.25);
+    }
+
+    .quote-left { top: -0.5rem; left: 0; }
+    .quote-right { bottom: -0.5rem; right: 0; transform: rotate(180deg); }
+
+    .message-text {
+        font-size: clamp(1rem, 2.5vw, 1.375rem);
+        color: rgba(255, 255, 255, 0.85);
+        font-weight: 300;
+        line-height: 1.7;
+        font-style: italic;
+    }
+
+    .fan-timeline {
+        display: flex;
+        justify-content: center;
+        gap: 2.5rem;
+        flex-wrap: wrap;
+    }
+
+    .timeline-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.375rem;
+        min-width: 90px;
+    }
+
+    .timeline-dot {
+        width: 10px;
+        height: 10px;
+        background: linear-gradient(135deg, #ec4899, #a855f7);
+        border-radius: 50%;
+        margin-bottom: 0.25rem;
+    }
+
+    .timeline-date {
+        font-size: 0.6875rem;
+        color: rgba(255, 255, 255, 0.35);
+    }
+
+    .timeline-text {
+        font-size: 0.8125rem;
+        color: rgba(255, 255, 255, 0.55);
+    }
+
+    /* ===== 全员墙 ===== */
+    .section-wall {
+        position: relative;
+        width: 100%;
+        min-height: 100vh;
+        background: linear-gradient(180deg, #0f172a 0%, #1e293b 30%, #0f172a 100%);
+        padding: 5rem 1.5rem 4rem;
+    }
+
+    .wall-header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(15, 23, 42, 0.9);
+        backdrop-filter: blur(20px);
+        padding: 1.25rem;
+        margin: -5rem -1.5rem 2.5rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .wall-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.375rem;
+    }
+
+    .wall-subtitle {
+        font-size: 0.9375rem;
+        color: rgba(255, 255, 255, 0.45);
+    }
+
+    .wall-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    @media (min-width: 640px) {
+        .wall-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .wall-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+    }
+
+    .wall-card {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 1rem;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .wall-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(236, 72, 153, 0.3);
+        box-shadow: 0 25px 50px rgba(236, 72, 153, 0.12);
+    }
+
+    .wall-card-image {
+        position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
+        border-radius: 0.875rem;
+        margin: 0.5rem;
+    }
+
+    .wall-card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+    }
+
+    .wall-card:hover .wall-card-image img {
+        transform: scale(1.1);
+    }
+
+    .wall-card-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.5));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        display: flex;
+        align-items: flex-end;
+        padding: 1rem;
+    }
+
+    .wall-card:hover .wall-card-overlay {
+        opacity: 1;
+    }
+
+    .wall-card-message {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-style: italic;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .wall-card-info {
+        padding: 0.875rem;
+    }
+
+    .wall-card-name {
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.25rem;
+    }
+
+    .wall-card-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.6875rem;
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .wall-card-days {
+        color: #f472b6;
+    }
+
+    .wall-footer {
+        text-align: center;
+        padding-top: 4rem;
+        margin-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .back-to-top {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1.75rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50px;
+        color: white;
+        font-size: 0.9375rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 1.25rem;
+    }
+
+    .back-to-top:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(236, 72, 153, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .wall-footer-text {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* 移动端优化 */
+    @media (max-width: 640px) {
+        .fan-timeline {
+            gap: 1.5rem;
+        }
+        .wall-header {
+            padding: 1rem;
+        }
+        .wall-title {
+            font-size: 1.5rem;
+        }
+    }
+</style>

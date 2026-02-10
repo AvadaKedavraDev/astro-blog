@@ -86,18 +86,121 @@ Afraid, fearful, terrified
 </details>
 
 ### 3. Chain-of-Thought（思维链 / CoT）
-在示例中展示推理步骤，引导模型"逐步思考"。
+> [!tip] 在示例中展示推理步骤，引导模型"逐步思考"。
+
+```python
+cot_examples = [
+    {
+        "question": "15个苹果均分给3个朋友，每人几个？",
+        "reasoning": "总数15除以人数3，15÷3=5，所以每人5个。",
+        "answer": "5个"
+    },
+    {
+        "question": "一个长方形长8cm，宽是长的一半，面积是多少？",
+        "reasoning": "先求宽：8÷2=4cm。再算面积：长×宽=8×4=32平方厘米。",
+        "answer": "32平方厘米"
+    }
+]
+
+cot_example_prompt = ChatPromptTemplate.from_messages([
+    ("human", "问题：{question}"),
+    ("ai", "思考过程：{reasoning} 最终答案：{answer}")
+])
+
+cot_few_shot = FewShotChatMessagePromptTemplate(
+    example_prompt=cot_example_prompt,
+    examples=cot_examples
+)
+
+cot_prompt = ChatPromptTemplate.from_messages([
+    ("system", "解决数学问题时，请模仿示例，先展示详细推理，再给出答案。"),
+    cot_few_shot,
+    ("human", "问题：{question}"),
+])
+
+cot_chain = cot_prompt | llm
+result = cot_chain.invoke({"question": "汽车时速60km，行驶2.5小时，路程多少？"})
+```
+
 
 ## 二、进阶推理框架
 
 ### 1. Zero-shot-CoT / Auto-CoT
-不借助示例，仅通过在问题后添加"让我们一步步思考"等触发词激活推理能力。
+> [!tip] 不借助示例，仅通过在问题后添加"让我们一步步思考"等触发词激活推理能力。
+> 理论上对大模型来说，只需要提示其“一步一步输出”，但是8b规模小，需要明确指定才可
+
+```python
+zero_shot_cot_prompt = ChatPromptTemplate.from_template(
+"""
+问题：{question}
+请按以下格式回答：
+<thinking>
+步骤1：分析题目要求和已知条件
+步骤2：详细计算过程
+步骤3：验证结果
+</thinking>
+<answer>最终答案</answer>
+
+开始解答：
+""")
+
+zero_shot_cot_chain = zero_shot_cot_prompt | llm
+```
+<details>
+<summary>非 Zero-shot-CoT 与 Zero-shot-CoT 结果对比</summary>
+
+::: code-group labels=[非 Zero-shot-CoT, Zero-shot-CoT]
+
+```text [非 Zero-shot-CoT]
+按照数学运算的优先级规则，乘法应先于加法和减法进行计算。因此，原式 $12 + 34 \times 2 - 10$ 的计算步骤如下：
+1. **先计算乘法部分**：  
+   $34 \times 2 = 68$
+2. **将结果代入原式**：  
+   $12 + 68 - 10$
+3. **从左到右依次进行加减法**：  
+   - $12 + 68 = 80$  
+   - $80 - 10 = 70$
+**最终答案**：  
+$$
+\boxed{70}
+$$
+```
+
+```text [Zero-shot-CoT]
+<thinking>
+步骤1：分析题目要求和已知条件  
+题目要求计算表达式 $12 + 34 \times 2 - 10$ 的值，需遵循数学运算顺序（先乘除后加减）。
+
+步骤2：详细计算过程  
+1. **先计算乘法部分**：$34 \times 2 = 68$。  
+2. **将乘法结果代入原式**：$12 + 68 - 10$。  
+3. **计算加法**：$12 + 68 = 80$。  
+4. **计算减法**：$80 - 10 = 70$。  
+
+步骤3：验证结果  
+- 重新检查每一步计算：  
+  - $34 \times 2 = 68$（正确）。  
+  - $12 + 68 = 80$（正确）。  
+  - $80 - 10 = 70$（正确）。  
+- 通过分步验证，结果无误。
+</thinking>
+<answer>70</answer>
+```
+:::
+
+</details>
+
 
 ### 2. Tree of Thoughts（思维树 / ToT）
-将推理过程展开为树状结构，探索多条路径并评估，适用于复杂决策。
-生成多个思考步骤
-评估每个步骤的得分
-回溯或继续深入最有希望的路径
+
+> [!tip] 将推理过程展开为树状结构，探索多条路径并评估，适用于复杂决策。
+> 生成多个思考步骤，评估每个步骤的得分，回溯或继续深入最有希望的路径 
+> 核心：维护多个思维路径，评估后选择最优
+
+```python
+
+
+```
 
 ### 3. ReAct（Reasoning + Acting）
 交替进行思考（Thought）和行动（Action），并观察环境反馈（Observation），适合工具使用场景。
