@@ -420,6 +420,137 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
     </script>
 </BaseLayout>
 
+<!-- 图片灯箱脚本 -->
+<script is:inline>
+(function() {
+    // 灯箱状态
+    let lightbox = null;
+    let lightboxImg = null;
+    let isOpen = false;
+
+    // 初始化灯箱
+    function initLightbox() {
+        // 如果已存在则不再创建
+        if (document.getElementById('image-lightbox')) return;
+
+        // 创建灯箱 DOM
+        lightbox = document.createElement('div');
+        lightbox.id = 'image-lightbox';
+        lightbox.className = 'fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300';
+        lightbox.style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
+        lightbox.style.backdropFilter = 'blur(4px)';
+        
+        // 灯箱内容：图片 + 关闭按钮
+        lightbox.innerHTML = `
+            <img id="lightbox-img" src="" alt="" class="max-w-[90vw] max-h-[90vh] object-contain scale-95 transition-transform duration-300 rounded-lg shadow-2xl" />
+            <button id="lightbox-close" class="absolute top-4 right-4 p-2 text-white/80 hover:text-white transition-colors rounded-full hover:bg-white/10" aria-label="关闭">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div id="lightbox-caption" class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/80 text-sm max-w-[80vw] text-center"></div>
+        `;
+        
+        document.body.appendChild(lightbox);
+        lightboxImg = document.getElementById('lightbox-img');
+
+        // 点击关闭
+        lightbox.addEventListener('click', function(e) {
+            if (e.target === lightbox || e.target.closest('#lightbox-close')) {
+                closeLightbox();
+            }
+        });
+
+        // ESC 关闭
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && isOpen) {
+                closeLightbox();
+            }
+        });
+    }
+
+    // 打开灯箱
+    function openLightbox(img) {
+        if (!lightbox) initLightbox();
+        
+        lightboxImg.src = img.src;
+        lightboxImg.alt = img.alt || '';
+        
+        // 设置图片说明（如果有 alt 文本）
+        const caption = document.getElementById('lightbox-caption');
+        caption.textContent = img.alt || '';
+        caption.style.display = img.alt ? 'block' : 'none';
+        
+        // 显示灯箱
+        lightbox.classList.remove('opacity-0', 'pointer-events-none');
+        lightbox.classList.add('opacity-100', 'pointer-events-auto');
+        
+        // 图片放大动画
+        setTimeout(() => {
+            lightboxImg.classList.remove('scale-95');
+            lightboxImg.classList.add('scale-100');
+        }, 10);
+        
+        isOpen = true;
+        document.body.style.overflow = 'hidden'; // 禁止背景滚动
+    }
+
+    // 关闭灯箱
+    function closeLightbox() {
+        if (!lightbox || !isOpen) return;
+        
+        lightboxImg.classList.remove('scale-100');
+        lightboxImg.classList.add('scale-95');
+        lightbox.classList.remove('opacity-100', 'pointer-events-auto');
+        lightbox.classList.add('opacity-0', 'pointer-events-none');
+        
+        isOpen = false;
+        document.body.style.overflow = ''; // 恢复背景滚动
+    }
+
+    // 绑定图片点击事件
+    function bindImages() {
+        // 只绑定文章内容区的图片
+        const articleContent = document.querySelector('.prose-custom');
+        if (!articleContent) return;
+
+        const images = articleContent.querySelectorAll('img');
+        images.forEach(img => {
+            // 跳过已绑定的图片
+            if (img.dataset.lightboxBound) return;
+            
+            // 添加点击样式
+            img.style.cursor = 'zoom-in';
+            img.classList.add('hover:opacity-90', 'transition-opacity');
+            
+            // 绑定点击事件
+            img.addEventListener('click', function(e) {
+                e.preventDefault();
+                openLightbox(img);
+            });
+            
+            img.dataset.lightboxBound = 'true';
+        });
+    }
+
+    // 初始化
+    function init() {
+        initLightbox();
+        bindImages();
+    }
+
+    // 页面加载完成后初始化
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    // Swup 页面过渡后重新绑定（如果使用了 Swup）
+    document.addEventListener('swup:content:replace', function() {
+        setTimeout(init, 0);
+    });
+})();
+</script>
+
 <style>
     /* 垂直文字 */
     .writing-vertical {
