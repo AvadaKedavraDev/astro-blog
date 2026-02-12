@@ -1,3 +1,9 @@
+/**
+ * @file post.ts
+ * @description 文章相关的数据获取函数
+ * @exports getAdjacentPosts - 获取相邻文章
+ * @exports getRelatedPostsByTags - 根据标签获取相关文章
+ */
 // src/lib/post.ts
 import { getCollection, type CollectionEntry } from 'astro:content';
 

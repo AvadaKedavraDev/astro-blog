@@ -12,7 +12,6 @@ import remarkCallouts from 'remark-callouts';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import swup, {Theme} from '@swup/astro';
-import react from '@astrojs/react';
 import icon from 'astro-icon';
 
 // 导入原始主题（Shiki 格式）
@@ -97,5 +96,5 @@ export default defineConfig({
             },
         
 
-        }), react(), icon()],
+        }), icon()],
 });

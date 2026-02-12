@@ -1,0 +1,170 @@
+---
+/**
+ * @component SwupCompat
+ * @description Swup 兼容性工具组件，提供统一的生命周期事件管理
+ * @features onPageView、onContentReplace、beforeContentReplace API
+ * @usage 在 BaseLayout 中引用，其他组件通过 window.SwupCompat 访问
+ */
+---
+
+<script is:inline>
+(function() {
+  'use strict';
+  
+  // 如果已经存在且已就绪，直接返回
+  if (window.SwupCompat && window.SwupCompat.__isReady__) {
+    return;
+  }
+  
+  // 保留已有的回调（如果存在）
+  const existingCallbacks = window.SwupCompat?.callbacks || {
+    'page:view': [],
+    'content:replace': [],
+    'content:replace:before': []
+  };
+  
+  // 创建全局 Swup 兼容管理器
+  window.SwupCompat = {
+    // 回调注册表（保留已有的）
+    callbacks: {
+      'page:view': [...existingCallbacks['page:view']],
+      'content:replace': [...existingCallbacks['content:replace']],
+      'content:replace:before': [...existingCallbacks['content:replace:before']]
+    },
+    
+    // 是否已初始化事件监听
+    __isReady__: false,
+    
+    // 注册页面视图回调（页面切换完成后）
+    onPageView(callback, options = {}) {
+      const { immediate = true } = options;
+      
+      // 添加到注册表
+      this.callbacks['page:view'].push(callback);
+      
+      // 立即执行一次（如果页面已加载）
+      if (immediate && document.readyState !== 'loading') {
+        try {
+          callback();
+        } catch (e) {
+          console.error('SwupCompat: 初始回调执行失败:', e);
+        }
+      }
+      
+      return () => this.off('page:view', callback);
+    },
+    
+    // 注册内容替换后回调
+    onContentReplace(callback, options = {}) {
+      const { immediate = true } = options;
+      
+      this.callbacks['content:replace'].push(callback);
+      
+      if (immediate && document.readyState !== 'loading') {
+        try {
+          callback();
+        } catch (e) {
+          console.error('SwupCompat: 初始回调执行失败:', e);
+        }
+      }
+      
+      return () => this.off('content:replace', callback);
+    },
+    
+    // 注册内容替换前回调
+    beforeContentReplace(callback) {
+      this.callbacks['content:replace:before'].push(callback);
+      return () => this.off('content:replace:before', callback);
+    },
+    
+    // 移除回调
+    off(event, callback) {
+      if (this.callbacks[event]) {
+        const index = this.callbacks[event].indexOf(callback);
+        if (index > -1) {
+          this.callbacks[event].splice(index, 1);
+        }
+      }
+    },
+    
+    // 触发回调
+    emit(event) {
+      if (this.callbacks[event]) {
+        this.callbacks[event].forEach(callback => {
+          try {
+            callback();
+          } catch (e) {
+            console.error(`SwupCompat: ${event} 回调执行失败:`, e);
+          }
+        });
+      }
+    },
+    
+    // 手动触发 Swup Scripts Plugin
+    runScripts() {
+      const scriptsPlugin = window.swup?.findPlugin('SwupScriptsPlugin');
+      if (scriptsPlugin && scriptsPlugin.runScripts) {
+        console.log('[SwupCompat] Manually triggering runScripts');
+        // 使用 call 绑定 this，确保方法内部能正确访问 this.options 和 this.swup
+        scriptsPlugin.runScripts.call(scriptsPlugin);
+      }
+    },
+    
+    // 初始化事件监听
+    init() {
+      if (this.__isReady__) return;
+      
+      // 监听 Swup 标准事件（旧版兼容）
+      document.addEventListener('swup:contentReplaced', () => {
+        this.emit('content:replace');
+        this.runScripts(); // 手动触发脚本执行
+        requestAnimationFrame(() => {
+          setTimeout(() => this.emit('page:view'), 0);
+        });
+      });
+      
+      document.addEventListener('swup:beforeContentReplace', () => {
+        this.emit('content:replace:before');
+      });
+      
+      // 监听 Swup hooks（新版）
+      const bindSwupHooks = () => {
+        if (window.swup?.hooks) {
+          console.log('[SwupCompat] Binding to swup hooks');
+          
+          window.swup.hooks.on('content:replace', () => {
+            this.emit('content:replace:before');
+          });
+          
+          window.swup.hooks.on('content:replace', () => {
+            this.emit('content:replace');
+            this.runScripts(); // 手动触发脚本执行
+          });
+          
+          window.swup.hooks.on('page:view', () => {
+            this.emit('page:view');
+          });
+          
+          return true;
+        }
+        return false;
+      };
+      
+      if (!bindSwupHooks()) {
+        document.addEventListener('swup:enable', () => {
+          bindSwupHooks();
+        }, { once: true });
+      }
+      
+      document.addEventListener('astro:page-load', () => {
+        this.emit('page:view');
+      });
+      
+      this.__isReady__ = true;
+    }
+  };
+  
+  // 立即初始化
+  window.SwupCompat.init();
+})();
+</script>
