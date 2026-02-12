@@ -52,6 +52,7 @@ const fullTitle = title === "首页" ? "Moonpeak" : `${title} — Moonpeak`;
     
     {/* 主题初始化 - 必须在最前面执行，防止闪烁 */}
     <script is:inline>
+      // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
       (function() {
         const theme = localStorage.getItem('theme') || 
           (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');

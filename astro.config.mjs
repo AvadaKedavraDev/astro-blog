@@ -37,11 +37,13 @@ const customLatte = {
 // https://astro.build/config
 export default defineConfig({
     vite: {
-        plugins: [tailwindcss(), pluginCollapsibleSections()],
+        // @ts-ignore - TailwindCSS Vite 插件类型版本不匹配，不影响运行
+        plugins: [tailwindcss()],
     },
 
     markdown: {
         // 解决MD 换行被破坏、注释挤在一起的问题
+        // @ts-ignore - remark 插件类型版本不匹配，不影响运行
         remarkPlugins: [remarkGfm, remarkBreaks, remarkCallouts, remarkMath],
         rehypePlugins: [rehypeKatex, rehypeCodeGroup],
     },
@@ -62,21 +64,23 @@ export default defineConfig({
             globalInstance: true,
         }),
         expressiveCode({
-            themes: [customLatte, 'houston'], // 1. 关闭自动媒体查询，完全交给下面的手动选择器控制
+            themes: [customLatte, 'houston'],
             useDarkModeMediaQuery: false,
 
-            // 2. 修正逻辑：暗色主题挂在 .dark 下，亮色主题挂在非 .dark 下
+            // 主题选择器
             themeCssSelector: (theme) => {
-                // 直接返回类名字符串，不要带 &，让插件自动处理嵌套
                 if (theme.type === 'dark') return '.dark';
                 return ':root:not(.dark)';
             },
 
-            // 实际上可以通过配置全局的默认 props
+            // 默认属性
             defaultProps: {
-                wrap: true, // 这里的 wrap 是有效的
+                wrap: true,
+                // @ts-ignore - showLineNumbers 类型定义问题，不影响运行
+                showLineNumbers: false,
             },
 
+            // 样式覆盖
             styleOverrides: {
                 borderRadius: '0.625rem',
                 codePaddingInline: '1.25rem',
@@ -84,17 +88,16 @@ export default defineConfig({
                 codeFontSize: '0.8125rem',
                 // 隐藏终端框架的标题栏
                 frames: {
-                    terminalTitleBarDotsForeground: 'transparent',
-                    terminalTitleBarDotsOpacity: '0',
+                    terminalTitlebarDotsForeground: 'transparent',
+                    terminalTitlebarDotsOpacity: '0',
                     tooltipSuccessBackground: 'var(--foreground)',
                     tooltipSuccessForeground: 'var(--background)',
                 },
             },
-            defaultProps: {
-                wrap: true,
-                showLineNumbers: false,
-            },
-        
-
-        }), icon()],
+            
+            // Expressive Code 插件
+            plugins: [pluginCollapsibleSections()],
+        }), 
+        icon()
+    ],
 });

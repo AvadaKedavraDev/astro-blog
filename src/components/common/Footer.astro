@@ -73,6 +73,7 @@ const SITE_BIRTH = "2025-03-31T00:00:00";
 
 <!-- 性能优化：使用 is:inline 避免打包开销，直接运行在浏览器 -->
 <script is:inline data-swup-ignore-script>
+  // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
   (function() {
     const textEl = document.getElementById('runtime-text');
     if (!textEl) return;
