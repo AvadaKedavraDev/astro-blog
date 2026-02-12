@@ -1,4 +1,11 @@
 ---
+/**
+ * @component BookMarkManager
+ * @description 工具箱管理组件，支持添加、删除、编辑书签链接
+ * @props links - 初始链接数组
+ * @features 本地存储、鼠标拖拽排序、编辑模态框
+ * @usage 在 /links 页面使用
+ */
 // 工具箱组件
 interface Link {
     name: string;
@@ -154,7 +161,7 @@ function generateColor(str: string): string {
     }
 </style>
 
-<script is:inline>
+<script is:inline data-swup-ignore-script>
     (function() {
         function initBookmarkManager() {
             const searchInput = document.getElementById('nav-search-input');

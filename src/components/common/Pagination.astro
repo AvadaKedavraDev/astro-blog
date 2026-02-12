@@ -1,5 +1,12 @@
 ---
-// 分页组件
+/**
+ * @component Pagination
+ * @description 分页导航组件，支持上一页/下一页和页码导航
+ * @props section - 内容类型（如 blog）
+ * @props currentPage - 当前页码
+ * @props totalPages - 总页数
+ * @props basePath - 基础路径
+ */
 interface Props {
   section: string;
   currentPage: number;

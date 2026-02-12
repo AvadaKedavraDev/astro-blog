@@ -1,5 +1,10 @@
 ---
-// 极简导航栏
+/**
+ * @component Navigation
+ * @description 顶部导航栏组件，支持桌面端和移动端响应式布局
+ * @features 当前页高亮、移动端菜单、主题切换、Swup 兼容
+ * @usage 在 BaseLayout 中引用
+ */
 import ThemeIcon from "@components/widgets/ThemeIcon.astro";
 import { Icon } from "astro-icon/components";
 
@@ -112,7 +117,7 @@ const currentPath = Astro.url.pathname;
   </div>
 </header>
 
-<script is:inline>
+<script is:inline data-swup-ignore-script>
   (function() {
     // 判断是否是当前页面
     function isActive(itemHref, currentPath) {
@@ -206,13 +211,16 @@ const currentPath = Astro.url.pathname;
     // 页面加载时初始化
     init();
     
-    // 兼容 Swup - 页面过渡完成后重新初始化
-    document.addEventListener('swup:enable', () => {
-      window.swup?.hooks?.on('page:view', init);
-    });
-    
-    // 兼容 Astro View Transitions
-    document.addEventListener('astro:page-load', init);
+    // 使用 SwupCompat 统一处理页面切换
+    if (window.SwupCompat) {
+      window.SwupCompat.onPageView(init);
+    } else {
+      // 降级处理
+      document.addEventListener('swup:enable', () => {
+        window.swup?.hooks?.on('page:view', init);
+      });
+      document.addEventListener('astro:page-load', init);
+    }
     
     // 监听 URL 变化（备用方案）
     window.addEventListener('popstate', updateNavHighlight);

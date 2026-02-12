@@ -1,5 +1,10 @@
 ---
-// 同标签文章侧边栏组件
+/**
+ * @component RelatedPostsByTag
+ * @description 根据当前文章标签显示相关文章列表的侧边栏组件
+ * @props posts - 相关文章数组
+ * @props currentTags - 当前文章的标签数组
+ */
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {

@@ -1,4 +1,14 @@
 ---
+/**
+ * @component TypeWriter
+ * @description 打字机动效组件，逐字显示文本
+ * @props text - 要显示的文本
+ * @props class - 自定义类名
+ * @props speed - 打字速度（默认100ms）
+ * @props delay - 延迟开始时间（默认500ms）
+ * @features 字符级动画、Swup 兼容、防止重复初始化
+ * @usage 用于首页标题等需要打字效果的场景
+ */
 // 打字机组件
 interface Props {
     text: string;
@@ -152,6 +162,11 @@ const uid = Math.random().toString(36).substring(2, 11);
                 reinitTimer?: number;
             };
             fixTypewriter?: () => void;
+            SwupCompat?: {
+                onPageView: (callback: () => void) => () => void;
+                onContentReplace: (callback: () => void) => () => void;
+                beforeContentReplace: (callback: () => void) => () => void;
+            };
             swup?: {
                 hooks?: {
                     on: (event: string, callback: () => void) => void;
@@ -235,9 +250,20 @@ const uid = Math.random().toString(36).substring(2, 11);
             G.timeouts.add(t);
         }
 
-        // 绑定 Swup 事件
+        // 使用 SwupCompat 统一处理（如果可用）
+        function bindWithSwupCompat(): boolean {
+            if (window.SwupCompat) {
+                window.SwupCompat.beforeContentReplace(nukeAllTypewriters);
+                window.SwupCompat.onPageView(init);
+                return true;
+            }
+            return false;
+        }
+
+        // 直接绑定 Swup hooks（备用方案）
         function bindSwupHooks(): boolean {
             if (window.swup && window.swup.hooks) {
+                // 注意：先解绑再绑定，避免重复
                 window.swup.hooks.off('content:replace', nukeAllTypewriters);
                 window.swup.hooks.off('page:view', init);
                 window.swup.hooks.on('content:replace', nukeAllTypewriters);
@@ -247,22 +273,31 @@ const uid = Math.random().toString(36).substring(2, 11);
             return false;
         }
 
-        // Swup 标准事件（兼容旧版）
-        document.addEventListener('swup:contentReplaced', init);
+        // 标准事件（兼容旧版 Swup）
+        document.addEventListener('swup:contentReplaced', () => {
+            nukeAllTypewriters();
+            init();
+        });
         document.addEventListener('swup:beforeContentReplace', nukeAllTypewriters);
+        
+        // Astro View Transitions 兼容
+        document.addEventListener('astro:page-load', () => {
+            nukeAllTypewriters();
+            init();
+        });
 
-        // 延迟绑定（如果 Swup 还没加载）
-        if (!bindSwupHooks()) {
-            const checkSwup = window.setInterval(() => {
-                if (bindSwupHooks()) {
-                    clearInterval(checkSwup);
+        // 延迟绑定（等待 SwupCompat 或 Swup 加载）
+        if (!bindWithSwupCompat()) {
+            const checkInterval = window.setInterval(() => {
+                if (bindWithSwupCompat() || bindSwupHooks()) {
+                    clearInterval(checkInterval);
                 }
             }, 100);
-            G.timeouts.add(checkSwup);
+            G.timeouts.add(checkInterval);
 
             // 10秒后停止检查
             window.setTimeout(() => {
-                clearInterval(checkSwup);
+                clearInterval(checkInterval);
             }, 10000);
         }
 

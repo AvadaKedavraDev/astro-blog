@@ -1,4 +1,11 @@
 ---
+/**
+ * @component TableOfContents
+ * @description 文章目录组件，自动高亮当前阅读位置
+ * @props headings - Markdown 标题数组（只显示 H2 和 H3）
+ * @features IntersectionObserver 优化、平滑滚动、Swup 兼容
+ * @usage 在 ArticleLayout 中传入 headings 数据
+ */
 import type { MarkdownHeading } from 'astro';
 
 interface Props {
@@ -32,9 +39,16 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
   </nav>
 )}
 
-<script is:inline>
+<script is:inline data-swup-ignore-script>
   (function() {
+    let tocObserver = null;
+    
     function initTOC() {
+      // 清理旧的 observer
+      if (tocObserver) {
+        tocObserver.disconnect();
+      }
+      
       const tocItems = document.querySelectorAll('.toc-item');
       const tocLinks = document.querySelectorAll('.toc-link');
       const headings = Array.from(document.querySelectorAll('article h2, article h3'));
@@ -46,7 +60,7 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
       const visibleHeadings = new Map();
       
       // 使用 IntersectionObserver 优化性能
-      const observer = new IntersectionObserver((entries) => {
+      tocObserver = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           visibleHeadings.set(entry.target.id, entry.isIntersecting);
         });
@@ -96,7 +110,7 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
         threshold: 0
       });
       
-      headings.forEach(h => observer.observe(h));
+      headings.forEach(h => tocObserver.observe(h));
     }
     
     // 延迟初始化，确保页面完全加载
@@ -106,7 +120,13 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
       initTOC();
     }
     
-    // 兼容 Astro View Transitions
-    document.addEventListener('astro:page-load', initTOC);
+    // 使用 SwupCompat 统一处理页面切换
+    if (window.SwupCompat) {
+      window.SwupCompat.onPageView(initTOC);
+    } else {
+      // 降级处理
+      document.addEventListener('astro:page-load', initTOC);
+      document.addEventListener('swup:contentReplaced', initTOC);
+    }
   })();
 </script>

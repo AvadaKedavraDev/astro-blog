@@ -1,4 +1,9 @@
 ---
+/**
+ * @component Footer
+ * @description 页面底部组件，包含版权信息、运行时间和建站周年计算
+ * @features 动态运行时间计算、建站时间展示
+ */
 import { Icon } from "astro-icon/components";
 const currentYear = new Date().getFullYear();
 // 建站时间（请修改为你的实际建站日期）
@@ -67,7 +72,7 @@ const SITE_BIRTH = "2025-03-31T00:00:00";
 </footer>
 
 <!-- 性能优化：使用 is:inline 避免打包开销，直接运行在浏览器 -->
-<script is:inline>
+<script is:inline data-swup-ignore-script>
   (function() {
     const textEl = document.getElementById('runtime-text');
     if (!textEl) return;

@@ -1,9 +1,17 @@
 ---
+/**
+ * @layout ArticleLayout
+ * @description 文章页面布局组件，继承自 BaseLayout
+ * @features 三栏布局、目录、相关文章、文章抽屉、阅读进度、图片灯箱
+ * @props post - 文章内容数据
+ * @props headings - Markdown 标题数组
+ */
 import BaseLayout from "@layouts/BaseLayout.astro";
 import ReadingProgress from "@components/ui/ReadingProgress.astro";
 import TableOfContents from "@components/common/TableOfContents.astro";
 import ArticleNavigation from "@components/article/ArticleNavigation.astro";
 import RelatedPostsByTag from "@components/article/RelatedPostsByTag.astro";
+import ArticleDrawer from "@components/common/ArticleDrawer.astro";
 import {Icon} from "astro-icon/components";
 
 import {getAdjacentPosts, getRelatedPostsByTags} from "@lib/post";
@@ -256,7 +264,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                                         </div>
                                     </div>
 
-                                    {/* 可以添加更多 Card，比如：工具 */}
+                                    {/* 快捷操作 */}
                                     <div class="card-base overflow-hidden mt-4">
                                         <div class="px-4 py-3 border-b border-border bg-muted/30">
                                             <div class="flex items-center gap-2">
@@ -329,6 +337,9 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                 </div>
         )}
     </div>
+
+    {/* ========== 文章抽屉 ========== */}
+    <ArticleDrawer />
 
     {/* Sidebar Toggle Scripts */}
     <script is:inline>
@@ -544,10 +555,13 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
         init();
     }
 
-    // Swup 页面过渡后重新绑定（如果使用了 Swup）
-    document.addEventListener('swup:content:replace', function() {
-        setTimeout(init, 0);
-    });
+    // Swup 页面过渡后重新绑定
+    if (window.SwupCompat) {
+        window.SwupCompat.onPageView(init);
+    } else {
+        document.addEventListener('swup:contentReplaced', init);
+        document.addEventListener('astro:page-load', init);
+    }
 })();
 </script>
 

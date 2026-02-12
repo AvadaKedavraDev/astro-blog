@@ -1,9 +1,13 @@
 ---
-// Swup 滚动配置组件
-// 配置 Swup Scroll Plugin 的 offset，解决锚点被导航栏遮挡的问题
+/**
+ * @component SwupScrollConfig
+ * @description Swup 滚动配置组件，配置锚点滚动 offset
+ * @features 解决固定导航栏遮挡锚点的问题
+ * @usage 在 BaseLayout 中引用
+ */
 ---
 
-<script is:inline>
+<script is:inline data-swup-ignore-script>
   (function() {
     // 导航栏高度 64px + 额外间距 32px = 96px
     const SCROLL_OFFSET = 96;
@@ -14,7 +18,7 @@
         return false;
       }
       
-      // 检查 plugins 是否存在（Swup 可能尚未完全初始化）
+      // 检查 plugins 是否存在
       if (!window.swup.plugins || !Array.isArray(window.swup.plugins)) {
         return false;
       }
@@ -47,7 +51,19 @@
       window.addEventListener('load', tryConfigure);
     }
     
-    // 每次页面视图更新后重新配置（Swup 页面切换后）
-    document.addEventListener('astro:page-load', tryConfigure);
+    // 使用 SwupCompat 在每次页面视图更新后重新配置
+    if (window.SwupCompat) {
+      window.SwupCompat.onPageView(tryConfigure);
+    } else {
+      // 降级处理
+      document.addEventListener('swup:contentReplaced', tryConfigure);
+      document.addEventListener('astro:page-load', tryConfigure);
+    }
+    
+    // 同时监听 swup:enable 事件
+    document.addEventListener('swup:enable', () => {
+      // Swup 启用后，等待 hooks 可用
+      setTimeout(tryConfigure, 100);
+    });
   })();
 </script>

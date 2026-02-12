@@ -1,5 +1,10 @@
 ---
-// 上/下一篇文章
+/**
+ * @component ArticleNavigation
+ * @description 文章底部导航组件，显示上一篇和下一篇文章的快捷导航
+ * @props prevArticle - 上一篇文章信息 {title, slug}（可选）
+ * @props nextArticle - 下一篇文章信息 {title, slug}（可选）
+ */
 import { Icon } from "astro-icon/components";
 
 interface Article {

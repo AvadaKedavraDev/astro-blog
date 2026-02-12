@@ -1,46 +1,57 @@
 ---
-// 阅读进度条组件 - 使用 IntersectionObserver 优化性能
+/**
+ * @component ReadingProgress
+ * @description 阅读进度条组件，显示当前阅读进度
+ * @features requestAnimationFrame 优化、passive 事件监听、Swup 兼容
+ * @usage 在 ArticleLayout 中引用
+ */
 ---
 
 <div id="reading-progress" class="fixed top-0 left-0 h-[2px] bg-foreground/70 z-[100] w-0 transition-[width] duration-100 ease-out"></div>
 
-<script is:inline>
+<script is:inline data-swup-ignore-script>
   (function() {
-    // 使用 requestAnimationFrame 和 passive 事件监听器优化滚动性能
-    let ticking = false;
-    let progressBar = null;
-    let article = null;
-    
-    function updateProgress() {
-      if (!progressBar || !article) return;
-      
-      const scrollTop = window.scrollY;
-      const articleTop = article.offsetTop;
-      const articleHeight = article.offsetHeight;
-      const windowHeight = window.innerHeight;
-      
-      // 计算文章可见区域
-      const readableHeight = articleHeight - windowHeight + articleTop;
-      const currentProgress = Math.max(0, scrollTop - articleTop + 100);
-      const progress = Math.min(100, Math.max(0, (currentProgress / readableHeight) * 100));
-      
-      progressBar.style.width = progress + '%';
-      ticking = false;
-    }
+    let scrollHandler = null;
     
     function initProgress() {
-      progressBar = document.getElementById('reading-progress');
-      article = document.querySelector('article');
+      // 使用 requestAnimationFrame 和 passive 事件监听器优化滚动性能
+      let ticking = false;
+      const progressBar = document.getElementById('reading-progress');
+      const article = document.querySelector('article');
       
       if (!progressBar) return;
       
-      // 使用 passive 事件监听器提高滚动性能
-      window.addEventListener('scroll', function() {
+      // 移除旧的事件监听器
+      if (scrollHandler) {
+        window.removeEventListener('scroll', scrollHandler);
+      }
+      
+      function updateProgress() {
+        if (!progressBar || !article) return;
+        
+        const scrollTop = window.scrollY;
+        const articleTop = article.offsetTop;
+        const articleHeight = article.offsetHeight;
+        const windowHeight = window.innerHeight;
+        
+        // 计算文章可见区域
+        const readableHeight = articleHeight - windowHeight + articleTop;
+        const currentProgress = Math.max(0, scrollTop - articleTop + 100);
+        const progress = Math.min(100, Math.max(0, (currentProgress / readableHeight) * 100));
+        
+        progressBar.style.width = progress + '%';
+        ticking = false;
+      }
+      
+      scrollHandler = function() {
         if (!ticking) {
           requestAnimationFrame(updateProgress);
           ticking = true;
         }
-      }, { passive: true });
+      };
+      
+      // 使用 passive 事件监听器提高滚动性能
+      window.addEventListener('scroll', scrollHandler, { passive: true });
       
       // 初始化
       updateProgress();
@@ -49,12 +60,15 @@
     // 立即初始化
     initProgress();
     
-    // 兼容 Astro View Transitions
-    document.addEventListener('astro:page-load', initProgress);
-    
-    // 兼容 Swup
-    document.addEventListener('swup:enable', () => {
-      window.swup?.hooks?.on('page:view', initProgress);
-    });
+    // 使用 SwupCompat 统一处理页面切换
+    if (window.SwupCompat) {
+      window.SwupCompat.onPageView(initProgress);
+    } else {
+      // 降级处理
+      document.addEventListener('astro:page-load', initProgress);
+      document.addEventListener('swup:enable', () => {
+        window.swup?.hooks?.on('page:view', initProgress);
+      });
+    }
   })();
 </script>
