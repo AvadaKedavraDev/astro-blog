@@ -251,3 +251,47 @@ JDK 1.7 死循环原因：
 ---
 
 ## 二、ConcurrentHashMap
+
+### 一、JDK 1.7：Segment 分段锁（ReentrantLock）
+核心结构
+```java
+// 1.7 核心结构
+static final class Segment<K,V> extends ReentrantLock implements Serializable {
+    transient volatile HashEntry<K,V>[] table;  // 每个Segment维护独立的Hash表
+    transient int count;                        // Segment内元素个数（volatile保证可见性）
+    transient int modCount;
+    transient int threshold;
+    final float loadFactor;
+}
+
+final Segment<K,V>[] segments;  // 默认16个Segment，即默认16个并发度
+```
+- 锁机制详解
+    1. 分段粒度：默认创建 16 个 Segment（不可扩容），每个 Segment 继承 ReentrantLock
+    2. 锁范围：先定位到 Segment，再对该 Segment 加锁，而非锁住整个 Map
+    3. 并发度：理论上支持 16 个线程真正并行写入不同 Segment
+    4. get 操作：无需加锁，利用 volatile 的内存语义保证可见性（HashEntry 的 value 和 next 都是 volatile）
+- 1.7 的局限
+   1. 锁粒度粗：虽然比 Hashtable（synchronized 方法）细，但 Segment 不可动态增加，并发度固定
+   2. 查询效率低：链表过长时遍历慢（没有红黑树优化）
+   3. 内存占用：每个 Segment 是独立的小 HashMap，空节点也占用内存
+
+### 二、JDK 1.8：CAS + synchronized + 红黑树
+```java
+// 1.8 核心节点类
+static class Node<K,V> implements Map.Entry<K,V> {
+    final int hash;
+    final K key;
+    volatile V val;        // 保证可见性
+    volatile Node<K,V> next; // 链表下一个节点
+}
+
+// 红黑树节点
+static final class TreeNode<K,V> extends Node<K,V> {
+    TreeNode<K,V> parent, left, right, prev;
+    boolean red;
+}
+
+// 关键控制字段
+private transient volatile int sizeCtl;  // 核心控制参数，多义字段
+```
