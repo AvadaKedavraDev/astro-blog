@@ -1,0 +1,349 @@
+---
+/**
+ * @component SplashModal
+ * @description 活动开屏弹窗组件 - 支持嵌入自定义页面内容
+ * @features 动画效果、本地存储记忆、倒计时自动关闭、响应式设计、Swup 兼容
+ * 
+ * @props {string} [storageKey='splash-modal-closed'] - localStorage 的 key
+ * @props {boolean} [rememberClosed=true] - 是否记住用户已关闭（使用 localStorage）
+ * @props {boolean} [showOncePerSession=false] - 是否每会话只显示一次（默认每天一次）
+ * @props {boolean} [showCloseButton=true] - 是否显示关闭按钮
+ * @props {boolean} [clickOutsideToClose=true] - 点击遮罩层是否关闭
+ * @props {number} [autoCloseSeconds] - 自动关闭秒数（可选）
+ * @props {string} [closeButtonPosition='top-right'] - 关闭按钮位置: 'top-right' | 'top-left' | 'outside'
+ * @props {string} [maxWidth='max-w-2xl'] - 弹窗最大宽度: 'max-w-sm' | 'max-w-md' | 'max-w-lg' | 'max-w-xl' | 'max-w-2xl' | 'max-w-3xl' | 'max-w-4xl' | 'max-w-full'
+ * @props {boolean} [fullHeight=false] - 是否占满屏幕高度（适合嵌入完整页面）
+ * 
+ * @slot default - 弹窗主体内容区域，可传入任意 Astro 组件或 HTML
+ * 
+ * @example
+ * <SplashModal storageKey="promo-2024">
+ *   <YourCustomPage />
+ * </SplashModal>
+ */
+import { Icon } from "astro-icon/components";
+
+export interface Props {
+  storageKey?: string;
+  rememberClosed?: boolean;
+  showOncePerSession?: boolean;
+  showCloseButton?: boolean;
+  clickOutsideToClose?: boolean;
+  autoCloseSeconds?: number;
+  closeButtonPosition?: 'top-right' | 'top-left' | 'outside';
+  maxWidth?: 'max-w-sm' | 'max-w-md' | 'max-w-lg' | 'max-w-xl' | 'max-w-2xl' | 'max-w-3xl' | 'max-w-4xl' | 'max-w-5xl' | 'max-w-6xl' | 'max-w-7xl' | 'max-w-full';
+  fullHeight?: boolean;
+  showOnFirstVisit?: boolean;
+}
+
+const {
+  storageKey = 'splash-modal-closed',
+  rememberClosed = true,
+  showOncePerSession = false,
+  showCloseButton = true,
+  clickOutsideToClose = true,
+  autoCloseSeconds,
+  closeButtonPosition = 'top-right',
+  maxWidth = 'max-w-2xl',
+  fullHeight = false,
+  showOnFirstVisit = true,
+} = Astro.props;
+
+// 生成唯一的组件 ID
+const componentId = `splash-${Math.random().toString(36).substr(2, 9)}`;
+
+// 关闭按钮位置样式
+const closeButtonStyles = {
+  'top-right': 'absolute top-4 right-4 z-10',
+  'top-left': 'absolute top-4 left-4 z-10',
+  'outside': 'fixed -top-12 right-0 z-10',
+};
+---
+
+<!-- 开屏弹窗容器 -->
+<div
+  id={componentId}
+  class="splash-modal-container fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+  role="dialog"
+  aria-modal="true"
+  data-storage-key={storageKey}
+  data-remember-closed={rememberClosed.toString()}
+  data-show-once-per-session={showOncePerSession.toString()}
+  data-click-outside={clickOutsideToClose.toString()}
+  data-auto-close={autoCloseSeconds}
+  data-show-on-first-visit={showOnFirstVisit.toString()}
+  style="display: none;"
+>
+  <!-- 遮罩层 -->
+  <div class="splash-backdrop absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
+  
+  <!-- 弹窗内容容器 -->
+  <div 
+    class={`splash-content relative w-full ${maxWidth} transform scale-95 opacity-0 transition-all duration-300 ${fullHeight ? 'h-[90vh]' : ''}`}
+    style="transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);"
+  >
+    <!-- 弹窗卡片 -->
+    <div class={`card overflow-hidden shadow-2xl relative bg-card ${fullHeight ? 'h-full flex flex-col' : ''}`}>
+      
+      {/* 关闭按钮 */}
+      {showCloseButton && (
+        <button
+          class={`splash-close-btn ${closeButtonStyles[closeButtonPosition]} 
+                  p-2.5 rounded-full bg-muted/80 text-muted-foreground backdrop-blur-sm
+                  hover:bg-muted hover:text-foreground transition-all duration-200 hover:scale-110
+                  shadow-lg border border-border/50`}
+          aria-label="关闭弹窗"
+        >
+          <Icon name="lucide:x" class="w-5 h-5" />
+        </button>
+      )}
+      
+      {/* 内容区域 - 通过 slot 传入自定义内容 */}
+      <div class={`splash-body ${fullHeight ? 'flex-1 overflow-y-auto' : ''}`}>
+        <slot />
+      </div>
+      
+      {/* 自动关闭倒计时提示 */}
+      {autoCloseSeconds && autoCloseSeconds > 0 && (
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/90 backdrop-blur-sm text-xs text-muted-foreground shadow-lg">
+          <Icon name="lucide:clock" class="w-3 h-3" />
+          <span class="splash-countdown">{autoCloseSeconds} 秒后自动关闭</span>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+
+<script is:inline data-swup-ignore-script>
+(function() {
+  // 等待 DOM 加载完成
+  function initSplashModals() {
+    const containers = document.querySelectorAll('.splash-modal-container');
+    
+    containers.forEach(function(container) {
+      // 避免重复初始化
+      if (container.dataset.initialized) return;
+      container.dataset.initialized = 'true';
+      
+      const storageKey = container.dataset.storageKey;
+      const rememberClosed = container.dataset.rememberClosed === 'true';
+      const showOncePerSession = container.dataset.showOncePerSession === 'true';
+      const clickOutside = container.dataset.clickOutside === 'true';
+      const autoCloseSeconds = parseInt(container.dataset.autoClose) || 0;
+      const showOnFirstVisit = container.dataset.showOnFirstVisit !== 'false';
+      
+      const backdrop = container.querySelector('.splash-backdrop');
+      const content = container.querySelector('.splash-content');
+      const closeButtons = container.querySelectorAll('.splash-close-btn');
+      const countdownEl = container.querySelector('.splash-countdown');
+      
+      let autoCloseTimer = null;
+      let countdownTimer = null;
+      let countdownValue = autoCloseSeconds;
+      
+      // 检查是否应该显示弹窗
+      function shouldShow() {
+        if (!rememberClosed) return true;
+        
+        const stored = localStorage.getItem(storageKey);
+        if (!stored) return showOnFirstVisit;
+        
+        // 每会话只显示一次
+        if (showOncePerSession) {
+          const sessionId = sessionStorage.getItem('splash-session-id');
+          const storedData = JSON.parse(stored);
+          return storedData.sessionId !== sessionId;
+        }
+        
+        // 每天只显示一次
+        try {
+          const storedData = JSON.parse(stored);
+          const lastClosed = new Date(storedData.timestamp);
+          const now = new Date();
+          const isSameDay = lastClosed.toDateString() === now.toDateString();
+          return !isSameDay;
+        } catch (e) {
+          return true;
+        }
+      }
+      
+      // 显示弹窗
+      function showSplash() {
+        container.style.display = 'flex';
+        // 强制重绘
+        container.offsetHeight;
+        
+        // 动画进入
+        requestAnimationFrame(function() {
+          backdrop.classList.remove('opacity-0');
+          backdrop.classList.add('opacity-100');
+          content.classList.remove('scale-95', 'opacity-0');
+          content.classList.add('scale-100', 'opacity-100');
+        });
+        
+        // 禁止背景滚动
+        document.body.style.overflow = 'hidden';
+        
+        // 触发显示事件（供外部监听）
+        container.dispatchEvent(new CustomEvent('splash:shown', { bubbles: true }));
+        
+        // 自动关闭倒计时
+        if (autoCloseSeconds > 0) {
+          countdownValue = autoCloseSeconds;
+          
+          countdownTimer = setInterval(function() {
+            countdownValue--;
+            if (countdownEl) {
+              countdownEl.textContent = countdownValue + ' 秒后自动关闭';
+            }
+            if (countdownValue <= 0) {
+              clearInterval(countdownTimer);
+            }
+          }, 1000);
+          
+          autoCloseTimer = setTimeout(function() {
+            closeSplash();
+          }, autoCloseSeconds * 1000);
+        }
+      }
+      
+      // 关闭弹窗
+      function closeSplash() {
+        // 清除定时器
+        if (autoCloseTimer) {
+          clearTimeout(autoCloseTimer);
+          autoCloseTimer = null;
+        }
+        if (countdownTimer) {
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+        }
+        
+        // 动画退出
+        backdrop.classList.remove('opacity-100');
+        backdrop.classList.add('opacity-0');
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+        
+        // 恢复背景滚动
+        document.body.style.overflow = '';
+        
+        // 触发关闭事件（供外部监听）
+        container.dispatchEvent(new CustomEvent('splash:closed', { bubbles: true }));
+        
+        // 记录关闭状态
+        if (rememberClosed) {
+          const data = {
+            timestamp: new Date().toISOString(),
+            sessionId: sessionStorage.getItem('splash-session-id')
+          };
+          localStorage.setItem(storageKey, JSON.stringify(data));
+        }
+        
+        // 延迟后隐藏元素
+        setTimeout(function() {
+          container.style.display = 'none';
+        }, 300);
+      }
+      
+      // 暴露方法到 DOM 元素
+      container.showSplash = showSplash;
+      container.closeSplash = closeSplash;
+      
+      // 绑定关闭按钮
+      closeButtons.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeSplash();
+        });
+      });
+      
+      // 点击遮罩关闭
+      if (clickOutside) {
+        container.addEventListener('click', function(e) {
+          if (e.target === container || e.target === backdrop) {
+            closeSplash();
+          }
+        });
+      }
+      
+      // ESC 键关闭
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && container.style.display !== 'none') {
+          closeSplash();
+        }
+      });
+      
+      // 延迟显示（避免页面加载时的突兀感）
+      if (shouldShow()) {
+        setTimeout(function() {
+          showSplash();
+        }, 600);
+      }
+    });
+  }
+  
+  // 生成会话 ID
+  if (!sessionStorage.getItem('splash-session-id')) {
+    sessionStorage.setItem('splash-session-id', Date.now().toString());
+  }
+  
+  // 初始化
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSplashModals);
+  } else {
+    initSplashModals();
+  }
+  
+  // Swup 兼容
+  if (window.SwupCompat) {
+    window.SwupCompat.onPageView(initSplashModals);
+  } else {
+    document.addEventListener('swup:contentReplaced', initSplashModals);
+    document.addEventListener('astro:page-load', initSplashModals);
+  }
+})();
+</script>
+
+<style>
+  /* 弹窗入场动画增强 */
+  .splash-content {
+    will-change: transform, opacity;
+  }
+  
+  /* 内容区域滚动条美化 */
+  .splash-body::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .splash-body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .splash-body::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
+    border-radius: 3px;
+  }
+  
+  .splash-body::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklch, var(--muted-foreground) 50%, transparent);
+  }
+  
+  /* 确保弹窗在减少动画偏好下仍然可用 */
+  @media (prefers-reduced-motion: reduce) {
+    .splash-backdrop,
+    .splash-content {
+      transition: none !important;
+    }
+    
+    .splash-content {
+      transform: none !important;
+      opacity: 1 !important;
+    }
+    
+    .splash-backdrop {
+      opacity: 1 !important;
+    }
+  }
+</style>

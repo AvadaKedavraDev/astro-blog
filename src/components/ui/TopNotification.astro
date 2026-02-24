@@ -1,0 +1,217 @@
+---
+/**
+ * @component TopNotification
+ * @description 顶部通知栏组件 - 固定在页面顶部的横幅通知
+ * @features 可关闭、动画效果、本地存储记忆、响应式设计、Swup 兼容
+ * 
+ * @props {string} message - 通知消息内容（支持 HTML）
+ * @props {string} [type='info'] - 通知类型：'info' | 'success' | 'warning' | 'error' | 'promotion'
+ * @props {string} [icon] - 图标名称（lucide 图标）
+ * @props {string} [link] - 点击跳转链接
+ * @props {string} [linkText] - 链接文本
+ * @props {boolean} [dismissible=true] - 是否可关闭
+ * @props {boolean} [rememberClosed=true] - 是否记住用户已关闭
+ * @props {string} [storageKey='top-notification-closed'] - localStorage 的 key
+ * @props {boolean} [sticky=false] - 是否固定定位
+ */
+import { Icon } from "astro-icon/components";
+
+export interface Props {
+  message: string;
+  type?: 'info' | 'success' | 'warning' | 'error' | 'promotion';
+  icon?: string;
+  link?: string;
+  linkText?: string;
+  dismissible?: boolean;
+  rememberClosed?: boolean;
+  storageKey?: string;
+  sticky?: boolean;
+}
+
+const {
+  message,
+  type = 'info',
+  icon,
+  link,
+  linkText = '了解更多',
+  dismissible = true,
+  rememberClosed = true,
+  storageKey = 'top-notification-closed',
+  sticky = false,
+} = Astro.props;
+
+// 根据类型设置默认图标和颜色
+const typeConfig = {
+  info: {
+    icon: 'lucide:info',
+    bgClass: 'bg-indigo-500',
+    darkBgClass: 'dark:bg-indigo-600',
+  },
+  success: {
+    icon: 'lucide:check-circle',
+    bgClass: 'bg-emerald-500',
+    darkBgClass: 'dark:bg-emerald-600',
+  },
+  warning: {
+    icon: 'lucide:alert-triangle',
+    bgClass: 'bg-amber-500',
+    darkBgClass: 'dark:bg-amber-600',
+  },
+  error: {
+    icon: 'lucide:x-circle',
+    bgClass: 'bg-rose-500',
+    darkBgClass: 'dark:bg-rose-600',
+  },
+  promotion: {
+    icon: 'lucide:gift',
+    bgClass: 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500',
+    darkBgClass: '',
+  },
+};
+
+const config = typeConfig[type];
+const iconName = icon || config.icon;
+const componentId = `top-notify-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+<div
+  id={componentId}
+  class={`top-notification w-full ${config.bgClass} ${config.darkBgClass} text-white relative overflow-hidden`}
+  data-storage-key={storageKey}
+  data-remember-closed={rememberClosed.toString()}
+  style={`${sticky ? 'position: sticky; top: 0; z-index: 90;' : ''} display: none;`}
+>
+  {/* 动画背景装饰 */}
+  {type === 'promotion' && (
+    <div class="absolute inset-0 opacity-30">
+      <div class="absolute -left-10 -top-10 w-32 h-32 bg-white/20 rounded-full blur-2xl"></div>
+      <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-white/20 rounded-full blur-2xl"></div>
+    </div>
+  )}
+  
+  <div class="container-medium relative">
+    <div class="flex items-center justify-center gap-3 py-2.5 px-4 text-sm">
+      {/* 图标 */}
+      <Icon name={iconName} class="w-4 h-4 flex-shrink-0" />
+      
+      {/* 消息内容 */}
+      <div class="flex items-center gap-2 flex-wrap justify-center">
+        <span set:html={message} />
+        
+        {/* 链接 */}
+        {link && (
+          <a 
+            href={link}
+            class="inline-flex items-center gap-1 font-medium underline underline-offset-2 hover:opacity-80 transition-opacity whitespace-nowrap"
+          >
+            {linkText}
+            <Icon name="lucide:arrow-right" class="w-3 h-3" />
+          </a>
+        )}
+      </div>
+      
+      {/* 关闭按钮 */}
+      {dismissible && (
+        <button
+          class="top-notify-close p-1 rounded-full hover:bg-white/20 transition-colors flex-shrink-0 ml-2"
+          aria-label="关闭通知"
+        >
+          <Icon name="lucide:x" class="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  </div>
+</div>
+
+<script is:inline data-swup-ignore-script>
+(function() {
+  function initTopNotifications() {
+    const notifications = document.querySelectorAll('.top-notification');
+    
+    notifications.forEach(function(notification) {
+      if (notification.dataset.initialized) return;
+      notification.dataset.initialized = 'true';
+      
+      const storageKey = notification.dataset.storageKey;
+      const rememberClosed = notification.dataset.rememberClosed === 'true';
+      const closeBtn = notification.querySelector('.top-notify-close');
+      
+      // 检查是否应该显示
+      function shouldShow() {
+        if (!rememberClosed) return true;
+        const stored = localStorage.getItem(storageKey);
+        if (!stored) return true;
+        
+        try {
+          const data = JSON.parse(stored);
+          const lastClosed = new Date(data.timestamp);
+          const now = new Date();
+          // 24 小时内不重复显示
+          const hoursSince = (now - lastClosed) / (1000 * 60 * 60);
+          return hoursSince >= 24;
+        } catch (e) {
+          return true;
+        }
+      }
+      
+      // 显示通知
+      function showNotification() {
+        notification.style.display = 'block';
+        // 动画效果
+        notification.style.transform = 'translateY(-100%)';
+        notification.style.opacity = '0';
+        notification.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+        
+        requestAnimationFrame(function() {
+          notification.style.transform = 'translateY(0)';
+          notification.style.opacity = '1';
+        });
+      }
+      
+      // 关闭通知
+      function closeNotification() {
+        notification.style.transform = 'translateY(-100%)';
+        notification.style.opacity = '0';
+        
+        setTimeout(function() {
+          notification.style.display = 'none';
+        }, 400);
+        
+        if (rememberClosed) {
+          localStorage.setItem(storageKey, JSON.stringify({
+            timestamp: new Date().toISOString()
+          }));
+        }
+      }
+      
+      // 绑定关闭按钮
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeNotification();
+        });
+      }
+      
+      // 初始化显示
+      if (shouldShow()) {
+        showNotification();
+      }
+    });
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTopNotifications);
+  } else {
+    initTopNotifications();
+  }
+  
+  // Swup 兼容
+  if (window.SwupCompat) {
+    window.SwupCompat.onPageView(initTopNotifications);
+  } else {
+    document.addEventListener('swup:contentReplaced', initTopNotifications);
+    document.addEventListener('astro:page-load', initTopNotifications);
+  }
+})();
+</script>

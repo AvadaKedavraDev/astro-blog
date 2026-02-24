@@ -2,11 +2,12 @@
 /**
  * @layout BaseLayout
  * @description 基础布局组件，提供站点通用的页面结构
- * @features SEO、导航栏、页脚、Swup 兼容、主题切换、返回顶部
+ * @features SEO、导航栏、页脚、Swup 兼容、主题切换、返回顶部、开屏弹窗
  * @props title - 页面标题
  * @props description - 页面描述（可选）
  * @props canonicalUrl - 规范链接（可选）
  * @props ogImage - OG 图片（可选）
+ * @props hideTopNotification - 是否隐藏顶部通知栏（可选）
  */
 import "../styles/global.css";
 import SEO from "@components/widgets/SEO.astro";
@@ -16,12 +17,16 @@ import ScrollToTop from "@components/ui/ScrollToTop.astro";
 import SwupScrollConfig from "@components/common/SwupScrollConfig.astro";
 import H2Animation from "@components/common/H2Animation.astro";
 import SwupCompat from "@components/common/SwupCompat.astro";
+import SplashModal from "@components/ui/SplashModal.astro";
+import TopNotification from "@components/ui/TopNotification.astro";
 
 export interface Props {
   title: string;
   description?: string;
   canonicalUrl?: string;
   ogImage?: string;
+  hideTopNotification?: boolean;
+  hideSplashModal?: boolean;
 }
 
 const {
@@ -29,6 +34,8 @@ const {
   description = "一个极简现代的个人博客",
   canonicalUrl = Astro.url.href,
   ogImage,
+  hideTopNotification = false,
+  hideSplashModal = false,
 } = Astro.props;
 
 const fullTitle = title === "首页" ? "Moonpeak" : `${title} — Moonpeak`;
@@ -72,6 +79,21 @@ const fullTitle = title === "首页" ? "Moonpeak" : `${title} — Moonpeak`;
     <SwupCompat />
     <SwupScrollConfig />
     <H2Animation/>
+    
+    {/* 顶部通知栏插槽 - 可通过 slot 自定义或使用默认 */}
+    {!hideTopNotification && (
+      <slot name="top-notification">
+        {/* 默认顶部通知栏 - 如需启用，取消下面的注释并修改内容 */}
+        {/*
+        <TopNotification
+          type="info"
+          message="🎉 欢迎来到 Moonpeak！"
+          dismissible={true}
+        />
+        */}
+      </slot>
+    )}
+    
     <Navigation />
     
     <main id="swup" class="pt-16 transition-fade">
@@ -80,6 +102,22 @@ const fullTitle = title === "首页" ? "Moonpeak" : `${title} — Moonpeak`;
     
     <Footer />
     <ScrollToTop />
+    
+    {/* 开屏弹窗插槽 - 可通过 slot 自定义或使用默认 */}
+    {!hideSplashModal && (
+      <slot name="splash-modal">
+        {/* 默认开屏弹窗 - 如需启用，取消下面的注释并修改内容 */}
+        {/*
+        <SplashModal
+          title="欢迎访问 Moonpeak"
+          description="这是一个极简现代的个人博客，记录技术与生活。"
+          buttonText="开始探索"
+          buttonLink="/about"
+          showOncePerSession={true}
+        />
+        */}
+      </slot>
+    )}
     
     <slot name="footer-scripts" />
   </body>
