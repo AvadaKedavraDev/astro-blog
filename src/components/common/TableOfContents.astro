@@ -2,7 +2,7 @@
 /**
  * @component TableOfContents
  * @description 文章目录组件，自动高亮当前阅读位置
- * @props headings - Markdown 标题数组（只显示 H2 和 H3）
+ * @props headings - Markdown 标题数组（显示 H2、H3 和 H4）
  * @features IntersectionObserver 优化、平滑滚动、Swup 兼容
  * @usage 在 ArticleLayout 中传入 headings 数据
  */
@@ -14,8 +14,8 @@ interface Props {
 
 const { headings = [] } = Astro.props;
 
-// 只显示 H2 和 H3
-const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+// 显示 H2、H3 和 H4
+const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
 ---
 
 {filteredHeadings.length > 0 && (
@@ -52,7 +52,7 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
       
       const tocItems = document.querySelectorAll('.toc-item');
       const tocLinks = document.querySelectorAll('.toc-link');
-      const headings = Array.from(document.querySelectorAll('article h2, article h3'));
+      const headings = Array.from(document.querySelectorAll('article h2, article h3, article h4'));
       
       if (headings.length === 0) return;
       

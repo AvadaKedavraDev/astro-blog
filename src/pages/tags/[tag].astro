@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
 import { getCollection, type CollectionEntry } from "astro:content";
+import { getAllTags } from "@lib/post";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
@@ -24,12 +25,7 @@ const taggedPosts = allPosts.filter(post =>
   post.data.tags?.includes(tag)
 );
 
-const allTags = new Map<string, number>();
-allPosts.forEach(post => {
-  post.data.tags?.forEach(t => {
-    allTags.set(t, (allTags.get(t) || 0) + 1);
-  });
-});
+const allTags = await getAllTags();
 ---
 
 <BaseLayout title={`标签：${tag}`} description={`查看所有包含「${tag}」标签的文章`}>

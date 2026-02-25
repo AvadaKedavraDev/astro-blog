@@ -111,35 +111,116 @@
       }
     },
     
+    // 清理动态添加的内容（在 Swup 导航前调用）
+    cleanup() {
+      // 清理 rehype-code-group 的初始化标记
+      document.querySelectorAll('.rehype-code-group[data-swup-compat-initialized]').forEach((group) => {
+        delete group.dataset.swupCompatInitialized;
+      });
+      
+      // 清理 KaTeX 可能的问题（如果有客户端脚本）
+      // 注意：KaTeX 是服务端渲染的，通常不需要清理，但这里做保险处理
+    },
+    
+    // 初始化 rehype-code-group 代码块多标签切换
+    initCodeGroups() {
+      const codeGroups = document.querySelectorAll('.rehype-code-group');
+      if (codeGroups.length === 0) return;
+      
+      codeGroups.forEach((group) => {
+        // 跳过已初始化的组（防止重复绑定）
+        if (group.dataset.swupCompatInitialized) return;
+        
+        const tabs = group.querySelectorAll('.rcg-tab');
+        const blocks = group.querySelectorAll('.rcg-block');
+        
+        if (tabs.length === 0 || blocks.length === 0) return;
+        
+        // 标记为已初始化
+        group.dataset.swupCompatInitialized = 'true';
+        
+        // 获取当前激活状态
+        let activeTab = group.querySelector('.rcg-tab.active');
+        let activeBlock = group.querySelector('.rcg-block.active');
+        
+        // 添加点击事件监听
+        group.addEventListener('click', (event) => {
+          const tab = event.target.closest('.rcg-tab');
+          if (!tab) return;
+          
+          const index = Array.from(tabs).indexOf(tab);
+          if (index === -1) return;
+          
+          // 移除当前激活状态
+          if (activeTab) {
+            activeTab.classList.remove('active');
+            activeTab.setAttribute('aria-selected', 'false');
+          }
+          if (activeBlock) {
+            activeBlock.classList.remove('active');
+            activeBlock.setAttribute('hidden', 'true');
+          }
+          
+          // 激活新标签
+          tab.classList.add('active');
+          tab.setAttribute('aria-selected', 'true');
+          
+          const newBlock = blocks[index];
+          if (newBlock) {
+            newBlock.classList.add('active');
+            newBlock.removeAttribute('hidden');
+          }
+          
+          // 更新激活状态引用
+          activeTab = tab;
+          activeBlock = newBlock;
+        });
+      });
+      
+      if (codeGroups.length > 0) {
+        console.log('[SwupCompat] Initialized rehype-code-group:', codeGroups.length, 'groups');
+      }
+    },
+    
     // 初始化事件监听
     init() {
       if (this.__isReady__) return;
       
-      // 监听 Swup 标准事件（旧版兼容）
+      // 标记是否使用新版 hooks，避免重复触发
+      let usingNewHooks = false;
+      
+      // 监听 Swup 标准事件（旧版兼容）- 仅当新版 hooks 不可用时使用
       document.addEventListener('swup:contentReplaced', () => {
+        if (usingNewHooks) return; // 如果已使用新版 hooks，跳过旧版事件
         this.emit('content:replace');
         this.runScripts(); // 手动触发脚本执行
+        this.initCodeGroups(); // 初始化 rehype-code-group
         requestAnimationFrame(() => {
           setTimeout(() => this.emit('page:view'), 0);
         });
       });
       
       document.addEventListener('swup:beforeContentReplace', () => {
+        if (usingNewHooks) return;
         this.emit('content:replace:before');
+        this.cleanup(); // 清理动态内容
       });
       
       // 监听 Swup hooks（新版）
       const bindSwupHooks = () => {
         if (window.swup?.hooks) {
           console.log('[SwupCompat] Binding to swup hooks');
+          usingNewHooks = true; // 标记使用新版 hooks
           
           window.swup.hooks.on('content:replace', () => {
             this.emit('content:replace:before');
+            this.cleanup(); // 清理动态内容
           });
           
           window.swup.hooks.on('content:replace', () => {
             this.emit('content:replace');
             this.runScripts(); // 手动触发脚本执行
+            this.initCodeGroups(); // 初始化 rehype-code-group
           });
           
           window.swup.hooks.on('page:view', () => {
@@ -159,7 +240,15 @@
       
       document.addEventListener('astro:page-load', () => {
         this.emit('page:view');
+        this.initCodeGroups(); // 初始化 rehype-code-group
       });
+      
+      // 初始页面加载时也执行
+      if (document.readyState !== 'loading') {
+        this.initCodeGroups();
+      } else {
+        document.addEventListener('DOMContentLoaded', () => this.initCodeGroups());
+      }
       
       this.__isReady__ = true;
     }

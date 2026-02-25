@@ -15,7 +15,6 @@ import Navigation from "@components/common/Navigation.astro";
 import Footer from "@components/common/Footer.astro";
 import ScrollToTop from "@components/ui/ScrollToTop.astro";
 import SwupScrollConfig from "@components/common/SwupScrollConfig.astro";
-import H2Animation from "@components/common/H2Animation.astro";
 import SwupCompat from "@components/common/SwupCompat.astro";
 import SplashModal from "@components/ui/SplashModal.astro";
 import TopNotification from "@components/ui/TopNotification.astro";
@@ -57,6 +56,9 @@ const fullTitle = title === "首页" ? "Moonpeak" : `${title} — Moonpeak`;
     {/* 使用本地字体文件，不依赖外部 CDN */}
     <link rel="stylesheet" href="/fonts/fonts.css">
     
+    {/* ===== KaTeX 数学公式样式 ===== */}
+    <link rel="stylesheet" href="/katex.min.css">
+    
     {/* 主题初始化 - 必须在最前面执行，防止闪烁 */}
     <script is:inline>
       // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
@@ -78,7 +80,6 @@ const fullTitle = title === "首页" ? "Moonpeak" : `${title} — Moonpeak`;
   <body class="min-h-screen bg-background text-foreground">
     <SwupCompat />
     <SwupScrollConfig />
-    <H2Animation/>
     
     {/* 顶部通知栏插槽 - 可通过 slot 自定义或使用默认 */}
     {!hideTopNotification && (

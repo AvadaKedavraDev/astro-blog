@@ -1,15 +1,10 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
+import { getAllTags } from "@lib/post";
 
 const posts = await getCollection("blog");
-
-const tagCounts = new Map<string, number>();
-posts.forEach(post => {
-  post.data.tags?.forEach(tag => {
-    tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
-  });
-});
+const tagCounts = await getAllTags();
 
 const sortedTags = Array.from(tagCounts.entries())
   .sort((a, b) => b[1] - a[1]);
