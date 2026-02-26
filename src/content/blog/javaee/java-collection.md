@@ -34,7 +34,7 @@ static final int hash(Object key) {
        当采用  (n - 1) & hash 时，则为：
            0000 1111 & 0011 0101 = 0000 0101 = 5
  */
-(n -1) & hash
+(n - 1) & hash
 ```
 
 #### HashMap Put 主流程（JDK 1.8）

@@ -1,6 +1,12 @@
 {
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "types": ["solid-js", "solid-js/dom"],
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "@components/*": [
@@ -28,8 +34,6 @@
         "src/*"
       ]
     },
-    "jsx": "react-jsx",
-    "jsxImportSource": "react"
   },
   "include": [
     ".astro/types.d.ts",

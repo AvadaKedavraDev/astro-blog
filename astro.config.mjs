@@ -13,6 +13,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import swup, {Theme} from '@swup/astro';
 import icon from 'astro-icon';
+import solid from '@astrojs/solid-js';
 
 // 导入原始主题（Shiki 格式）
 import latte from 'shiki/themes/catppuccin-latte.mjs';
@@ -98,6 +99,7 @@ export default defineConfig({
             // Expressive Code 插件
             plugins: [pluginCollapsibleSections()],
         }), 
-        icon()
+        icon(),
+        solid()
     ],
 });
