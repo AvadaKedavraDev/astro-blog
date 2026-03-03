@@ -10,7 +10,7 @@ pinned: true
 # 系列文章
 series:
   name: "Java 基础"
-  order: 2
+  order: 1
 ---
 
 ## 一、Java 集合框架概览
@@ -45,12 +45,12 @@ Map（键值对，Key 唯一）
 
 ### 1.2 核心接口对比
 
-| 特性 | List | Set | Map |
-|------|------|-----|-----|
-| 元素重复 | 允许 | 不允许 | Key 不允许，Value 允许 |
-| 顺序性 | 有序 | 无序（TreeSet 除外） | 无序（TreeMap/LinkedHashMap 除外） |
-| 实现类 | ArrayList, LinkedList | HashSet, TreeSet | HashMap, TreeMap |
-| null 元素 | 允许多个 | HashSet 允许 1 个，TreeSet 不允许 | HashMap 允许 1 个 null key |
+| 特性      | List                  | Set                        | Map                          |
+|---------|-----------------------|----------------------------|------------------------------|
+| 元素重复    | 允许                    | 不允许                        | Key 不允许，Value 允许             |
+| 顺序性     | 有序                    | 无序（TreeSet 除外）             | 无序（TreeMap/LinkedHashMap 除外） |
+| 实现类     | ArrayList, LinkedList | HashSet, TreeSet           | HashMap, TreeMap             |
+| null 元素 | 允许多个                  | HashSet 允许 1 个，TreeSet 不允许 | HashMap 允许 1 个 null key      |
 
 ---
 
@@ -111,15 +111,15 @@ private void grow(int minCapacity) {
     int oldCapacity = elementData.length;
     // newCapacity = oldCapacity + oldCapacity/2 = 1.5 * oldCapacity
     int newCapacity = oldCapacity + (oldCapacity >> 1);
-    
+
     // 如果 1.5 倍还不够，使用所需的最小容量
     if (newCapacity - minCapacity < 0)
         newCapacity = minCapacity;
-    
+
     // 超过 MAX_ARRAY_SIZE (Integer.MAX_VALUE - 8) 则使用 Integer.MAX_VALUE
     if (newCapacity - MAX_ARRAY_SIZE > 0)
         newCapacity = hugeCapacity(minCapacity);
-    
+
     // 数组拷贝（System.arraycopy 是 native 方法，高效）
     elementData = Arrays.copyOf(elementData, newCapacity);
 }
@@ -132,12 +132,12 @@ public E remove(int index) {
     rangeCheck(index);
     modCount++;
     E oldValue = elementData(index);
-    
+
     int numMoved = size - index - 1;  // 需要移动的元素个数
     if (numMoved > 0)
         // 将 index 后的元素前移一位
         System.arraycopy(elementData, index + 1, elementData, index, numMoved);
-    
+
     elementData[--size] = null;  // 置空，帮助 GC
     return oldValue;
 }
@@ -145,11 +145,11 @@ public E remove(int index) {
 
 #### 优缺点分析
 
-| 优点 | 缺点 |
-|------|------|
+| 优点        | 缺点               |
+|-----------|------------------|
 | 随机访问 O(1) | 插入/删除需要移动元素 O(n) |
-| 内存连续，缓存友好 | 扩容需要数组拷贝，有一定开销 |
-| 尾部操作 O(1) | 非尾部插入/删除效率低 |
+| 内存连续，缓存友好 | 扩容需要数组拷贝，有一定开销   |
+| 尾部操作 O(1) | 非尾部插入/删除效率低      |
 
 **适用场景**：查询多、随机访问多的场景；已知数据量时可指定初始容量避免扩容。
 
@@ -167,6 +167,7 @@ private static class Node<E> {
     E item;
     Node<E> next;
     Node<E> prev;
+
     Node(Node<E> prev, E element, Node<E> next) {
         this.item = element;
         this.next = next;
@@ -222,24 +223,24 @@ Node<E> node(int index) {
 
 #### 优缺点分析
 
-| 优点 | 缺点 |
-|------|------|
-| 插入/删除 O(1)（已知节点位置） | 随机访问 O(n) |
-| 不需要扩容 | 每个节点额外开销（prev/next 指针） |
-| 内存按需分配 | 缓存不友好（非连续内存） |
+| 优点                 | 缺点                     |
+|--------------------|------------------------|
+| 插入/删除 O(1)（已知节点位置） | 随机访问 O(n)              |
+| 不需要扩容              | 每个节点额外开销（prev/next 指针） |
+| 内存按需分配             | 缓存不友好（非连续内存）           |
 
 **适用场景**：频繁插入/删除；实现栈/队列。
 
 ### 2.3 ArrayList vs LinkedList
 
-| 特性 | ArrayList | LinkedList |
-|------|-----------|------------|
-| 底层结构 | 动态数组 | 双向链表 |
-| 随机访问 | O(1) | O(n) |
-| 头部插入/删除 | O(n) | O(1) |
-| 尾部插入/删除 | O(1) 均摊 | O(1) |
-| 中间插入/删除 | O(n) | O(n)（查找耗时） |
-| 内存占用 | 较少 | 较多（指针开销） |
+| 特性      | ArrayList | LinkedList |
+|---------|-----------|------------|
+| 底层结构    | 动态数组      | 双向链表       |
+| 随机访问    | O(1)      | O(n)       |
+| 头部插入/删除 | O(n)      | O(1)       |
+| 尾部插入/删除 | O(1) 均摊   | O(1)       |
+| 中间插入/删除 | O(n)      | O(n)（查找耗时） |
+| 内存占用    | 较少        | 较多（指针开销）   |
 
 ---
 
@@ -253,15 +254,15 @@ HashSet 底层使用 **HashMap** 实现，只使用 key，value 固定为一个 
 public class HashSet<E> extends AbstractSet<E> implements Set<E> {
     private transient HashMap<E, Object> map;
     private static final Object PRESENT = new Object();  // 占位符
-    
+
     public boolean add(E e) {
         return map.put(e, PRESENT) == null;  // 返回 null 表示新增成功
     }
-    
+
     public boolean remove(Object o) {
         return map.remove(o) == PRESENT;
     }
-    
+
     public boolean contains(Object o) {
         return map.containsKey(o);
     }
@@ -269,6 +270,7 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E> {
 ```
 
 **特点**：
+
 - 不保证顺序
 - 允许 null 元素（只能一个，因为 key 唯一）
 - 判断重复使用 `hashCode()` + `equals()`
@@ -280,11 +282,11 @@ TreeSet 底层使用 **TreeMap** 实现，基于红黑树，元素有序。
 ```java
 public class TreeSet<E> extends AbstractSet<E> implements NavigableSet<E> {
     private transient NavigableMap<E, Object> m;
-    
+
     public TreeSet() {
         this(new TreeMap<>());  // 自然排序
     }
-    
+
     public TreeSet(Comparator<? super E> comparator) {
         this(new TreeMap<>(comparator));  // 自定义比较器
     }
@@ -292,6 +294,7 @@ public class TreeSet<E> extends AbstractSet<E> implements NavigableSet<E> {
 ```
 
 **特点**：
+
 - 元素有序（自然排序或自定义 Comparator）
 - 不允许 null 元素（无法比较大小）
 - 增删改查 O(log n)
@@ -344,13 +347,13 @@ private void siftDown(int k, E x) {
         Object c = queue[child];
         int right = child + 1;  // 右子节点
         if (right < size &&
-            ((comparator == null) ?
-             ((Comparable<? super E>) c).compareTo((E) queue[right]) > 0 :
-             comparator.compare((E) c, (E) queue[right]) > 0))
+                ((comparator == null) ?
+                        ((Comparable<? super E>) c).compareTo((E) queue[right]) > 0 :
+                        comparator.compare((E) c, (E) queue[right]) > 0))
             c = queue[child = right];
         if ((comparator == null) ?
-            ((Comparable<? super E>) x).compareTo((E) c) <= 0 :
-            comparator.compare(x, (E) c) <= 0)
+                ((Comparable<? super E>) x).compareTo((E) c) <= 0 :
+                comparator.compare(x, (E) c) <= 0)
             break;
         queue[k] = c;
         k = child;
@@ -360,6 +363,7 @@ private void siftDown(int k, E x) {
 ```
 
 **时间复杂度**：
+
 - 插入：`O(log n)`
 - 删除队首：`O(log n)`
 - 查看队首：`O(1)`
@@ -399,7 +403,7 @@ private void doubleCapacity() {
     int r = n - p;  // head 到数组末尾的元素个数
     int newCapacity = n << 1;  // 翻倍
     Object[] a = new Object[newCapacity];
-    
+
     // 复制：head -> 末尾，0 -> tail
     System.arraycopy(elements, p, a, 0, r);
     System.arraycopy(elements, 0, a, r, p);
@@ -430,7 +434,7 @@ static final int hash(Object key) {
        当采用  (n - 1) & hash 时，则为：
            0000 1111 & 0011 0101 = 0000 0101 = 5
  */
-(n - 1) & hash
+(n -1)&hash
 ```
 
 ### 5.2 HashMap Put 主流程（JDK 1.8）
@@ -457,11 +461,11 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict) {
         if (p.hash == hash && ((k = p.key) == key || (key != null && key.equals(k))))
             e = p;
 
-        // 4. 红黑树处理
+            // 4. 红黑树处理
         else if (p instanceof TreeNode)
             e = ((TreeNode<K, V>) p).putTreeVal(this, tab, hash, key, value);
 
-        // 5. 链表遍历
+            // 5. 链表遍历
         else {
             for (int binCount = 0; ; ++binCount) {
                 if ((e = p.next) == null) {
@@ -590,10 +594,12 @@ final Node<K, V>[] resize() {
 #### 高低位拆分算法原理
 
 扩容时容量从 n 变为 2n，元素的新位置只可能是：
+
 - **原位置 j**（低位）
 - **原位置 + 旧容量 j+oldCap**（高位）
 
 判断依据：`e.hash & oldCap`
+
 - 结果为 0：hash 的高位为 0，位置不变（j）
 - 结果非 0：hash 的高位为 1，位置变为 `j+oldCap`
 
@@ -608,13 +614,14 @@ final Node<K, V>[] resize() {
 
 #### JDK 1.7 vs 1.8 迁移差异
 
-| 特性 | JDK 1.7 | JDK 1.8 |
-|------|---------|---------|
-| 插入方式 | 头插法（倒序） | 尾插法（保序） |
+| 特性   | JDK 1.7             | JDK 1.8               |
+|------|---------------------|-----------------------|
+| 插入方式 | 头插法（倒序）             | 尾插法（保序）               |
 | 并发安全 | 并发 resize 导致死循环（环链） | 不解决并发问题（仍可能丢数据），但无死循环 |
-| 拆分逻辑 | 逐个 rehash 计算新位置 | 高低位双链拆分（O(n) 且高效） |
+| 拆分逻辑 | 逐个 rehash 计算新位置     | 高低位双链拆分（O(n) 且高效）     |
 
 **JDK 1.7 死循环原因**：
+
 ```
 线程 A 记录：e = A, next = B
 线程 B 完成扩容：B → A（头插法倒序）
@@ -631,8 +638,8 @@ final Node<K, V>[] resize() {
 
 ```java
 // 1.7 的 Segment 继承 ReentrantLock，本身就是一把锁
-static final class Segment<K,V> extends ReentrantLock implements Serializable {
-    transient volatile HashEntry<K,V>[] table;  // 每个 Segment 独立的哈希表
+static final class Segment<K, V> extends ReentrantLock implements Serializable {
+    transient volatile HashEntry<K, V>[] table;  // 每个 Segment 独立的哈希表
     transient int count;                        // 元素个数（需加锁读取）
     transient int modCount;
     transient int threshold;
@@ -640,17 +647,17 @@ static final class Segment<K,V> extends ReentrantLock implements Serializable {
 
     // put 时先尝试获取锁：lock()
     final V put(K key, int hash, V value, boolean onlyIfAbsent) {
-        HashEntry<K,V> node = tryLock() ? null : scanAndLockForPut(key, hash, value);
+        HashEntry<K, V> node = tryLock() ? null : scanAndLockForPut(key, hash, value);
         // ... 实际插入逻辑
     }
 }
 
 // HashEntry：value 和 next 为 final，保证读安全（不可变模式）
-static final class HashEntry<K,V> {
+static final class HashEntry<K, V> {
     final int hash;
     final K key;
     volatile V value;      // volatile 保证可见性
-    final HashEntry<K,V> next;
+    final HashEntry<K, V> next;
 }
 ```
 
@@ -659,11 +666,11 @@ static final class HashEntry<K,V> {
 ```java
 // 1.7 定位需要两次哈希
 public V put(K key, V value) {
-    Segment<K,V> s;
+    Segment<K, V> s;
     if (value == null) throw new NullPointerException();
     int hash = hash(key);  // 第一次：计算 key 的 hash
     int j = (hash >>> segmentShift) & segmentMask;  // 定位 Segment
-    if ((s = (Segment<K,V>)UNSAFE.getObject(segments, (j << SSHIFT) + SBASE)) == null)
+    if ((s = (Segment<K, V>) UNSAFE.getObject(segments, (j << SSHIFT) + SBASE)) == null)
         s = ensureSegment(j);  // 延迟初始化 Segment
     return s.put(key, hash, value, false);  // 第二次：在 Segment 内定位桶
 }
@@ -681,10 +688,10 @@ public V put(K key, V value) {
 
 ```java
 // 核心数组，延迟初始化（第一次 put 时初始化）
-transient volatile Node<K,V>[] table;
+transient volatile Node<K, V>[] table;
 
 // 下一个使用的表，仅在扩容时非空（多线程迁移的目标数组）
-private transient volatile Node<K,V>[] nextTable;
+private transient volatile Node<K, V>[] nextTable;
 
 // 控制标识符，多用途：
 // - 负数表示正在初始化或扩容
@@ -697,9 +704,9 @@ private transient volatile int sizeCtl;
 private transient volatile int transferIndex;
 
 // 其他关键常量
-static final int MOVED     = -1;  // ForwardingNode 的 hash 值
-static final int TREEBIN   = -2;  // TreeBin 的 hash 值
-static final int RESERVED  = -3;  // ReservationNode 的 hash 值
+static final int MOVED = -1;  // ForwardingNode 的 hash 值
+static final int TREEBIN = -2;  // TreeBin 的 hash 值
+static final int RESERVED = -3;  // ReservationNode 的 hash 值
 static final int HASH_BITS = 0x7fffffff;  // 用于消除 hash 的符号位
 ```
 
@@ -707,39 +714,41 @@ static final int HASH_BITS = 0x7fffffff;  // 用于消除 hash 的符号位
 
 ```java
 // 1. 基础节点（链表节点）
-static class Node<K,V> implements Map.Entry<K,V> {
+static class Node<K, V> implements Map.Entry<K, V> {
     final int hash;
     final K key;
     volatile V val;           // 保证读可见性
-    volatile Node<K,V> next;  // 链表下一个
+    volatile Node<K, V> next;  // 链表下一个
 }
 
 // 2. 红黑树节点（继承 Node）
-static final class TreeNode<K,V> extends Node<K,V> {
-    TreeNode<K,V> parent;
-    TreeNode<K,V> left;
-    TreeNode<K,V> right;
-    TreeNode<K,V> prev;       // 删除时需要
+static final class TreeNode<K, V> extends Node<K, V> {
+    TreeNode<K, V> parent;
+    TreeNode<K, V> left;
+    TreeNode<K, V> right;
+    TreeNode<K, V> prev;       // 删除时需要
     boolean red;
 }
 
 // 3. 树容器（代理对象，持有树根节点）
-static final class TreeBin<K,V> extends Node<K,V> {
-    TreeNode<K,V> root;
+static final class TreeBin<K, V> extends Node<K, V> {
+    TreeNode<K, V> root;
     volatile Thread waiter;   // 等待线程（写时阻塞读）
     volatile int lockState;   // 读写锁状态
     // 树化后的桶，外部看到的头节点是 TreeBin，而非 TreeNode
 }
 
 // 4. 转发节点（扩容期间使用，hash = -1）
-static final class ForwardingNode<K,V> extends Node<K,V> {
-    final Node<K,V>[] nextTable;  // 指向新数组
-    ForwardingNode(Node<K,V>[] tab) {
+static final class ForwardingNode<K, V> extends Node<K, V> {
+    final Node<K, V>[] nextTable;  // 指向新数组
+
+    ForwardingNode(Node<K, V>[] tab) {
         super(MOVED, null, null, null);
         this.nextTable = tab;
     }
+
     // 查找时直接转发到新数组
-    Node<K,V> find(int h, Object k) {
+    Node<K, V> find(int h, Object k) {
         return nextTable[tabAt(nextTable, (n - 1) & h)].find(h, k);
     }
 }
@@ -752,55 +761,55 @@ final V putVal(K key, V value, boolean onlyIfAbsent) {
     if (key == null || value == null) throw new NullPointerException();
     int hash = spread(key.hashCode());  // 扰动函数，减少冲突
     int binCount = 0;
-    
+
     // 自旋 CAS（乐观锁）
-    for (Node<K,V>[] tab = table;;) {
-        Node<K,V> f; int n, i, fh;
-        
+    for (Node<K, V>[] tab = table; ; ) {
+        Node<K, V> f;
+        int n, i, fh;
+
         // 场景 1：table 未初始化，初始化
         if (tab == null || (n = tab.length) == 0)
             tab = initTable();
-        
-        // 场景 2：目标桶为空，CAS 直接插入（无锁快速路径）
+
+            // 场景 2：目标桶为空，CAS 直接插入（无锁快速路径）
         else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
-            if (casTabAt(tab, i, null, new Node<K,V>(hash, key, value, null)))
+            if (casTabAt(tab, i, null, new Node<K, V>(hash, key, value, null)))
                 break;  // CAS 成功，跳出循环
             // CAS 失败，自旋重试
         }
-        
+
         // 场景 3：发现 ForwardingNode，说明正在扩容，协助迁移
         else if ((fh = f.hash) == MOVED)
             tab = helpTransfer(tab, f);
-        
-        // 场景 4：桶非空且未扩容，synchronized 锁住头节点
+
+            // 场景 4：桶非空且未扩容，synchronized 锁住头节点
         else {
             V oldVal = null;
             synchronized (f) {  // **细粒度锁：只锁当前桶的头节点**
                 if (tabAt(tab, i) == f) {  // 再次确认锁对象
                     if (fh >= 0) {  // 链表
                         binCount = 1;
-                        for (Node<K,V> e = f;; ++binCount) {
+                        for (Node<K, V> e = f; ; ++binCount) {
                             K ek;
                             // 找到相同 key，覆盖 value
                             if (e.hash == hash &&
-                                ((ek = e.key) == key || (ek != null && key.equals(ek)))) {
+                                    ((ek = e.key) == key || (ek != null && key.equals(ek)))) {
                                 oldVal = e.val;
                                 if (!onlyIfAbsent)
                                     e.val = value;
                                 break;
                             }
-                            Node<K,V> pred = e;
+                            Node<K, V> pred = e;
                             // 尾插法插入新节点
                             if ((e = e.next) == null) {
-                                pred.next = new Node<K,V>(hash, key, value, null);
+                                pred.next = new Node<K, V>(hash, key, value, null);
                                 break;
                             }
                         }
-                    }
-                    else if (f instanceof TreeBin) {  // 红黑树
-                        Node<K,V> p;
+                    } else if (f instanceof TreeBin) {  // 红黑树
+                        Node<K, V> p;
                         binCount = 2;
-                        if ((p = ((TreeBin<K,V>)f).putTreeVal(hash, key, value)) != null) {
+                        if ((p = ((TreeBin<K, V>) f).putTreeVal(hash, key, value)) != null) {
                             oldVal = p.val;
                             if (!onlyIfAbsent)
                                 p.val = value;
@@ -808,7 +817,7 @@ final V putVal(K key, V value, boolean onlyIfAbsent) {
                     }
                 }
             }
-            
+
             // 检查树化条件：链表长度 >= 8
             if (binCount != 0) {
                 if (binCount >= TREEIFY_THRESHOLD)
@@ -827,19 +836,20 @@ final V putVal(K key, V value, boolean onlyIfAbsent) {
 #### initTable 初始化
 
 ```java
-private final Node<K,V>[] initTable() {
-    Node<K,V>[] tab; int sc;
+private final Node<K, V>[] initTable() {
+    Node<K, V>[] tab;
+    int sc;
     while ((tab = table) == null || tab.length == 0) {
         if ((sc = sizeCtl) < 0)
             Thread.yield();  // 其他线程正在初始化，让出 CPU
-        
-        // CAS 将 sizeCtl 设为 -1，表示本线程正在初始化
+
+            // CAS 将 sizeCtl 设为 -1，表示本线程正在初始化
         else if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
             try {
                 if ((tab = table) == null || tab.length == 0) {
                     int n = (sc > 0) ? sc : DEFAULT_CAPACITY;  // 默认 16
                     @SuppressWarnings("unchecked")
-                    Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
+                    Node<K, V>[] nt = (Node<K, V>[]) new Node<?, ?>[n];
                     table = tab = nt;
                     sc = n - (n >>> 2);  // 阈值 = 0.75 * n
                 }
@@ -858,17 +868,20 @@ private final Node<K,V>[] initTable() {
 ```java
 // 增加计数，并在达到阈值时触发扩容
 private final void addCount(long x, int check) {
-    CounterCell[] as; long b, s;
-    
+    CounterCell[] as;
+    long b, s;
+
     // 尝试直接更新 baseCount，失败则使用 CounterCell
     if ((as = counterCells) != null ||
-        !U.compareAndSwapLong(this, BASECOUNT, b = baseCount, s = b + x)) {
-        CounterCell a; long v; int m;
+            !U.compareAndSwapLong(this, BASECOUNT, b = baseCount, s = b + x)) {
+        CounterCell a;
+        long v;
+        int m;
         boolean uncontended = true;
         if (as == null || (m = as.length - 1) < 0 ||
-            (a = as[ThreadLocalRandom.getProbe() & m]) == null ||
-            !(uncontended =
-              U.compareAndSwapLong(a, CELLVALUE, v = a.value, v + x))) {
+                (a = as[ThreadLocalRandom.getProbe() & m]) == null ||
+                !(uncontended =
+                        U.compareAndSwapLong(a, CELLVALUE, v = a.value, v + x))) {
             fullAddCount(x, uncontended);  // 竞争激烈时的兜底方案
             return;
         }
@@ -876,24 +889,25 @@ private final void addCount(long x, int check) {
             return;
         s = sumCount();  // 计算总元素个数
     }
-    
+
     // 检查是否需要扩容
     if (check >= 0) {
-        Node<K,V>[] tab, nt; int n, sc;
-        while (s >= (long)(sc = sizeCtl) && (tab = table) != null &&
-               (n = tab.length) < MAXIMUM_CAPACITY) {
+        Node<K, V>[] tab, nt;
+        int n, sc;
+        while (s >= (long) (sc = sizeCtl) && (tab = table) != null &&
+                (n = tab.length) < MAXIMUM_CAPACITY) {
             int rs = resizeStamp(n);  // 生成扩容戳
             if (sc < 0) {  // 已有线程在扩容
                 if ((sc >>> RESIZE_STAMP_SHIFT) != rs || sc == rs + 1 ||
-                    sc == rs + MAX_RESIZERS || (nt = nextTable) == null ||
-                    transferIndex <= 0)
+                        sc == rs + MAX_RESIZERS || (nt = nextTable) == null ||
+                        transferIndex <= 0)
                     break;
                 if (U.compareAndSwapInt(this, SIZECTL, sc, sc + 1))
                     transfer(tab, nt);  // 协助扩容
             }
             // 本线程是第一个扩容的线程
             else if (U.compareAndSwapInt(this, SIZECTL, sc,
-                                         (rs << RESIZE_STAMP_SHIFT) + 2))
+                    (rs << RESIZE_STAMP_SHIFT) + 2))
                 transfer(tab, null);  // 发起扩容
             s = sumCount();
         }
@@ -905,16 +919,21 @@ private final void addCount(long x, int check) {
 
 ```java
 // CounterCell 数组，用于分散计数热点
-@sun.misc.Contended static final class CounterCell {
+@sun.misc.Contended
+static final class CounterCell {
     volatile long value;
-    CounterCell(long x) { value = x; }
+
+    CounterCell(long x) {
+        value = x;
+    }
 }
 
 private transient volatile long baseCount;  // 基础计数
 
 // 计算总元素数
 final long sumCount() {
-    CounterCell[] as = counterCells; CounterCell a;
+    CounterCell[] as = counterCells;
+    CounterCell a;
     long sum = baseCount;
     if (as != null) {
         for (int i = 0; i < as.length; ++i) {
@@ -928,11 +947,12 @@ final long sumCount() {
 public int size() {
     long n = sumCount();
     return ((n < 0L) ? 0 :
-            (n > (long)Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int)n);
+            (n > (long) Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) n);
 }
 ```
 
 **CounterCell 原理**：
+
 - 当多线程竞争激烈时，每个线程通过 `ThreadLocalRandom.getProbe()` 映射到不同的 CounterCell
 - 避免所有线程竞争同一个 `baseCount`，类似 `LongAdder` 的设计
 - 最终 size = baseCount + sum(CounterCell values)
@@ -940,18 +960,18 @@ public int size() {
 #### transfer 并发扩容
 
 ```java
-private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
+private final void transfer(Node<K, V>[] tab, Node<K, V>[] nextTab) {
     int n = tab.length, stride;
-    
+
     // 计算每个线程负责处理的桶数量（最小 16）
     if ((stride = (NCPU > 1) ? (n >>> 3) / NCPU : n) < MIN_TRANSFER_STRIDE)
         stride = MIN_TRANSFER_STRIDE;
-    
+
     // 新数组初始化
     if (nextTab == null) {
         try {
             @SuppressWarnings("unchecked")
-            Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n << 1];  // 容量翻倍
+            Node<K, V>[] nt = (Node<K, V>[]) new Node<?, ?>[n << 1];  // 容量翻倍
             nextTable = nextTab = nt;
         } catch (Throwable ex) {
             sizeCtl = Integer.MAX_VALUE;
@@ -959,16 +979,17 @@ private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
         }
         transferIndex = n;  // 从后往前分配任务
     }
-    
+
     int nextn = nextTab.length;
-    ForwardingNode<K,V> fwd = new ForwardingNode<K,V>(nextTab);
+    ForwardingNode<K, V> fwd = new ForwardingNode<K, V>(nextTab);
     boolean advance = true;
     boolean finishing = false;
-    
+
     // 自旋处理桶迁移
-    for (int i = 0, bound = 0;;) {
-        Node<K,V> f; int fh;
-        
+    for (int i = 0, bound = 0; ; ) {
+        Node<K, V> f;
+        int fh;
+
         // 分配下一个处理区间
         while (advance) {
             int nextIndex, nextBound;
@@ -980,13 +1001,13 @@ private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
             }
             // CAS 更新 transferIndex，分配任务区间
             else if (U.compareAndSwapInt(this, TRANSFERINDEX, nextIndex,
-                      nextBound = (nextIndex > stride ? nextIndex - stride : 0))) {
+                    nextBound = (nextIndex > stride ? nextIndex - stride : 0))) {
                 bound = nextBound;
                 i = nextIndex - 1;
                 advance = false;
             }
         }
-        
+
         // 处理完成
         if (i < 0 || i >= n || i + n >= nextn) {
             if (finishing) {
@@ -1003,25 +1024,25 @@ private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
                 i = n;
             }
         }
-        
+
         // 桶为空，直接放置 ForwardingNode
         else if ((f = tabAt(tab, i)) == null)
             advance = casTabAt(tab, i, null, fwd);
-        
-        // 已有 ForwardingNode，说明已被处理
+
+            // 已有 ForwardingNode，说明已被处理
         else if ((fh = f.hash) == MOVED)
             advance = true;
-        
-        // 迁移非空桶
+
+            // 迁移非空桶
         else {
             synchronized (f) {
                 if (tabAt(tab, i) == f) {
-                    Node<K,V> ln, hn;
+                    Node<K, V> ln, hn;
                     if (fh >= 0) {  // 链表迁移
                         // 高低位拆分（同 HashMap）
                         int runBit = fh & n;
-                        Node<K,V> lastRun = f;
-                        for (Node<K,V> p = f.next; p != null; p = p.next) {
+                        Node<K, V> lastRun = f;
+                        for (Node<K, V> p = f.next; p != null; p = p.next) {
                             int b = p.hash & n;
                             if (b != runBit) {
                                 runBit = b;
@@ -1035,26 +1056,27 @@ private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
                             hn = lastRun;
                             ln = null;
                         }
-                        for (Node<K,V> p = f; p != lastRun; p = p.next) {
-                            int ph = p.hash; K pk = p.key; V pv = p.val;
+                        for (Node<K, V> p = f; p != lastRun; p = p.next) {
+                            int ph = p.hash;
+                            K pk = p.key;
+                            V pv = p.val;
                             if ((ph & n) == 0)
-                                ln = new Node<K,V>(ph, pk, pv, ln);
+                                ln = new Node<K, V>(ph, pk, pv, ln);
                             else
-                                hn = new Node<K,V>(ph, pk, pv, hn);
+                                hn = new Node<K, V>(ph, pk, pv, hn);
                         }
                         setTabAt(nextTab, i, ln);      // 低位链放原位置
                         setTabAt(nextTab, i + n, hn);  // 高位链放新位置
                         setTabAt(tab, i, fwd);         // 原桶标记为已迁移
-                    }
-                    else if (f instanceof TreeBin) {  // 红黑树迁移
-                        TreeBin<K,V> t = (TreeBin<K,V>)f;
-                        TreeNode<K,V> lo = null, loTail = null;
-                        TreeNode<K,V> hi = null, hiTail = null;
+                    } else if (f instanceof TreeBin) {  // 红黑树迁移
+                        TreeBin<K, V> t = (TreeBin<K, V>) f;
+                        TreeNode<K, V> lo = null, loTail = null;
+                        TreeNode<K, V> hi = null, hiTail = null;
                         int lc = 0, hc = 0;
-                        for (Node<K,V> e = t.first; e != null; e = e.next) {
+                        for (Node<K, V> e = t.first; e != null; e = e.next) {
                             int h = e.hash;
-                            TreeNode<K,V> p = new TreeNode<K,V>
-                                (h, e.key, e.val, null, null);
+                            TreeNode<K, V> p = new TreeNode<K, V>
+                                    (h, e.key, e.val, null, null);
                             if ((h & n) == 0) {
                                 if ((p.prev = loTail) == null)
                                     lo = p;
@@ -1062,8 +1084,7 @@ private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
                                     loTail.next = p;
                                 loTail = p;
                                 ++lc;
-                            }
-                            else {
+                            } else {
                                 if ((p.prev = hiTail) == null)
                                     hi = p;
                                 else
@@ -1074,9 +1095,9 @@ private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
                         }
                         // 根据数量决定是否转回链表
                         ln = (lc <= UNTREEIFY_THRESHOLD) ? untreeify(lo) :
-                            (hc != 0) ? new TreeBin<K,V>(lo) : t;
+                                (hc != 0) ? new TreeBin<K, V>(lo) : t;
                         hn = (hc <= UNTREEIFY_THRESHOLD) ? untreeify(hi) :
-                            (lc != 0) ? new TreeBin<K,V>(hi) : t;
+                                (lc != 0) ? new TreeBin<K, V>(hi) : t;
                         setTabAt(nextTab, i, ln);
                         setTabAt(nextTab, i + n, hn);
                         setTabAt(tab, i, fwd);
@@ -1092,27 +1113,30 @@ private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
 
 ```java
 public V get(Object key) {
-    Node<K,V>[] tab; Node<K,V> e, p; int n, eh; K ek;
+    Node<K, V>[] tab;
+    Node<K, V> e, p;
+    int n, eh;
+    K ek;
     int h = spread(key.hashCode());  // 计算 hash
-    
+
     // 1. 检查 table 是否初始化且桶不为空
     if ((tab = table) != null && (n = tab.length) > 0 &&
-        (e = tabAt(tab, (n - 1) & h)) != null) {
-        
+            (e = tabAt(tab, (n - 1) & h)) != null) {
+
         // 2. 首节点就是目标
         if ((eh = e.hash) == h) {
             if ((ek = e.key) == key || (ek != null && key.equals(ek)))
                 return e.val;
         }
-        
+
         // 3. hash < 0，可能是红黑树或 ForwardingNode
         else if (eh < 0)
             return (p = e.find(h, key)) != null ? p.val : null;
-        
+
         // 4. 遍历链表
         while ((e = e.next) != null) {
             if (e.hash == h &&
-                ((ek = e.key) == key || (ek != null && key.equals(ek))))
+                    ((ek = e.key) == key || (ek != null && key.equals(ek))))
                 return e.val;
         }
     }
@@ -1121,21 +1145,22 @@ public V get(Object key) {
 ```
 
 **无锁原理**：
+
 - `tabAt()` 使用 `Unsafe.getObjectVolatile()` 保证读取可见性
 - Node 的 `val` 和 `next` 字段是 `volatile`，保证读到最新值
 - 利用 **happens-before** 规则，写操作的修改对后续读操作可见
 
 ### 6.3 JDK 1.7 vs 1.8 对比
 
-| 特性 | JDK 1.7 | JDK 1.8 |
-|------|---------|---------|
-| 数据结构 | Segment + HashEntry + 链表 | Node + 链表 + 红黑树 |
-| 锁机制 | Segment 继承 ReentrantLock | CAS + synchronized（桶级别） |
-| 并发度 | 固定 16（Segment 数量） | 理论上无上限（桶级别） |
-| 哈希冲突 | 链表遍历 | 链表 → 红黑树（长度≥8） |
-| size 计算 | 分段统计后求和 | CounterCell 分散热点 |
-| 扩容 | 单个 Segment 独立扩容 | 多线程并发协助扩容 |
-| 读取 | 无需加锁 | 无需加锁，volatile 保证可见性 |
+| 特性      | JDK 1.7                  | JDK 1.8                 |
+|---------|--------------------------|-------------------------|
+| 数据结构    | Segment + HashEntry + 链表 | Node + 链表 + 红黑树         |
+| 锁机制     | Segment 继承 ReentrantLock | CAS + synchronized（桶级别） |
+| 并发度     | 固定 16（Segment 数量）        | 理论上无上限（桶级别）             |
+| 哈希冲突    | 链表遍历                     | 链表 → 红黑树（长度≥8）          |
+| size 计算 | 分段统计后求和                  | CounterCell 分散热点        |
+| 扩容      | 单个 Segment 独立扩容          | 多线程并发协助扩容               |
+| 读取      | 无需加锁                     | 无需加锁，volatile 保证可见性     |
 
 ---
 
@@ -1144,7 +1169,8 @@ public V get(Object key) {
 ### 7.1 HashMap 相关
 
 **Q1: HashMap 的底层数据结构是什么？**
-> JDK 1.7：数组 + 链表；JDK 1.8：数组 + 链表 + 红黑树。当链表长度 ≥ 8 且数组长度 ≥ 64 时，链表转为红黑树，将查找时间复杂度从 O(n) 优化到 O(log n)。
+> JDK 1.7：数组 + 链表；JDK 1.8：数组 + 链表 + 红黑树。当链表长度 ≥ 8 且数组长度 ≥ 64 时，链表转为红黑树，将查找时间复杂度从
+> O(n) 优化到 O(log n)。
 
 **Q2: 为什么 HashMap 的容量要是 2 的幂次方？**
 > 1. 可以用位运算 `(n-1)&hash` 代替取模运算 `hash%n`，效率更高；
@@ -1193,7 +1219,8 @@ public V get(Object key) {
 > | 内存占用 | 较少 | 较多（指针开销） |
 
 **Q2: ArrayList 扩容机制？**
-> 默认初始容量 10，扩容为原来的 1.5 倍（`oldCapacity + (oldCapacity >> 1)`）。扩容使用 `Arrays.copyOf`，内部调用 `System.arraycopy`（native 方法）。
+> 默认初始容量 10，扩容为原来的 1.5 倍（`oldCapacity + (oldCapacity >> 1)`）。扩容使用 `Arrays.copyOf`，内部调用
+`System.arraycopy`（native 方法）。
 
 **Q3: 如何实现线程安全的 List？**
 > - `Collections.synchronizedList()`：包装器，所有方法加 synchronized；
@@ -1216,13 +1243,13 @@ public V get(Object key) {
 
 ## 八、总结
 
-| 集合类 | 底层结构 | 线程安全 | 适用场景 |
-|--------|----------|----------|----------|
-| ArrayList | 动态数组 | ❌ | 查询多、随机访问 |
-| LinkedList | 双向链表 | ❌ | 频繁插入/删除、实现栈/队列 |
-| HashMap | 数组+链表+红黑树 | ❌ | 通用键值存储 |
-| ConcurrentHashMap | 数组+链表+红黑树 | ✅ | 高并发键值存储 |
-| HashSet | HashMap | ❌ | 去重、无序集合 |
-| TreeSet | 红黑树 | ❌ | 有序集合 |
-| PriorityQueue | 小顶堆 | ❌ | 优先级队列、TopK 问题 |
-| ArrayDeque | 循环数组 | ❌ | 双端队列（比 Stack/LinkedList 更快） |
+| 集合类               | 底层结构      | 线程安全 | 适用场景                        |
+|-------------------|-----------|------|-----------------------------|
+| ArrayList         | 动态数组      | ❌    | 查询多、随机访问                    |
+| LinkedList        | 双向链表      | ❌    | 频繁插入/删除、实现栈/队列              |
+| HashMap           | 数组+链表+红黑树 | ❌    | 通用键值存储                      |
+| ConcurrentHashMap | 数组+链表+红黑树 | ✅    | 高并发键值存储                     |
+| HashSet           | HashMap   | ❌    | 去重、无序集合                     |
+| TreeSet           | 红黑树       | ❌    | 有序集合                        |
+| PriorityQueue     | 小顶堆       | ❌    | 优先级队列、TopK 问题               |
+| ArrayDeque        | 循环数组      | ❌    | 双端队列（比 Stack/LinkedList 更快） |

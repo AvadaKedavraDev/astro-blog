@@ -1,0 +1,68 @@
+---
+/**
+ * 算法可视化演示页面
+ * 支持多个演示：HashMap Put、ArrayList 扩容、完整存储演变
+ * 客户端动态切换，无需刷新页面
+ */
+import BaseLayout from '@layouts/BaseLayout.astro';
+import VisualizerClient from '@/components/visualizer/VisualizerClient';
+import { storageDemo } from '@/components/visualizer/demos/storage-demo';
+import { hashmapPutDemo } from '@/components/visualizer/demos/hashmap-put-demo';
+import { arraylistResizeDemo } from '@/components/visualizer/demos/arraylist-resize-demo';
+import { Icon } from 'astro-icon/components';
+
+// 所有可用的演示配置
+const demos = [
+  hashmapPutDemo,
+  arraylistResizeDemo,
+  storageDemo
+];
+
+// 从 URL 参数获取默认选中的演示
+const url = new URL(Astro.request.url);
+const demoId = url.searchParams.get('demo');
+const defaultDemo = demos.find(d => d.id === demoId) || demos[0];
+---
+
+<BaseLayout title="算法可视化" description="交互式算法可视化演示">
+  <div class="min-h-screen bg-[#f5f5f5] dark:bg-[#0f0f0f] transition-colors duration-300">
+    
+    {/* Header */}
+    <header class="pt-24 pb-6 px-4 sm:px-6">
+      <div class="max-w-7xl mx-auto">
+        <a
+          href="/"
+          class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4 group"
+        >
+          <Icon name="lucide:arrow-left" class="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1"/>
+          返回首页
+        </a>
+
+        <div class="max-w-4xl">
+          <div class="flex flex-wrap gap-2 mb-3">
+            <span class="tag-base">数据结构</span>
+            <span class="tag-base">可视化</span>
+          </div>
+
+          <h1 class="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-foreground mb-4 leading-tight">
+            算法可视化演示
+          </h1>
+
+          <div class="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            <span class="flex items-center gap-1">
+              <Icon name="lucide:layers" class="w-4 h-4"/>
+              {demos.length} 个演示
+            </span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    {/* 主内容 - 客户端动态渲染 */}
+    <div class="px-4 sm:px-6 pb-12">
+      <div class="max-w-7xl mx-auto">
+        <VisualizerClient demos={demos} defaultDemoId={defaultDemo.id} client:only="solid-js" />
+      </div>
+    </div>
+  </div>
+</BaseLayout>
