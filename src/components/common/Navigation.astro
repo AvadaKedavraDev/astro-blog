@@ -12,14 +12,23 @@ interface NavItem {
   label: string;
   href: string;
   icon: string;
+  children?: NavItem[];
 }
 
 const navItems: NavItem[] = [
   { label: '首页', href: '/', icon: 'lucide:home' },
   { label: '文章', href: '/blog', icon: 'lucide:file-text' },
-  { label: '工具箱', href: '/links', icon: 'lucide:box' },
   { label: '关于', href: '/about', icon: 'lucide:user' },
-  { label: '远程', href: '/remote', icon: 'lucide:monitor' }
+  { label: '远程', href: '/remote', icon: 'lucide:monitor' },
+  { 
+    label: '工具', 
+    href: '/tools', 
+    icon: 'lucide:folder',
+    children: [
+      { label: '工具箱', href: '/links', icon: 'lucide:box' },
+      { label: '图示', href: '/visualizer', icon: 'lucide:git-graph' }
+    ]
+  }
 ];
 
 const currentPath = Astro.url.pathname;
@@ -36,15 +45,43 @@ const currentPath = Astro.url.pathname;
     <!-- Desktop Nav -->
     <div class="hidden md:flex items-center gap-1" id="desktop-nav">
       {navItems.map((item) => (
-        <a
-          href={item.href}
-          data-nav-item
-          data-href={item.href}
-          class="nav-link relative px-4 py-2 text-sm rounded-lg nav-link-interactive flex items-center gap-2 group"
-        >
-          <Icon name={item.icon} class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
-          <span>{item.label}</span>
-        </a>
+        item.children ? (
+          <div class="relative group -my-2">
+            <button
+              class="nav-link relative px-4 py-2 text-sm rounded-lg nav-link-interactive flex items-center gap-2 group cursor-pointer"
+              data-dropdown-trigger
+            >
+              <Icon name={item.icon} class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
+              <span>{item.label}</span>
+              <Icon name="lucide:chevron-down" class="w-3 h-3 transition-transform duration-300 group-hover:rotate-180" />
+            </button>
+            <div class="absolute top-full left-0 mt-0 pt-1 w-40 rounded-lg bg-card border border-border shadow-lg opacity-0 invisible transform -translate-y-2 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0">
+              {item.children.map((child) => (
+                <a
+                  href={child.href}
+                  data-nav-item
+                  data-href={child.href}
+                  class="nav-link block px-4 py-2 text-sm nav-link-interactive"
+                >
+                  <div class="flex items-center gap-2">
+                    <Icon name={child.icon} class="w-4 h-4" />
+                    <span>{child.label}</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <a
+            href={item.href}
+            data-nav-item
+            data-href={item.href}
+            class="nav-link relative px-4 py-2 text-sm rounded-lg nav-link-interactive flex items-center gap-2 group"
+          >
+            <Icon name={item.icon} class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
+            <span>{item.label}</span>
+          </a>
+        )
       ))}
       <div class="pl-3 ml-2 border-l border-border flex items-center gap-2">
         <!-- Search Button -->
@@ -101,17 +138,41 @@ const currentPath = Astro.url.pathname;
         </div>
       </a>
       {navItems.map((item) => (
-        <a
-          href={item.href}
-          data-mobile-nav-item
-          data-href={item.href}
-          class="mobile-nav-link block px-4 py-3 rounded-lg text-base nav-link-interactive"
-        >
-          <div class="flex items-center gap-3">
-            <Icon name={item.icon} class="w-5 h-5" />
-            <span class="nav-label">{item.label}</span>
+        item.children ? (
+          <div class="mobile-nav-group">
+            <div class="flex items-center gap-3 px-4 py-3 text-base text-muted-foreground">
+              <Icon name={item.icon} class="w-5 h-5" />
+              <span>{item.label}</span>
+            </div>
+            <div class="ml-6 border-l border-border pl-4 space-y-1">
+              {item.children.map((child) => (
+                <a
+                  href={child.href}
+                  data-mobile-nav-item
+                  data-href={child.href}
+                  class="mobile-nav-link block px-4 py-3 rounded-lg text-base nav-link-interactive"
+                >
+                  <div class="flex items-center gap-3">
+                    <Icon name={child.icon} class="w-5 h-5" />
+                    <span class="nav-label">{child.label}</span>
+                  </div>
+                </a>
+              ))}
+            </div>
           </div>
-        </a>
+        ) : (
+          <a
+            href={item.href}
+            data-mobile-nav-item
+            data-href={item.href}
+            class="mobile-nav-link block px-4 py-3 rounded-lg text-base nav-link-interactive"
+          >
+            <div class="flex items-center gap-3">
+              <Icon name={item.icon} class="w-5 h-5" />
+              <span class="nav-label">{item.label}</span>
+            </div>
+          </a>
+        )
       ))}
     </div>
   </div>

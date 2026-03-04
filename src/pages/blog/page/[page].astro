@@ -1,0 +1,120 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+import Pagination from "@components/common/Pagination.astro";
+
+export async function getStaticPaths() {
+  const allPosts = (await getCollection("blog")).sort(
+    (a: CollectionEntry<"blog">, b: CollectionEntry<"blog">) =>
+      new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
+  );
+
+  const POSTS_PER_PAGE = 10;
+  const totalPages = Math.ceil(allPosts.length / POSTS_PER_PAGE);
+
+  // 为第2页及以后的每一页生成路径
+  return Array.from({ length: totalPages - 1 }, (_, i) => {
+    const page = i + 2; // 从第2页开始
+    return {
+      params: { page: page.toString() },
+      props: {
+        posts: allPosts.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE),
+        currentPage: page,
+        totalPages,
+        totalPosts: allPosts.length,
+      },
+    };
+  });
+}
+
+const { posts, currentPage, totalPages, totalPosts } = Astro.props;
+---
+
+<BaseLayout title={`文章 - 第 ${currentPage} 页`} description="探索技术文章和创作">
+  <div class="pt-32 pb-24 px-6">
+    <div class="container-narrow">
+      <!-- Header -->
+      <header class="mb-12">
+        <h1 class="text-2xl md:text-3xl font-semibold tracking-tight mb-2">
+          所有文章
+        </h1>
+        <p class="text-sm text-muted-foreground">
+          共 {totalPosts} 篇，记录学习与思考
+        </p>
+      </header>
+      
+      <!-- Posts List -->
+      <div class="space-y-1">
+        {posts.map((post) => (
+          <article class="group">
+            <a href={`/blog/${post.slug}/`} class="block">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 py-5 list-item-base">
+                <!-- Date -->
+                <time class="text-sm text-muted-foreground font-mono shrink-0 w-24">
+                  {post.data.pubDate.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                  }).replace(/\//g, '.')}
+                </time>
+                
+                <!-- Content -->
+                <div class="flex-1 min-w-0">
+                  <h2 class="text-base md:text-lg font-medium text-foreground transition-colors group-hover:opacity-80">
+                    {post.data.title}
+                  </h2>
+                  {post.data.description && (
+                    <p class="text-sm text-muted-foreground line-clamp-1 mt-0.5">
+                      {post.data.description}
+                    </p>
+                  )}
+                </div>
+                
+                <!-- Tags -->
+                {post.data.tags && post.data.tags.length > 0 && (
+                  <div class="hidden lg:flex items-center gap-1.5 shrink-0">
+                    {post.data.tags.slice(0, 2).map(tag => (
+                      <a 
+                        href={`/tags/${tag}/`}
+                        class="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground hover:bg-foreground hover:text-background transition-colors"
+                        onclick="event.stopPropagation();"
+                      >
+                        {tag}
+                      </a>
+                    ))}
+                  </div>
+                )}
+                
+                <!-- Arrow -->
+                <div class="hidden sm:block opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+                  <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                  </svg>
+                </div>
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+      
+      <!-- Empty State -->
+      {posts.length === 0 && (
+        <div class="text-center py-24">
+          <p class="text-muted-foreground">暂无文章，敬请期待...</p>
+        </div>
+      )}
+      
+      <!-- Pagination -->
+      {totalPages > 1 && (
+        <div class="mt-12">
+          <Pagination
+            section="blog"
+            currentPage={currentPage}
+            totalPages={totalPages}
+            basePath="/page"
+          />
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

@@ -4,7 +4,7 @@ pubDate: 2024-02-15
 description: "LangChain速查"
 tags: ["LLM", "LangChin"]
 #coverImage: "/images/docker-cover.jpg"
-readingTime: 15
+readingTime: 25
 pinned: true
 
 # 系列文章
@@ -386,7 +386,414 @@ for i, doc in enumerate(docs, 1):
 
 交通标准：
 - ...
+
+
 ```
 
-
 </details>
+
+## 3. 文档加载器
+
+LangChain 支持多种数据源加载：
+
+### 3.1 文本文件
+
+```python
+from langchain_community.document_loaders import TextLoader, CSVLoader, JSONLoader
+
+# 文本文件
+loader = TextLoader("document.txt", encoding="utf-8")
+docs = loader.load()
+
+# CSV 文件（每行一个文档）
+loader = CSVLoader("data.csv", encoding="utf-8")
+docs = loader.load()
+
+# JSON 文件（可指定 JSONPath）
+loader = JSONLoader("data.json", jq_schema=".messages[]", text_content=False)
+docs = loader.load()
+```
+
+### 3.2 网页内容
+
+```python
+from langchain_community.document_loaders import WebBaseLoader, YoutubeLoader
+
+# 网页抓取
+loader = WebBaseLoader("https://example.com/article")
+docs = loader.load()
+
+# YouTube 字幕
+loader = YoutubeLoader.from_youtube_url(
+    "https://www.youtube.com/watch?v=xxx",
+    language=["zh", "en"]
+)
+docs = loader.load()
+```
+
+### 3.3 PDF 文档
+
+```python
+from langchain_community.document_loaders import PyPDFLoader
+
+# 逐页加载
+loader = PyPDFLoader("document.pdf")
+pages = loader.load_and_split()
+
+# 或一次性加载
+docs = loader.load()
+print(f"共 {len(docs)} 页")
+```
+
+### 3.4 文档分割
+
+```python
+from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter
+
+# 简单按字符分割
+splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+
+# 推荐：递归分割（更好保留语义）
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=200,
+    separators=["\n\n", "\n", "。", "！", "？", ".", "!", "?", " ", ""]
+)
+
+texts = splitter.split_documents(docs)
+print(f"分割成 {len(texts)} 个片段")
+```
+
+## 4. 向量数据库
+
+### 4.1 Chroma（轻量级）
+
+```python
+from langchain_community.vectorstores import Chroma
+from langchain_ollama import OllamaEmbeddings
+
+# 使用 Ollama 本地嵌入
+embeddings = OllamaEmbeddings(model="shaw/dmeta-embedding-zh:latest")
+
+# 创建向量数据库
+vectorstore = Chroma.from_documents(
+    documents=texts,
+    embedding=embeddings,
+    collection_name="my_docs"
+)
+
+# 相似度检索
+query = "公司年假政策"
+docs = vectorstore.similarity_search(query, k=3)
+
+# 带分数的检索
+results = vectorstore.similarity_search_with_score(query, k=3)
+for doc, score in results:
+    print(f"[{score:.4f}] {doc.page_content[:100]}...")
+```
+
+### 4.2 FAISS（Facebook 高性能库）
+
+```python
+from langchain_community.vectorstores import FAISS
+
+vectorstore = FAISS.from_documents(texts, embeddings)
+
+# 保存到本地
+vectorstore.save_local("faiss_index")
+
+# 从本地加载
+loaded_vs = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
+```
+
+## 5. 流式输出
+
+实时显示 LLM 的生成过程：
+
+```python
+from langchain_ollama import ChatOllama
+from langchain_core.prompts import ChatPromptTemplate
+
+llm = ChatOllama(model="qwen3:8b")
+
+prompt = ChatPromptTemplate.from_template("用100字介绍{topic}")
+
+# 流式输出
+chain = prompt | llm
+
+print("回答：", end="")
+for chunk in chain.stream({"topic": "人工智能"}):
+    print(chunk.content, end="", flush=True)
+print()
+```
+
+> [!tip] 流式输出的优势
+> - 用户更快看到响应，减少等待感
+> - 适合长文本生成场景
+> - 可配合前端 SSE 实现实时显示
+
+## 6. 输出解析器
+
+### 6.1 JSON 输出
+
+```python
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import PromptTemplate
+from pydantic import BaseModel
+
+# 定义输出结构
+class Person(BaseModel):
+    name: str
+    age: int
+    skills: list[str]
+
+parser = JsonOutputParser(pydantic_object=Person)
+
+prompt = PromptTemplate.from_template(
+    "请提供一个虚构人物的信息：{format_instructions}",
+    partial_variables={"format_instructions": parser.get_format_instructions()}
+)
+
+chain = prompt | llm | parser
+result = chain.invoke({})
+
+print(result)
+# {'name': '张三', 'age': 28, 'skills': ['Python', '数据分析']}
+```
+
+### 6.2 结构化输出（推荐）
+
+```python
+from langchain_core.output_parsers import StructuredOutputParser, ResponseSchema
+
+response_schemas = [
+    ResponseSchema(name="name", description="人物姓名"),
+    ResponseSchema(name="age", description="年龄"),
+    ResponseSchema(name="skills", description="技能列表，用逗号分隔")
+]
+
+parser = StructuredOutputParser.from_response_schemas(response_schemas)
+```
+
+## 7. 自定义工具
+
+### 7.1 创建简单工具
+
+```python
+from langchain_core.tools import tool
+
+@tool
+def calculate(expression: str) -> str:
+    """执行数学计算，支持加减乘除等基本运算"""
+    try:
+        # 注意：实际生产环境应使用安全的数学计算库
+        result = eval(expression, {"__builtins__": {}}, {})
+        return str(result)
+    except Exception as e:
+        return f"计算错误: {e}"
+
+@tool
+def get_weather(city: str) -> str:
+    """查询城市天气"""
+    weather_db = {
+        "北京": "晴，15-25°C",
+        "上海": "多云，18-26°C",
+        "广州": "雨，22-28°C"
+    }
+    return weather_db.get(city, f"未找到{city}的天气信息")
+
+tools = [calculate, get_weather]
+
+# 绑定工具到模型
+llm_with_tools = llm.bind_tools(tools)
+
+# 让模型决定是否调用工具
+response = llm_with_tools.invoke("北京今天天气怎么样？")
+print(response.tool_calls)  # 显示模型想要调用的工具
+```
+
+### 7.2 Agent 使用自定义工具
+
+```python
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_core.prompts import ChatPromptTemplate
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "你是一个助手，可以使用工具来回答问题。"),
+    ("human", "{input}")
+])
+
+agent = create_tool_calling_agent(llm, tools, prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+result = agent_executor.invoke({"input": "计算 (5 + 3) * 2 并告诉我北京今天的天气"})
+print(result["output"])
+```
+
+## 8. Callback 回调
+
+监控和记录 LLM 执行过程：
+
+```python
+from langchain_core.callbacks import BaseCallbackHandler
+from langchain_ollama import ChatOllama
+
+class MyCallbackHandler(BaseCallbackHandler):
+    def on_llm_start(self, serialized, prompts, **kwargs):
+        print(f"🚀 开始调用 LLM，提示词: {prompts[0][:50]}...")
+    
+    def on_llm_new_token(self, token, **kwargs):
+        print(f"📝 新token: {token}", end="", flush=True)
+    
+    def on_llm_end(self, response, **kwargs):
+        print(f"\n✅ LLM 调用完成")
+    
+    def on_llm_error(self, error, **kwargs):
+        print(f"❌ 错误: {error}")
+
+llm = ChatOllama(model="qwen3:8b", callbacks=[MyCallbackHandler()])
+
+response = llm.invoke("用一句话介绍Python")
+print(f"\n最终结果: {response.content}")
+```
+
+## 9. 常见问题
+
+### 9.1 模型响应格式错误
+
+```python
+# 使用 handle_parsing_errors 自动重试
+agent_executor = AgentExecutor(
+    agent=agent,
+    tools=tools,
+    handle_parsing_errors="输出格式错误，请重试。",
+    max_iterations=3
+)
+```
+
+### 9.2 上下文长度限制
+
+```python
+# 限制历史消息数量
+from langchain_core.messages import HumanMessage, AIMessage
+
+def trim_messages():
+    # 只保留最近5条消息
+    pass  # 实际使用见 Memory 部分
+```
+
+### 9.3 Ollama 连接问题
+
+```python
+# 检查 Ollama 服务状态
+import requests
+
+try:
+    response = requests.get("http://localhost:11434/api/tags")
+    print("Ollama 正常运行")
+    print(response.json())
+except:
+    print("请确保 Ollama 服务已启动: ollama serve")
+```
+
+## 10. 项目结构示例
+
+一个典型的 LangChain RAG 项目结构：
+
+```
+project/
+├── data/                  # 原始文档
+│   └── docs/
+├── src/
+│   ├── config.py          # 配置管理
+│   ├── loader.py          # 文档加载
+│   ├── vectorstore.py     # 向量存储
+│   ├── chain.py           # RAG Chain
+│   └── main.py            # 入口
+├── requirements.txt
+└── .env
+```
+
+### 完整项目示例
+
+```python
+# src/chain.py
+from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+
+class RAGChain:
+    def __init__(self, model_name="qwen3:8b", embed_model="shaw/dmeta-embedding-zh:latest"):
+        self.llm = ChatOllama(model=model_name)
+        self.embeddings = OllamaEmbeddings(model=embed_model)
+        self.vectorstore = None
+        
+    def load_documents(self, folder_path):
+        """加载文件夹中所有文档"""
+        from langchain_community.document_loaders import DirectoryLoader, TextLoader
+        loader = DirectoryLoader(folder_path, loader_cls=TextLoader)
+        return loader.load()
+    
+    def build_index(self, documents, chunk_size=1000):
+        """构建向量索引"""
+        from langchain.text_splitter import RecursiveCharacterTextSplitter
+        from langchain_community.vectorstores import FAISS
+        
+        splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size)
+        texts = splitter.split_documents(documents)
+        
+        self.vectorstore = FAISS.from_documents(texts, self.embeddings)
+        return self
+    
+    def create_chain(self, system_prompt=None):
+        """创建问答链"""
+        if not self.vectorstore:
+            raise ValueError("请先调用 build_index()")
+        
+        retriever = self.vectorstore.as_retriever(search_kwargs={"k": 3})
+        
+        default_prompt = """基于以下上下文回答问题。如果不知道，请直接说"我不知道"。"""
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt or default_prompt),
+            ("human", "问题：{question}\n\n上下文：{context}")
+        ])
+        
+        def format_docs(docs):
+            return "\n\n".join(d.page_content for d in docs)
+        
+        self.chain = (
+            {"context": retriever | format_docs, "question": RunnablePassthrough()}
+            | prompt
+            | self.llm
+            | StrOutputParser()
+        )
+        return self
+    
+    def ask(self, question):
+        """提问"""
+        return self.chain.invoke(question)
+
+# 使用
+if __name__ == "__main__":
+    rag = RAGChain()
+    docs = rag.load_documents("./data")
+    rag.build_index(docs).create_chain()
+    
+    answer = rag.ask("公司的年假政策是什么？")
+    print(answer)
+```
+
+## 11. 最佳实践
+
+1. **使用 LCEL 组合链** - `|` 操作符让代码更简洁
+2. **选择合适的嵌入模型** - 中文推荐 `shaw/dmeta-embedding-zh`
+3. **合理设置 chunk_size** - 1000 左右通常效果较好
+4. **使用结构化输出** - 避免解析纯文本的麻烦
+5. **添加错误处理** - 特别是网络和 API 调用
+6. **监控和日志** - 使用 Callback 跟踪执行过程
+
+> [!tip] 性能优化
+> - 本地模型使用 Ollama 时，确保有足够内存
+> - 频繁查询可缓存向量数据库
+> - 大文档可异步加载和处理

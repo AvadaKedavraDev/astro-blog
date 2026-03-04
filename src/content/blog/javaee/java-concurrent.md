@@ -81,9 +81,7 @@ class MyThread extends Thread {
 
 // 使用
 MyThread thread = new MyThread();
-thread.
-
-start();
+thread.start();
 ```
 
 ```java [实现Runnable]
@@ -97,25 +95,14 @@ class MyRunnable implements Runnable {
 
 // 使用
 Thread thread = new Thread(new MyRunnable());
-thread.
-
-start();
+thread.start();
 
 // Lambda 简化
-new
-
-Thread(() ->System.out.
-
-println("线程启动")).
-
-start();
+newThread(() ->System.out.println("线程启动")).start();
 ```
 
 ```java [实现Callable]
 // 方式三：实现 Callable 接口（可返回结果、可抛异常）
-
-import java.util.concurrent.*;
-
 class MyCallable implements Callable<String> {
     @Override
     public String call() throws Exception {
@@ -126,60 +113,38 @@ class MyCallable implements Callable<String> {
 
 // 使用（需要 FutureTask 包装）
 FutureTask<String> futureTask = new FutureTask<>(new MyCallable());
-new
-
-Thread(futureTask).
-
-start();
+new Thread(futureTask).start();
 
 // 获取结果（阻塞）
-try{
-String result = futureTask.get();
-    System.out.
-
-println(result);
-}catch(
-Exception e){
-        e.
-
-printStackTrace();
+try {
+    String result = futureTask.get();
+    System.out.println(result);
+} catch (Exception e) {
+    e.printStackTrace();
 }
 ```
 
 ```java [线程池创建]
 // 方式四：使用线程池（最佳实践）
-
-import java.util.concurrent.*;
-
-// 创建固定线程池
 ExecutorService executor = Executors.newFixedThreadPool(4);
 
 // 提交 Runnable 任务（无返回值）
-executor.
+executor.execute(() -> System.out.println("Runnable 任务"));
 
-        execute(() ->System.out.
-
-        println("Runnable 任务"));
-
-        // 提交 Callable 任务（有返回值）
-        Future<Integer> future = executor.submit(() -> {
-            return 42;
-        });
+// 提交 Callable 任务（有返回值）
+Future<Integer> future = executor.submit(() -> {
+    return 42;
+});
 
 // 获取结果
-try{
-        Integer result = future.get(5, TimeUnit.SECONDS);
-}catch(
-        Exception e){
-        e.
-
-        printStackTrace();
+try {
+    Integer result = future.get(5, TimeUnit.SECONDS);
+} catch (Exception e) {
+    e.printStackTrace();
 }
 
 // 关闭线程池
-        executor.
-
-        shutdown();
+executor.shutdown();
 ```
 
 :::
@@ -211,19 +176,14 @@ try{
 #### 1. 任务内 try-catch
 
 ```java
-new Thread(() ->{
-        try{
-// 业务逻辑
-int result = 1 / 0;  // 可能抛出异常
-    }catch(
-Exception e){
-        System.out.
-
-println("捕获异常: "+e.getMessage());
-        }
-        }).
-
-start();
+new Thread(() -> {
+    try {
+        // 业务逻辑
+        int result = 1 / 0;  // 可能抛出异常
+    } catch (Exception e) {
+        System.out.println("捕获异常: " + e.getMessage());
+    }
+}).start();
 ```
 
 #### 2. 设置未捕获异常处理器
@@ -234,29 +194,17 @@ Thread thread = new Thread(() -> {
 });
 
 // 设置线程级别的处理器
-thread.
-
-setUncaughtExceptionHandler((t, e) ->{
-        System.out.
-
-println("线程 "+t.getName() +" 发生异常: "+e.
-
-getMessage());
-        // 可记录日志、发送告警等
-        });
+thread.setUncaughtExceptionHandler((t, e) -> {
+    System.out.println("线程 " + t.getName() + " 发生异常: " + e.getMessage());
+    // 可记录日志、发送告警等
+});
 
 // 或设置全局默认处理器
-        Thread.
+Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+    System.err.println("全局异常捕获: " + e.getMessage());
+});
 
-setDefaultUncaughtExceptionHandler((t, e) ->{
-        System.err.
-
-println("全局异常捕获: "+e.getMessage());
-        });
-
-        thread.
-
-start();
+thread.start();
 ```
 
 #### 3. 线程池异常处理
@@ -277,18 +225,11 @@ Future<?> future = executor.submit(() -> {
 });
 
 // 方式2：通过 Future.get() 捕获
-try{
-        future.
-
-get();
-}catch(
-ExecutionException e){
-        System.err.
-
-println("执行异常: "+e.getCause().
-
-getMessage());
-        }
+try {
+    future.get();
+} catch (ExecutionException e) {
+    System.err.println("执行异常: " + e.getCause().getMessage());
+}
 ```
 
 #### 4. 自定义 ThreadFactory

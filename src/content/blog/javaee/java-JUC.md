@@ -196,7 +196,7 @@ doReleaseShared()
 
 ## ReentrantLock
 
-### 与 synchronized 对比
+### 1. 与 synchronized 对比
 
 | 特性   | ReentrantLock           | synchronized       |
 |------|-------------------------|--------------------|
@@ -211,7 +211,7 @@ doReleaseShared()
 
 > 可重入关键：通过 exclusiveOwnerThread 记录持有线程，同一线程再次获取时只需增加 state 计数。
 
-### 公平锁 vs 非公平锁
+### 2. 公平锁 vs 非公平锁
 
 ```java
 // 非公平锁（默认）- 吞吐量更高
@@ -231,7 +231,7 @@ ReentrantLock fairLock = new ReentrantLock(true);
 - 需要避免线程饥饿
 - 持有锁时间较长的场景
 
-### 使用示例
+### 3. 使用示例
 
 ```java
 class Counter {
@@ -281,7 +281,7 @@ class Counter {
 
 ## Condition 条件队列
 
-### 与 Object.wait/notify 对比
+### 1. 与 Object.wait/notify 对比
 
 | 特性     | Condition           | Object.wait/notify     |
 |--------|---------------------|------------------------|
@@ -291,7 +291,7 @@ class Counter {
 | 等待位置   | 条件队列                | 对象监视器队列                |
 | 组合使用   | 必须与 Lock 配合使用       | 必须与 synchronized 配合使用  |
 
-### 核心方法
+### 2. 核心方法
 
 | 方法                       | 说明                              |
 |--------------------------|---------------------------------|
@@ -302,7 +302,7 @@ class Counter {
 | `signal()`               | 唤醒一个等待线程（转移到 AQS 同步队列）          |
 | `signalAll()`            | 唤醒所有等待线程                        |
 
-### 经典用法：生产者-消费者
+### 3. 经典用法：生产者-消费者
 
 ```java
 class BoundedBuffer<T> {
@@ -351,8 +351,9 @@ class BoundedBuffer<T> {
     }
 }
 ```
+> [!tip] 虚假唤醒：Java 的 Object.wait() 和 Condition.await() 底层都依赖操作系统的条件变量机制，又因多线程下可能会出现竞态信号从而导致莫名唤醒。
 
-### 线程状态流转
+### 4. 线程状态流转
 
 ```
          ┌─────────────┐
@@ -384,7 +385,7 @@ class BoundedBuffer<T> {
 
 ## 常用同步工具类
 
-### Semaphore（信号量）- 限流控制
+### 1. Semaphore（信号量）- 限流控制
 
 **原理**：控制同时访问某个资源的线程数量，基于 AQS 共享模式。
 
@@ -393,13 +394,10 @@ class BoundedBuffer<T> {
 Semaphore semaphore = new Semaphore(10);
 
 // 获取许可（state - 1）
-semaphore.
+semaphore.acquire();
 
-acquire();
 // 释放许可（state + 1）  
-semaphore.
-
-release();
+semaphore.release();
 ```
 
 #### 使用场景
@@ -438,7 +436,7 @@ class ConnectionPool {
 
 ---
 
-### CountDownLatch（倒计时门闩）- 等待多任务完成
+### 2. CountDownLatch（倒计时门闩）- 等待多任务完成
 
 **原理**：初始化一个计数器，`countDown()` 减一，直到为 0 时唤醒所有等待线程。
 
@@ -447,14 +445,10 @@ class ConnectionPool {
 CountDownLatch latch = new CountDownLatch(3);
 
 // 每个任务完成时调用
-latch.
-
-countDown();  // 计数器 - 1
+latch.countDown();  // 计数器 - 1
 
 // 主线程等待
-latch.
-
-await();      // 阻塞，直到计数器 = 0
+latch.await();      // 阻塞，直到计数器 = 0
 ```
 
 #### 使用场景
@@ -501,7 +495,7 @@ public void startService() throws InterruptedException {
 
 ---
 
-### CyclicBarrier（循环屏障）- 多线程互相等待
+### 3. CyclicBarrier（循环屏障）- 多线程互相等待
 
 **原理**：设置一个屏障点，线程到达后阻塞，直到所有线程都到达后才继续执行，**可循环使用**。
 
@@ -510,14 +504,10 @@ public void startService() throws InterruptedException {
 CyclicBarrier barrier = new CyclicBarrier(3);
 
 // 每个线程到达屏障
-barrier.
-
-await();  // 阻塞，等待其他线程
+barrier.await();  // 阻塞，等待其他线程
 
 // 带超时的等待
-barrier.
-
-await(10,TimeUnit.SECONDS);
+barrier.await(10, TimeUnit.SECONDS);
 ```
 
 #### CountDownLatch vs CyclicBarrier
@@ -601,27 +591,19 @@ Lock readLock = rwLock.readLock();
 Lock writeLock = rwLock.writeLock();
 
 // 读锁：共享，多个线程可同时获取
-readLock.
-
-lock();
-try{
-        // 读取操作
-        }finally{
-        readLock.
-
-unlock();
+readLock.lock();
+try {
+    // 读取操作
+} finally {
+    readLock.unlock();
 }
 
 // 写锁：独占，与其他读写锁互斥
-        writeLock.
-
-lock();
-try{
-        // 写入操作
-        }finally{
-        writeLock.
-
-unlock();
+writeLock.lock();
+try {
+    // 写入操作
+} finally {
+    writeLock.unlock();
 }
 ```
 
@@ -639,35 +621,138 @@ StampedLock lock = new StampedLock();
 
 // 乐观读
 long stamp = lock.tryOptimisticRead();
+
 // 读取数据...
-if(!lock.
-
-validate(stamp)){
-// 乐观读失败，转为悲观读
-stamp =lock.
-
-readLock();
-    try{
-            // 重新读取
-            }finally{
-            lock.
-
-unlockRead(stamp);
+if (!lock.validate(stamp)) {
+    // 乐观读失败，转为悲观读
+    stamp = lock.readLock();
+    try {
+        // 重新读取
+    } finally {
+        lock.unlockRead(stamp);
     }
-            }
+}
 
 // 写锁
-long stamp = lock.writeLock();
-try{
-        // 写入操作
-        }finally{
-        lock.
-
-unlockWrite(stamp);
+stamp = lock.writeLock();
+try {
+    // 写入操作
+} finally {
+    lock.unlockWrite(stamp);
 }
 ```
 
 **优势**：比 ReadWriteLock 性能更好，支持乐观读（无锁读取）。
+
+### CompletableFuture（异步编程）
+
+**原理**：基于 `Future` + `CompletionStage`，支持函数式编程风格的异步任务编排。
+
+#### 1. 创建异步任务
+
+```java
+// 使用默认线程池（ForkJoinPool.commonPool）
+CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+    return "result";
+});
+
+// 使用自定义线程池
+ExecutorService executor = Executors.newFixedThreadPool(4);
+CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+    return "result";
+}, executor);
+
+// 无返回值
+CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+    System.out.println("异步执行");
+});
+```
+
+#### 2. 任务链式编排
+
+```java
+CompletableFuture.supplyAsync(() -> "Hello")
+    .thenApply(s -> s + " World")           // 转换
+    .thenApply(String::toUpperCase)         // 链式转换
+    .thenAccept(System.out::println);       // 消费结果
+
+// 异步版本（不阻塞主线程）
+CompletableFuture.supplyAsync(() -> "Hello")
+    .thenApplyAsync(s -> s + " World")
+    .thenAcceptAsync(System.out::println);
+```
+
+#### 3. 组合多个任务
+
+```java
+// thenCompose: 扁平化嵌套 Future（用于依赖关系）
+CompletableFuture<String> result = CompletableFuture
+    .supplyAsync(() -> "userId")
+    .thenCompose(userId -> fetchUser(userId))  // 返回 CompletableFuture<User>
+
+// thenCombine: 合并两个独立的 Future
+CompletableFuture<Integer> f1 = CompletableFuture.supplyAsync(() -> 10);
+CompletableFuture<Integer> f2 = CompletableFuture.supplyAsync(() -> 20);
+CompletableFuture<Integer> combined = f1.thenCombine(f2, Integer::sum);
+
+// allOf: 等待所有任务完成
+CompletableFuture<Void> all = CompletableFuture.allOf(
+    CompletableFuture.runAsync(() -> task1()),
+    CompletableFuture.runAsync(() -> task2()),
+    CompletableFuture.runAsync(() -> task3())
+);
+
+// anyOf: 任意一个完成即可
+CompletableFuture<Object> any = CompletableFuture.anyOf(f1, f2, f3);
+```
+
+#### 4. 异常处理
+
+```java
+CompletableFuture.supplyAsync(() -> "result")
+    .thenApply(s -> Integer.parseInt(s))  // 可能抛出异常
+    .exceptionally(ex -> {
+        System.err.println("异常: " + ex.getMessage());
+        return 0;  // 默认值
+    })
+    .thenApply(n -> n * 2)
+    .handle((result, ex) -> {
+        if (ex != null) {
+            return "Error: " + ex.getMessage();
+        }
+        return "Success: " + result;
+    });
+```
+
+#### 5. 获取结果
+
+```java
+CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "result");
+
+// 阻塞等待（不推荐）
+String result = future.get();           // 阻塞，等待结果或异常
+String result = future.get(5, TimeUnit.SECONDS);  // 带超时
+
+// 非阻塞（推荐）
+future.thenAccept(result -> System.out.println(result));
+
+// join vs get: join 不抛出受检异常
+String result = future.join();
+```
+
+#### 使用场景
+
+| 场景 | 示例 |
+|------|------|
+| 异步调用 | 异步调用第三方 API，避免阻塞 |
+| 任务编排 | 多个任务串联/并联执行 |
+| 异步链 | 支付流程：下单 → 扣库存 → 发消息 |
+| 并行查询 | 多个数据源并行查询后合并结果 |
+
+> [!tip]
+> - 默认使用 `ForkJoinPool.commonPool()`，适合 CPU 密集型任务
+> - IO 密集型任务建议使用自定义线程池
+> - 记得最后添加异常处理，避免异常丢失
 
 ---
 
@@ -682,6 +767,7 @@ unlockWrite(stamp);
 | `CyclicBarrier`  | `await`              | 多线程分阶段协作 | 可重用，注意异常处理     |
 | `ReadWriteLock`  | `readLock/writeLock` | 读多写少场景   | 支持锁降级          |
 | `StampedLock`    | `tryOptimisticRead`  | 高并发读场景   | 不支持重入          |
+| `CompletableFuture` | `supplyAsync/thenApply` | 异步编程    | 记得异常处理         |
 
 ---
 
