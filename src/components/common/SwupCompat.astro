@@ -212,19 +212,23 @@
           console.log('[SwupCompat] Binding to swup hooks');
           usingNewHooks = true; // 标记使用新版 hooks
           
+          // 注意：Swup 4.x 的 hooks 命名
+          // 'content:replace' 在内容替换前触发（对应旧版的 beforeContentReplace）
+          // 'page:view' 在页面视图更新后触发（对应旧版的 contentReplaced）
           window.swup.hooks.on('content:replace', () => {
             this.emit('content:replace:before');
             this.cleanup(); // 清理动态内容
           });
           
-          window.swup.hooks.on('content:replace', () => {
+          // page:view 在内容替换完成后触发
+          window.swup.hooks.on('page:view', () => {
             this.emit('content:replace');
             this.runScripts(); // 手动触发脚本执行
             this.initCodeGroups(); // 初始化 rehype-code-group
-          });
-          
-          window.swup.hooks.on('page:view', () => {
-            this.emit('page:view');
+            // 延迟触发 page:view，确保 DOM 已更新
+            requestAnimationFrame(() => {
+              this.emit('page:view');
+            });
           });
           
           return true;

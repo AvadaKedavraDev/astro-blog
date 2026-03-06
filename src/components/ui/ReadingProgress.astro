@@ -12,6 +12,8 @@
   // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
   (function() {
     let scrollHandler = null;
+    let resizeHandler = null;
+    let isInitialized = false;
     
     function initProgress() {
       // 使用 requestAnimationFrame 和 passive 事件监听器优化滚动性能
@@ -19,11 +21,26 @@
       const progressBar = document.getElementById('reading-progress');
       const article = document.querySelector('article');
       
-      if (!progressBar) return;
+      if (!progressBar) {
+        console.warn('[ReadingProgress] progress bar not found');
+        return;
+      }
       
-      // 移除旧的事件监听器
+      if (!article) {
+        console.warn('[ReadingProgress] article not found');
+        // 如果没有文章元素，隐藏进度条
+        progressBar.style.width = '0%';
+        return;
+      }
+      
+      // 清理旧的事件监听器
       if (scrollHandler) {
         window.removeEventListener('scroll', scrollHandler);
+        scrollHandler = null;
+      }
+      if (resizeHandler) {
+        window.removeEventListener('resize', resizeHandler);
+        resizeHandler = null;
       }
       
       function updateProgress() {
@@ -33,6 +50,13 @@
         const articleTop = article.offsetTop;
         const articleHeight = article.offsetHeight;
         const windowHeight = window.innerHeight;
+        
+        // 如果文章高度小于视口高度，显示 100%
+        if (articleHeight <= windowHeight) {
+          progressBar.style.width = scrollTop > articleTop ? '100%' : '0%';
+          ticking = false;
+          return;
+        }
         
         // 计算文章可见区域
         const readableHeight = articleHeight - windowHeight + articleTop;
@@ -50,25 +74,44 @@
         }
       };
       
+      // 窗口大小改变时重新计算
+      resizeHandler = function() {
+        updateProgress();
+      };
+      
       // 使用 passive 事件监听器提高滚动性能
       window.addEventListener('scroll', scrollHandler, { passive: true });
+      window.addEventListener('resize', resizeHandler, { passive: true });
       
       // 初始化
+      isInitialized = true;
       updateProgress();
+      
+      console.log('[ReadingProgress] initialized');
     }
     
-    // 立即初始化
-    initProgress();
+    // 延迟初始化，确保 DOM 已准备好
+    function delayedInit() {
+      // 给 Swup 一点时间完成 DOM 更新
+      requestAnimationFrame(() => {
+        setTimeout(initProgress, 50);
+      });
+    }
+    
+    // 立即初始化（首次加载）
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', delayedInit);
+    } else {
+      delayedInit();
+    }
     
     // 使用 SwupCompat 统一处理页面切换
     if (window.SwupCompat) {
-      window.SwupCompat.onPageView(initProgress);
+      window.SwupCompat.onPageView(delayedInit);
     } else {
       // 降级处理
-      document.addEventListener('astro:page-load', initProgress);
-      document.addEventListener('swup:enable', () => {
-        window.swup?.hooks?.on('page:view', initProgress);
-      });
+      document.addEventListener('astro:page-load', delayedInit);
+      document.addEventListener('swup:contentReplaced', delayedInit);
     }
   })();
 </script>

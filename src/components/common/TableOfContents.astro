@@ -43,20 +43,30 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
   // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
   (function() {
     let tocObserver = null;
+    let isInitialized = false;
     
     function initTOC() {
       // 清理旧的 observer
       if (tocObserver) {
         tocObserver.disconnect();
+        tocObserver = null;
       }
       
       const tocItems = document.querySelectorAll('.toc-item');
       const tocLinks = document.querySelectorAll('.toc-link');
       const headings = Array.from(document.querySelectorAll('article h2, article h3, article h4'));
       
-      if (headings.length === 0) return;
+      if (headings.length === 0) {
+        console.warn('[TableOfContents] no headings found');
+        return;
+      }
       
-      // 点击事件由 Swup 处理滚动，配置在 SwupScrollConfig 组件中
+      if (tocItems.length === 0) {
+        console.warn('[TableOfContents] no toc items found');
+        return;
+      }
+      
+      console.log('[TableOfContents] initializing with', headings.length, 'headings');
       
       const visibleHeadings = new Map();
       
@@ -111,23 +121,59 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
         threshold: 0
       });
       
-      headings.forEach(h => tocObserver.observe(h));
+      headings.forEach(h => {
+        if (h.id) {
+          tocObserver.observe(h);
+        }
+      });
+      
+      isInitialized = true;
+      
+      // 立即执行一次高亮
+      const scrollY = window.scrollY + 100;
+      const activeId = headings
+        .filter(h => h.offsetTop <= scrollY)
+        .pop()?.id || '';
+      
+      if (activeId) {
+        tocItems.forEach((item, index) => {
+          const link = tocLinks[index];
+          const linkSlug = link?.getAttribute('data-slug');
+          if (linkSlug === activeId) {
+            item.style.borderLeftColor = 'currentColor';
+            link?.classList.add('font-medium');
+            link?.classList.remove('text-muted-foreground');
+            link?.classList.add('text-foreground');
+          } else {
+            item.style.borderLeftColor = 'transparent';
+            link?.classList.remove('font-medium');
+            link?.classList.add('text-muted-foreground');
+            link?.classList.remove('text-foreground');
+          }
+        });
+      }
     }
     
     // 延迟初始化，确保页面完全加载
+    function delayedInit() {
+      requestAnimationFrame(() => {
+        setTimeout(initTOC, 50);
+      });
+    }
+    
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initTOC);
+      document.addEventListener('DOMContentLoaded', delayedInit);
     } else {
-      initTOC();
+      delayedInit();
     }
     
     // 使用 SwupCompat 统一处理页面切换
     if (window.SwupCompat) {
-      window.SwupCompat.onPageView(initTOC);
+      window.SwupCompat.onPageView(delayedInit);
     } else {
       // 降级处理
-      document.addEventListener('astro:page-load', initTOC);
-      document.addEventListener('swup:contentReplaced', initTOC);
+      document.addEventListener('astro:page-load', delayedInit);
+      document.addEventListener('swup:contentReplaced', delayedInit);
     }
   })();
 </script>

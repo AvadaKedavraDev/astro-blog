@@ -1,10 +1,10 @@
 ---
-title: "MySQL 索引详解"
+title: "MySQL 索引深度剖析：从 B+ 树原理到生产级优化实践"
 pubDate: 2024-01-15
-description: "深入理解 MySQL 索引原理、类型、优化策略及最佳实践"
+description: "深入 InnoDB 索引底层实现，剖析页分裂、锁竞争、覆盖索引等高阶原理，结合生产环境复杂案例分析索引设计陷阱与调优策略"
 tags: ["MySQL", "数据库", "索引", "性能优化"]
 #coverImage: "/images/mysql-index-cover.jpg"
-readingTime: 25
+readingTime: 45
 pinned: true
 
 # 系列文章
@@ -13,575 +13,736 @@ series:
   order: 2
 ---
 
-## 一、索引概述
+## 一、InnoDB 索引页物理结构深度解析
 
-### 1.1 什么是索引
+### 1.1 数据页（Page）的 16KB 布局
 
-索引（Index）是帮助 MySQL 高效获取数据的数据结构。它类似于书籍的目录，通过索引可以快速定位到数据所在的位置，避免全表扫描。
-
-### 1.2 为什么需要索引
-
-| 场景 | 无索引 | 有索引 |
-|------|--------|--------|
-| 查询 100 万条数据中的一条 | 需要扫描 100 万行 | 仅需 3-4 次磁盘 IO |
-| 时间复杂度 | O(n) | O(log n) |
-| 磁盘 IO 次数 | 大量 | 极少 |
-
-### 1.3 索引的优缺点
-
-**优点：**
-- 大大提高数据查询速度
-- 加速表与表之间的连接（JOIN）
-- 在使用分组和排序时，显著减少时间
-- 通过创建唯一索引，保证数据的唯一性
-
-**缺点：**
-- 占用额外的存储空间
-- 降低写操作（INSERT/UPDATE/DELETE）的性能
-- 需要定期维护（碎片整理、统计信息更新）
-
----
-
-## 二、索引数据结构
-
-### 2.1 常见数据结构对比
-
-| 数据结构 | 特点 | 适用场景 |
-|----------|------|----------|
-| 哈希表 (Hash) | 等值查询 O(1)，不支持范围查询 | Memory 引擎、自适应哈希索引 |
-| 有序数组 | 等值和范围查询快，插入慢 | 静态数据 |
-| 二叉搜索树 | 查询 O(log n)，可能退化为链表 | 理论基础 |
-| 平衡二叉树 (AVL/红黑树) | 保持平衡，但树高度较高 | 内存数据库 |
-| B 树 (B-Tree) | 多叉树，降低树高，适合磁盘 IO | 文件系统 |
-| B+ 树 (B+Tree) | 数据都在叶子节点，支持范围查询 | **MySQL 默认索引结构** |
-
-### 2.2 B+ 树详解
-
-MySQL InnoDB 引擎使用 **B+ 树** 作为索引的数据结构。
-
-#### B+ 树的特点：
-
-1. **多路平衡查找树**：每个节点可以有多个子节点，降低树的高度
-2. **非叶子节点只存储键值**：不存储实际数据，可以存储更多键值
-3. **叶子节点存储所有数据**：并且通过指针相互连接，形成有序链表
-4. **查询稳定**：任何数据的查找都需要从根节点走到叶子节点
+InnoDB 的最小存储单元是页（默认 16KB），理解页的物理结构是索引优化的基础。
 
 ```
-                    [10 | 20 | 30]
-                   /    |    |    \
-              [5|9]  [15]  [25]  [35|40]
-               / \     /     /     /   \
-            数据页  数据页  数据页  数据页  数据页
-            (1-9)  (10-19) (20-29) (30-39) (40+)
-               ↓      ↓      ↓      ↓      ↓
-            ←←←←←←←←←←←← 双向链表 →→→→→→→→→→→
+┌─────────────────────────────────────────────────────────────┐
+│  File Header (38 bytes)                                     │
+│  ├─ FIL_PAGE_SPACE: 表空间 ID                               │
+│  ├─ FIL_PAGE_OFFSET: 页号（4 字节，最大 2^32 页 ≈ 64TB）     │
+│  ├─ FIL_PAGE_PREV: 上一页指针（双向链表）                    │
+│  ├─ FIL_PAGE_NEXT: 下一页指针                               │
+│  └─ FIL_PAGE_LSN: 最后修改的 LSN（用于 Recovery）           │
+├─────────────────────────────────────────────────────────────┤
+│  Page Header (56 bytes)                                     │
+│  ├─ PAGE_N_DIR_SLOTS: Page Directory 槽位数                 │
+│  ├─ PAGE_HEAP_TOP: 堆顶位置（空闲空间起始）                  │
+│  ├─ PAGE_N_HEAP: 记录数（含已删除）                         │
+│  ├─ PAGE_FREE: 删除记录链表头                                │
+│  ├─ PAGE_GARBAGE: 删除记录总字节数（碎片）                   │
+│  ├─ PAGE_N_RECS: 实际记录数                                 │
+│  ├─ PAGE_MAX_TRX_ID: 最大事务 ID（二级索引）                 │
+│  ├─ PAGE_LEVEL: B+ 树层级（0 表示叶子页）                    │
+│  └─ PAGE_INDEX_ID: 索引 ID                                  │
+├─────────────────────────────────────────────────────────────┤
+│  Infimum Record (13 bytes) - 最小虚拟记录                    │
+├─────────────────────────────────────────────────────────────┤
+│  Supremum Record (13 bytes) - 最大虚拟记录                   │
+├─────────────────────────────────────────────────────────────┤
+│  User Records - 用户记录（按主键排序的链表）                  │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ Record Header (5 bytes)                             │    │
+│  │ ├─ delete_mask (1 bit): 是否已删除                  │    │
+│  │ ├─ min_rec_mask (1 bit): B+ 树非叶子节点最小记录    │    │
+│  │ ├─ n_owned (4 bits): 该组拥有的记录数               │    │
+│  │ ├─ heap_no (13 bits): 堆中位置（0=Infimum,1=Supremum）│   │
+│  │ ├─ record_type (3 bits): 0=普通,1=非叶子节点,2=Infimum,3=Supremum │
+│  │ └─ next_record (16 bits): 下一条记录偏移量          │    │
+│  ├─────────────────────────────────────────────────────┤    │
+│  │ [Row Data]                                          │    │
+│  │ ├─ 变长字段长度列表（逆序）                          │    │
+│  │ ├─ NULL 值列表（逆序）                               │    │
+│  │ ├─ 记录头信息（5 bytes，如上）                       │    │
+│  │ ├─ Row ID (6 bytes, 隐藏主键)                        │    │
+│  │ ├─ Transaction ID (6 bytes)                         │    │
+│  │ ├─ Roll Pointer (7 bytes) → undo log                │    │
+│  │ └─ 实际列数据                                        │    │
+│  └─────────────────────────────────────────────────────┘    │
+├─────────────────────────────────────────────────────────────┤
+│  Free Space - 空闲空间                                      │
+├─────────────────────────────────────────────────────────────┤
+│  Page Directory - 页目录（稀疏索引）                         │
+│  ├─ 每个槽（slot）2 字节，指向组内最大记录的偏移              │
+│  ├─ 默认每组 4-8 条记录，二分查找定位组                       │
+│  └─ 槽数量 ≈ 记录数 / 4                                     │
+├─────────────────────────────────────────────────────────────┤
+│  File Trailer (8 bytes)                                     │
+│  ├─ 旧校验和（4 bytes，兼容老版本）                          │
+│  └─ 新校验和（4 bytes，CRC32）                               │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-#### 为什么不用 B 树？
+### 1.2 页内记录的存储格式
 
-| 特性 | B 树 | B+ 树 |
-|------|------|-------|
-| 数据存储 | 非叶子节点也存数据 | 只在叶子节点存数据 |
-| 范围查询 | 需要中序遍历 | 叶子节点链表直接遍历 |
-| 树高度 | 相对较高 | 更低（非叶子节点存更多键） |
-| 查询稳定性 | 不稳定 | 稳定（都在叶子节点） |
-
-### 2.3 Hash 索引
+InnoDB 使用 **Compact Row Format**（默认），理解其存储格式对索引设计至关重要：
 
 ```sql
--- 创建哈希索引（仅 Memory 引擎支持显式创建）
-CREATE TABLE test_hash (
-    id INT PRIMARY KEY,
-    name VARCHAR(50),
-    INDEX USING HASH (name)
-) ENGINE = MEMORY;
-```
-
-**Hash 索引特点：**
-- 等值查询效率极高（O(1)）
-- 不支持范围查询（>、<、BETWEEN）
-- 不支持排序（ORDER BY）
-- 不支持最左前缀匹配
-- 存在哈希冲突问题
-
----
-
-## 三、索引类型
-
-### 3.1 按数据结构分类
-
-| 类型 | 说明 | 使用场景 |
-|------|------|----------|
-| B+ 树索引 | 默认索引类型 | 大多数场景 |
-| Hash 索引 | 哈希表实现 | 精确匹配查询 |
-| 全文索引 | 倒排索引 | 文本搜索 |
-| 空间索引 | R 树实现 | 地理数据（GIS） |
-
-### 3.2 按功能分类
-
-#### 3.2.1 主键索引 (Primary Key)
-
-```sql
--- 创建主键索引
-CREATE TABLE users (
-    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(50) NOT NULL
-);
-
--- 或单独添加
-ALTER TABLE users ADD PRIMARY KEY (id);
-```
-
-**特点：**
-- 自动创建，不能为空，不能重复
-- 一个表只能有一个主键索引
-- InnoDB 中，主键索引就是聚簇索引
-- 建议使用自增整数作为主键
-
-#### 3.2.2 唯一索引 (Unique Key)
-
-```sql
--- 创建唯一索引
-CREATE TABLE users (
+-- 创建一个示例表
+CREATE TABLE user (
     id BIGINT PRIMARY KEY,
-    email VARCHAR(100) UNIQUE,
-    phone VARCHAR(20)
+    name VARCHAR(50) NOT NULL,
+    email VARCHAR(100),
+    age TINYINT,
+    created_at DATETIME
+) ENGINE=InnoDB ROW_FORMAT=COMPACT;
+```
+
+一条记录的物理存储：
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  变长字段长度列表（逆序存储）                                │
+│  ├─ email 长度（假设 16）: 0x10                             │
+│  ├─ name 长度（假设 8）: 0x08                               │
+│  └─ 变长字段数 = 所有 VARCHAR/TEXT/BLOB 字段               │
+├─────────────────────────────────────────────────────────────┤
+│  NULL 值位图（逆序，每列 1 bit）                            │
+│  ├─ bit 0: id (NOT NULL) → 0                               │
+│  ├─ bit 1: name (NOT NULL) → 0                             │
+│  ├─ bit 2: email → 1 (NULL) 或 0 (NOT NULL)                │
+│  ├─ bit 3: age → 1 (NULL) 或 0 (NOT NULL)                  │
+│  └─ bit 4: created_at → 1 (NULL) 或 0 (NOT NULL)           │
+├─────────────────────────────────────────────────────────────┤
+│  记录头信息（5 bytes）                                       │
+├─────────────────────────────────────────────────────────────┤
+│  隐藏列                                                      │
+│  ├─ DB_ROW_ID (6 bytes): 无主键时生成                       │
+│  ├─ DB_TRX_ID (6 bytes): 最后修改的事务 ID                   │
+│  └─ DB_ROLL_PTR (7 bytes): 回滚指针 → undo 记录              │
+├─────────────────────────────────────────────────────────────┤
+│  实际列数据（按定义顺序）                                    │
+│  ├─ id (8 bytes BIGINT)                                     │
+│  ├─ name (8 bytes VARCHAR)                                  │
+│  ├─ email (16 bytes VARCHAR 或不存在如果是 NULL)             │
+│  ├─ age (1 byte TINYINT 或不存在如果是 NULL)                 │
+│  └─ created_at (5 bytes DATETIME 或不存在)                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**关键洞察：**
+- `NULL` 值不占用数据空间（除了 NULL 位图的 1 bit），但会占用记录头的空间
+- 变长字段长度列表只存在于实际有变长字段的表中
+- 每行记录至少有 27 bytes 的额外开销（5 + 6 + 6 + 7 + 可能 3 bytes 变长列表）
+
+### 1.3 页目录（Page Directory）的二分查找机制
+
+页内查找不是线性扫描，而是通过 Page Directory 实现近似二分查找：
+
+```
+记录链表（按主键排序）:
+
+Infimum → R1 → R2 → R3 → R4 → R5 → R6 → R7 → R8 → Supremum
+
+Page Directory（槽数组）:
+┌─────┬─────┬─────┐
+│  S0 │  S1 │  S2 │
+└─────┴─────┴─────┘
+   ↓     ↓     ↓
+  Infimum  R4    R8  (每组最大记录)
+
+查找 R6 的过程:
+1. 二分查找 Page Directory: S0=Infimum < R6 < S2=R8 → 落在 S1 组
+2. 从 S1 指向的 R4 开始线性扫描: R4 → R5 → R6 (找到)
+
+时间复杂度: O(log(n/4)) + O(4) ≈ O(log n)
+```
+
+槽的数量计算公式：
+```
+slot_count = (n_recs + 8 - 1) / 4  // 向上取整，每组最多 8 条
+```
+
+---
+
+## 二、B+ 树索引的深层机制
+
+### 2.1 索引页的分裂（Page Split）机制
+
+当页满（16KB 用完）时发生页分裂，这是索引性能退化的主要原因。
+
+**分裂过程详解：**
+
+```
+分裂前（16KB 已满）:
+[1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31]
+
+插入 16（中间位置插入）：
+
+1. 申请新的空页（Page B）
+2. 计算分裂点（约 50% 处）
+3. 将 [17, 19, 21, 23, 25, 27, 29, 31] 移动到新页
+4. 插入 16 到原页
+5. 更新双向链表指针
+
+分裂后:
+Page A: [1, 3, 5, 7, 9, 11, 13, 15, 16]  →→  Page B: [17, 19, 21, 23, 25, 27, 29, 31]
+
+6. 向上层父节点插入指向 Page B 的索引项（key=17, page_no=B）
+```
+
+**页分裂的代价：**
+1. **I/O 成本**：申请新页、写入旧页、写入新页、更新父节点（至少 4 次 I/O）
+2. **锁竞争**：分裂期间需要持有页级锁，影响并发
+3. **空间碎片**：页不再满，空间利用率下降（通常降至 50%）
+4. **树高度增加**：频繁分裂可能导致树高度增加
+
+**监控页分裂：**
+
+```sql
+-- 查看页分裂次数
+SHOW STATUS LIKE 'Innodb_pages_%';
+
+-- 更详细的统计（MySQL 8.0）
+SELECT 
+    event_name,
+    count_star,
+    sum_timer_wait/1000000000000 as wait_ms
+FROM performance_schema.events_waits_summary_global_by_event_name
+WHERE event_name LIKE '%innodb%page%';
+```
+
+**减少页分裂的策略：**
+
+```sql
+-- 1. 使用自增主键（顺序插入，只在页尾追加）
+CREATE TABLE t (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    ...
 );
 
--- 单独创建
-CREATE UNIQUE INDEX idx_unique_email ON users(email);
+-- 2. 预留页空间（FILLFACTOR 概念，MySQL 不支持，但可通过预插入实现）
+-- 对于已知会有大量插入的表，可预先插入一些占位数据后删除
+
+-- 3. 避免随机主键（如 UUID）
+-- 坏：UUID 导致随机插入，频繁页分裂
+-- 好：使用 AUTO_INCREMENT 或时间戳+自增组合
+
+-- 4. 调整页大小（较少用，需重建实例）
+-- 对于纯读表，可以使用更大的页（32KB/64KB）减少树高度
 ```
 
-**特点：**
-- 保证列值的唯一性
-- 允许 NULL 值（MySQL 中多个 NULL 视为不同）
-- 一个表可以有多个唯一索引
+### 2.2 索引的并发控制：锁与索引的关系
 
-#### 3.2.3 普通索引 (Index/Key)
+InnoDB 的锁是基于索引的，理解这一点对排查死锁和性能问题至关重要。
+
+**锁的类型与索引的关系：**
 
 ```sql
--- 创建普通索引
-CREATE INDEX idx_username ON users(username);
+-- 表结构
+CREATE TABLE accounts (
+    id INT PRIMARY KEY,
+    user_id INT UNIQUE,
+    balance DECIMAL(10,2),
+    status TINYINT,
+    INDEX idx_status (status)
+);
 
--- 复合索引
-CREATE INDEX idx_name_age ON users(username, age);
+-- 案例 1: 主键查询加锁
+SELECT * FROM accounts WHERE id = 100 FOR UPDATE;
+-- 只在聚簇索引（主键索引）的 id=100 记录上加 X 锁
+
+-- 案例 2: 唯一索引查询加锁
+SELECT * FROM accounts WHERE user_id = 1000 FOR UPDATE;
+-- 1. 在二级索引 idx_user_id 的 user_id=1000 记录上加 X 锁
+-- 2. 回表到聚簇索引，对 id=? 的记录加 X 锁
+-- 共持有 2 个锁
+
+-- 案例 3: 非唯一索引查询加锁
+SELECT * FROM accounts WHERE status = 1 FOR UPDATE;
+-- 1. 在 idx_status 的 status=1 的所有记录上加 X 锁（可能有多个）
+-- 2. 对每个匹配的记录，回表到聚簇索引加 X 锁
+-- 3. 同时，为了防止幻读，还会在间隙加 Gap 锁
 ```
 
-#### 3.2.4 前缀索引
+**间隙锁（Gap Lock）与索引：**
 
 ```sql
--- 对字符串前 N 个字符创建索引
-CREATE INDEX idx_name_prefix ON users(username(10));
+-- 事务 A
+BEGIN;
+SELECT * FROM accounts WHERE id > 100 AND id < 200 FOR UPDATE;
 
--- 确定前缀长度（选择性接近完整列）
+-- 锁的范围：
+-- 1. 对 id ∈ (100, 200) 的所有记录加 X 锁
+-- 2. 对间隙 (100, next_record) 和 (prev_record, 200) 加 Gap Lock
+-- 3. 阻止其他事务在 (100, 200) 范围内插入新记录
+
+-- 事务 B（阻塞）
+INSERT INTO accounts (id, ...) VALUES (150, ...); -- 等待事务 A 释放间隙锁
+```
+
+**Next-Key Lock = Record Lock + Gap Lock**
+
+```
+索引记录: [10] [20] [30] [40]
+
+Next-Key Lock on 20 覆盖范围:
+(-∞, 10] [10, 20] (20, 30]
+         ↑ 锁定这个区间
+
+实际锁定的范围：(10, 20] 左开右闭
+```
+
+**死锁案例分析：**
+
+```sql
+-- 表: CREATE TABLE t (id INT PRIMARY KEY, a INT, b INT, INDEX idx_a(a));
+-- 数据: (1, 1, 1), (2, 2, 2), (3, 3, 3)
+
+-- 事务 A                    -- 事务 B
+BEGIN;                      BEGIN;
+DELETE FROM t WHERE a = 1;  DELETE FROM t WHERE a = 2;
+-- 锁住 idx_a 的 a=1 记录   -- 锁住 idx_a 的 a=2 记录
+-- 锁住 id=1 的聚簇索引     -- 锁住 id=2 的聚簇索引
+
+UPDATE t SET b = 100        UPDATE t SET b = 200
+WHERE id = 2;               WHERE id = 1;
+-- 等待事务 B 释放 id=2 锁   -- 等待事务 A 释放 id=1 锁
+-- ↓ 死锁发生 ↓
+```
+
+**锁优化的关键：**
+1. **索引设计影响锁粒度**：WHERE 条件走索引时只锁匹配行；全表扫描会锁所有扫描过的行
+2. **减少二级索引回表**：使用覆盖索引可以减少需要加锁的行数
+3. **主键顺序访问**：按主键顺序操作可以减少死锁概率
+
+### 2.3 覆盖索引（Covering Index）的深层原理
+
+覆盖索引不仅仅是 "避免回表" 这么简单，它还能显著减少锁竞争。
+
+```sql
+-- 表结构
+CREATE TABLE orders (
+    id BIGINT PRIMARY KEY,
+    user_id INT,
+    order_no VARCHAR(32),
+    status TINYINT,
+    amount DECIMAL(10,2),
+    created_at DATETIME,
+    INDEX idx_user_status (user_id, status, created_at)
+);
+
+-- 非覆盖索引查询
+SELECT * FROM orders WHERE user_id = 100 AND status = 1;
+-- 执行过程：
+-- 1. 在 idx_user_status 找到匹配记录
+-- 2. 对每条记录，通过主键回表获取完整数据
+-- 3. 总共访问：N 个二级索引页 + N 个聚簇索引页
+
+-- 覆盖索引查询
+SELECT user_id, status, created_at FROM orders 
+WHERE user_id = 100 AND status = 1;
+-- 执行过程：
+-- 1. 在 idx_user_status 找到匹配记录
+-- 2. 直接返回索引中的数据
+-- 3. 总共访问：N 个二级索引页（可能 1-2 个页）
+```
+
+**覆盖索引的性能优势量化：**
+
+| 指标 | 非覆盖索引 | 覆盖索引 | 提升倍数 |
+|------|-----------|----------|----------|
+| 页访问次数 | 2N ~ 3N | N/10 ~ N | 10x+ |
+| I/O 次数 | 高（随机 I/O） | 极低（顺序 I/O） | 100x+ |
+| 锁持有数量 | 2N（二级+聚簇） | N（仅二级） | 2x |
+| CPU 消耗 | 高（解析行数据） | 低（直接返回） | 3x+ |
+
+**设计高效覆盖索引的策略：**
+
+```sql
+-- 策略 1: 查询列全部包含在索引中
+-- 原索引
+CREATE INDEX idx_user ON orders(user_id);
+-- 查询
+SELECT user_id, status, created_at FROM orders WHERE user_id = ?;
+-- 需要回表获取 status 和 created_at
+
+-- 优化后（覆盖索引）
+CREATE INDEX idx_user_status_ctime ON orders(user_id, status, created_at);
+-- 完全覆盖查询，无需回表
+
+-- 策略 2: 利用最左前缀原则的覆盖索引
+-- 索引: (a, b, c)
+-- 覆盖查询: SELECT a, b FROM t WHERE a = ?
+-- 不覆盖: SELECT a, b, d FROM t WHERE a = ? (d 不在索引中)
+
+-- 策略 3: 延迟关联（Deferred Join）优化深分页
+-- 原查询（深分页性能差）
+SELECT * FROM orders 
+WHERE status = 1 
+ORDER BY created_at DESC 
+LIMIT 1000000, 10;
+
+-- 优化：先覆盖索引查出 ID，再关联
+SELECT o.* 
+FROM orders o
+JOIN (
+    SELECT id FROM orders 
+    WHERE status = 1 
+    ORDER BY created_at DESC 
+    LIMIT 1000000, 10
+) tmp ON o.id = tmp.id;
+-- 子查询使用覆盖索引 idx_status_ctime(id)，只扫描索引
+-- 大幅减少 I/O
+```
+
+---
+
+## 三、复合索引的高阶设计技巧
+
+### 3.1 索引列顺序的科学决策
+
+复合索引的列顺序不是随意的，需要基于 **选择性（Cardinality）** 和 **查询模式** 科学决策。
+
+```sql
+-- 假设表结构
+CREATE TABLE logs (
+    id BIGINT PRIMARY KEY,
+    app_id INT,           -- 100 个不同值
+    level TINYINT,        -- 5 个不同值 (DEBUG/INFO/WARN/ERROR/FATAL)
+    user_id INT,          -- 1000000 个不同值
+    created_at DATETIME,
+    message TEXT
+);
+
+-- 问题：如何设计 (app_id, level, user_id) 的索引顺序？
+```
+
+**错误的设计：**
+
+```sql
+-- 顺序：区分度低的在前
+CREATE INDEX idx_wrong ON logs(level, app_id, user_id);
+
+-- 查询: WHERE app_id = 5 AND level = 3
+-- 只能用到 level 列，app_id 无法使用（违反最左前缀）
+```
+
+**科学的设计方法：**
+
+```sql
+-- 步骤 1: 计算各列选择性
 SELECT 
-    COUNT(DISTINCT LEFT(username, 5)) / COUNT(DISTINCT username) as selectivity_5,
-    COUNT(DISTINCT LEFT(username, 10)) / COUNT(DISTINCT username) as selectivity_10
-FROM users;
+    COUNT(DISTINCT app_id) / COUNT(*) as app_id_sel,
+    COUNT(DISTINCT level) / COUNT(*) as level_sel,
+    COUNT(DISTINCT user_id) / COUNT(*) as user_id_sel,
+    COUNT(*)
+FROM logs;
+-- 结果: app_id_sel = 0.0001, level_sel = 0.0000005, user_id_sel = 1
+
+-- 步骤 2: 分析查询模式
+-- Q1: WHERE app_id = ? AND user_id = ? (最频繁)
+-- Q2: WHERE app_id = ? AND level = ? ORDER BY created_at
+-- Q3: WHERE user_id = ?
+
+-- 步骤 3: 设计索引
+-- 对于 Q1：CREATE INDEX idx_app_user ON logs(app_id, user_id, created_at);
+-- 对于 Q2：CREATE INDEX idx_app_level_ctime ON logs(app_id, level, created_at);
+-- 对于 Q3：CREATE INDEX idx_user ON logs(user_id);
+
+-- 步骤 4: 合并索引（减少索引数量）
+-- 观察：Q1 和 Q2 都用到 app_id，可以合并
+CREATE INDEX idx_optimal ON logs(app_id, level, user_id, created_at);
+
+-- 验证各查询是否能使用该索引：
+-- Q1: WHERE app_id = ? AND user_id = ? → 使用 app_id（等值），跳过 level，user_id（等值）✓
+-- Q2: WHERE app_id = ? AND level = ? ORDER BY created_at → 完美匹配 ✓
+-- Q3: WHERE user_id = ? → 无法使用（缺少最左列 app_id）✗
+-- 需要额外索引：CREATE INDEX idx_user ON logs(user_id);
 ```
 
-#### 3.2.5 全文索引 (Fulltext)
+**进阶技巧：索引的 "跳跃扫描"（Index Skip Scan）**
+
+MySQL 8.0.13+ 支持松散索引扫描，允许跳过最左前缀：
 
 ```sql
--- 创建全文索引
-CREATE FULLTEXT INDEX idx_content ON articles(content);
+-- 索引: INDEX (a, b)
+-- 查询: WHERE b = 2
 
--- 使用全文索引
-SELECT * FROM articles 
-WHERE MATCH(content) AGAINST('MySQL 索引' IN NATURAL LANGUAGE MODE);
+-- MySQL 8.0.13+ 会自动优化为：
+-- 1. 找出所有不同的 a 值
+-- 2. 对每个 a 值，执行 WHERE a = ? AND b = 2
+-- 3. 合并结果
+
+-- 查看执行计划
+EXPLAIN SELECT * FROM t WHERE b = 2;
+-- Extra: Using index for skip scan
 ```
 
-**注意：** MySQL 5.6 之前仅 MyISAM 支持，5.6 之后 InnoDB 也支持。
+### 3.2 范围查询与等值查询的索引设计
 
-### 3.3 按存储方式分类
-
-#### 3.3.1 聚簇索引 (Clustered Index)
-
-**特点：**
-- 数据行和索引存储在一起
-- 叶子节点就是数据页
-- 一个表只能有一个聚簇索引
-- InnoDB 的主键索引就是聚簇索引
-
-```
-聚簇索引结构：
-
-[主键值] → [完整数据行]
-
-非叶子节点：存储主键值
-叶子节点：存储完整的数据记录
-```
-
-#### 3.3.2 非聚簇索引 (Secondary/Non-clustered Index)
-
-**特点：**
-- 索引和数据分开存储
-- 叶子节点存储主键值（回表查询）
-- 一个表可以有多个非聚簇索引
-
-```
-非聚簇索引结构：
-
-[索引列值] → [主键值]
-
-查询时需要回表：通过主键值再到聚簇索引查找完整数据
-```
-
-#### 3.3.3 覆盖索引 (Covering Index)
-
-当查询的所有列都在索引中时，无需回表，直接返回索引中的数据。
+范围查询（`>`、`<`、`BETWEEN`、`LIKE 'prefix%'`）会阻断其后的列使用索引。
 
 ```sql
--- 创建复合索引
-CREATE INDEX idx_name_age ON users(username, age);
+-- 表结构
+CREATE TABLE products (
+    id INT PRIMARY KEY,
+    category_id INT,
+    price DECIMAL(10,2),
+    brand_id INT,
+    status TINYINT,
+    INDEX idx_cat_price_brand (category_id, price, brand_id)
+);
 
--- 覆盖索引查询（无需回表）
-SELECT username, age FROM users WHERE username = '张三';
+-- 查询 1：范围查询在中间
+SELECT * FROM products 
+WHERE category_id = 1 
+  AND price BETWEEN 100 AND 200 
+  AND brand_id = 5;
 
--- 非覆盖索引查询（需要回表）
-SELECT username, age, email FROM users WHERE username = '张三';
+-- 索引使用情况：
+-- category_id: 等值匹配 ✓
+-- price: 范围匹配 ✓
+-- brand_id: 无法使用索引 ✗（被范围查询阻断）
+
+-- 优化方案 1：调整列顺序，等值查询在前
+DROP INDEX idx_cat_price_brand ON products;
+CREATE INDEX idx_cat_brand_price ON products(category_id, brand_id, price);
+
+-- 现在：
+-- category_id: 等值 ✓
+-- brand_id: 等值 ✓
+-- price: 范围 ✓（最后）
+
+-- 优化方案 2：如果 price 范围查询和高选择性 brand_id 组合频繁，考虑冗余索引
+CREATE INDEX idx_cat_price ON products(category_id, price);  -- 用于纯价格筛选
+CREATE INDEX idx_cat_brand_price ON products(category_id, brand_id, price);  -- 用于品牌+价格筛选
 ```
 
----
-
-## 四、InnoDB 索引实现
-
-### 4.1 InnoDB 索引组织方式
-
-InnoDB 使用 **聚簇索引** 组织数据：
-
-1. **有主键**：使用主键作为聚簇索引
-2. **无主键**：使用第一个非空唯一索引作为聚簇索引
-3. **无主键且无唯一索引**：自动生成 6 字节的隐藏列 `row_id` 作为聚簇索引
-
-### 4.2 索引页结构
-
-```
-+------------------+
-|  File Header     |  ← 文件头（38 字节）
-+------------------+
-|  Page Header     |  ← 页头（56 字节）
-+------------------+
-|  Infimum         |  ← 虚拟最小记录
-+------------------+
-|  Supremum        |  ← 虚拟最大记录
-+------------------+
-|  User Records    |  ← 用户记录（索引数据）
-|  (按主键排序)     |
-+------------------+
-|  Free Space      |  ← 空闲空间
-+------------------+
-|  Page Directory  |  ← 页目录（稀疏索引）
-+------------------+
-|  File Trailer    |  ← 文件尾（校验和）
-+------------------+
-```
-
-### 4.3 回表查询
-
-当使用非主键索引查询时，需要两次索引查找：
+**IN 查询的特殊处理：**
 
 ```sql
-SELECT * FROM users WHERE username = '张三';
+-- 索引: (a, b)
+
+-- IN 等值查询 - 可以使用 b
+SELECT * FROM t WHERE a IN (1, 2, 3) AND b = 4;
+-- 执行方式：分别执行 (a=1 AND b=4) OR (a=2 AND b=4) OR (a=3 AND b=4)
+-- 都可以使用 b
+
+-- 但 IN 元素过多会退化为范围扫描
+SELECT * FROM t WHERE a IN (1, 2, ..., 1000) AND b = 4;
+-- 可能只使用 a，b 无法使用
 ```
 
-查询过程：
-1. 在 `idx_username` 索引中找到 `username = '张三'` 的记录，获取主键值 `id = 1`
-2. 在聚簇索引中根据 `id = 1` 找到完整数据行
+### 3.3 排序与分组的索引优化
 
-### 4.4 索引下推 (ICP - Index Condition Pushdown)
-
-MySQL 5.6 引入的优化，减少回表次数。
+索引不仅可以加速 WHERE，还可以消除排序（Using filesort）和临时表。
 
 ```sql
--- 有索引 INDEX (name, age)
-SELECT * FROM users WHERE name LIKE '张%' AND age = 20;
-```
+-- 表结构
+CREATE TABLE orders (
+    id BIGINT PRIMARY KEY,
+    user_id INT,
+    status TINYINT,
+    amount DECIMAL(10,2),
+    created_at DATETIME,
+    INDEX idx_user_status_ctime (user_id, status, created_at)
+);
 
-**不使用 ICP：**
-1. 找到所有 `name LIKE '张%'` 的记录（可能 100 条）
-2. 回表查询这 100 条的完整数据
-3. 在 Server 层过滤 `age = 20`
-
-**使用 ICP：**
-1. 找到 `name LIKE '张%'` 的记录
-2. **在存储引擎层** 就判断 `age = 20`，过滤掉不符合的
-3. 只回表符合条件的记录（可能只有 10 条）
-
-```sql
--- 查看 ICP 是否开启
-SHOW VARIABLES LIKE 'optimizer_switch';
--- index_condition_pushdown=on 表示开启
-```
-
----
-
-## 五、索引使用原则
-
-### 5.1 适合创建索引的列
-
-| 场景 | 原因 |
-|------|------|
-| 频繁作为查询条件的列 | 加快查询速度 |
-| 经常用于 JOIN 的列 | 加快连接速度 |
-| 经常用于排序的列 | 避免 filesort |
-| 经常用于分组（GROUP BY）的列 | 避免临时表 |
-| 字段值区分度高的列 | 提高索引选择性 |
-
-### 5.2 不适合创建索引的列
-
-| 场景 | 原因 |
-|------|------|
-| 很少作为查询条件的列 | 浪费存储空间 |
-| 数据重复度高的列（如性别） | 索引效果差 |
-| 频繁更新的列 | 增加维护成本 |
-| 小表（数据量 < 1000） | 全表扫描更快 |
-| 长文本/大字段 | 索引占用空间大 |
-
-### 5.3 最左前缀原则
-
-对于复合索引 `(a, b, c)`，查询条件必须从最左边开始使用：
-
-```sql
--- 能使用索引
-WHERE a = 1
-WHERE a = 1 AND b = 2
-WHERE a = 1 AND b = 2 AND c = 3
-WHERE a = 1 AND c = 3  -- a 能用，c 不能用
-WHERE a = 1 AND b > 2 AND c = 3  -- a、b 能用，c 不能用（范围查询后停止）
-
--- 不能使用索引
-WHERE b = 2
-WHERE b = 2 AND c = 3
-WHERE c = 3
-```
-
-### 5.4 索引选择性
-
-选择性 = 不重复值的数量 / 总记录数
-
-```sql
--- 计算列的选择性
-SELECT 
-    COUNT(DISTINCT username) / COUNT(*) AS username_selectivity,
-    COUNT(DISTINCT gender) / COUNT(*) AS gender_selectivity
-FROM users;
-```
-
-**原则：** 选择性越接近 1，索引效果越好。选择性低于 0.1 的列不建议建索引。
-
----
-
-## 六、索引优化策略
-
-### 6.1 复合索引设计原则
-
-```sql
--- 创建复合索引
-CREATE INDEX idx_multi ON table_name(col1, col2, col3);
-```
-
-**设计原则：**
-
-1. **等值查询列放前面**：`=` 条件的列放在最左边
-2. **区分度高的列放前面**：选择性高的列优先
-3. **范围查询列放后面**：`>`、`<`、`BETWEEN` 等放后面
-4. **控制索引列数**：一般不超过 5 列
-
-```sql
--- 推荐：区分度高 + 等值查询在前
-CREATE INDEX idx_age_status ON users(age, status);
-
--- 不推荐：范围查询在前会导致后面列无法用索引
-CREATE INDEX idx_age_salary ON users(age, salary);  -- WHERE age > 20 AND salary = 5000
-```
-
-### 6.2 覆盖索引优化
-
-```sql
--- 原查询（需要回表）
-SELECT id, username, age FROM users WHERE username = '张三';
-
--- 优化：创建覆盖索引
-CREATE INDEX idx_username_age ON users(username, age);
-
--- 优化后查询（无需回表）
-SELECT username, age FROM users WHERE username = '张三';
-```
-
-### 6.3 避免索引失效
-
-```sql
--- 1. 避免对索引列进行函数操作
-WHERE DATE(create_time) = '2024-01-01'  -- 失效
-WHERE create_time >= '2024-01-01' AND create_time < '2024-01-02'  -- 有效
-
--- 2. 避免隐式类型转换
-WHERE phone = 13800138000  -- 失效（字符串列用数字查）
-WHERE phone = '13800138000'  -- 有效
-
--- 3. 避免使用 != 或 <>
-WHERE status != 1  -- 可能失效
-
--- 4. 避免使用 OR（部分场景）
-WHERE id = 1 OR id = 2  -- 可用索引
-WHERE id = 1 OR age = 20  -- 可能失效（age 无索引）
-
--- 5. LIKE 通配符在前
-WHERE username LIKE '%张'  -- 失效
-WHERE username LIKE '张%'  -- 有效
-```
-
-### 6.4 索引提示
-
-```sql
--- 强制使用某个索引
-SELECT * FROM users FORCE INDEX (idx_username) WHERE username = '张三';
-
--- 建议优化器使用某个索引
-SELECT * FROM users USE INDEX (idx_username) WHERE username = '张三';
-
--- 忽略某个索引
-SELECT * FROM users IGNORE INDEX (idx_username) WHERE username = '张三';
-```
-
-### 6.5 索引优化实践案例
-
-#### 案例 1：分页优化
-
-```sql
--- 深分页问题
-SELECT * FROM users ORDER BY id LIMIT 1000000, 10;
-
--- 优化方案 1：使用覆盖索引 + 子查询
-SELECT * FROM users 
-WHERE id >= (SELECT id FROM users ORDER BY id LIMIT 1000000, 1) 
+-- 案例 1: ORDER BY 优化
+SELECT * FROM orders 
+WHERE user_id = 100 
+ORDER BY created_at DESC 
 LIMIT 10;
 
--- 优化方案 2：使用游标（推荐）
-SELECT * FROM users WHERE id > last_id ORDER BY id LIMIT 10;
+-- 没有合适索引时：Using where; Using filesort（内存排序，数据量大时创建临时表）
+-- 有 idx_user_status_ctime 时：Using index condition（直接使用索引顺序）
+
+-- 关键点：ORDER BY 列必须紧跟在 WHERE 等值条件列之后
+-- 索引: (user_id, status, created_at)
+-- WHERE user_id = ? ORDER BY created_at → 无法使用索引排序（status 在中间）
+-- WHERE user_id = ? AND status = ? ORDER BY created_at → 可以使用索引排序 ✓
+
+-- 案例 2: 多列排序
+SELECT * FROM orders 
+WHERE user_id = 100 
+ORDER BY status ASC, created_at DESC;
+
+-- 索引: (user_id, status, created_at)
+-- 结果：Using filesort（排序方向不一致）
+
+-- 优化：创建反向索引（MySQL 8.0 支持 DESC 索引）
+CREATE INDEX idx_user_status_ctime_desc ON orders(user_id, status, created_at DESC);
+-- 或使用：
+CREATE INDEX idx_user_status_desc_ctime_desc ON orders(user_id, status DESC, created_at DESC);
+
+-- 案例 3: GROUP BY 优化
+SELECT status, COUNT(*) FROM orders 
+WHERE user_id = 100 
+GROUP BY status;
+
+-- 有索引 (user_id, status) 时：
+-- 按索引顺序扫描 user_id=100 的所有记录，status 已经是有序的
+-- 无需临时表：Using index for group-by
 ```
 
-#### 案例 2：ORDER BY 优化
+**索引与排序的最佳实践：**
 
 ```sql
--- 需要 filesort
-SELECT * FROM users WHERE age = 20 ORDER BY create_time;
+-- 设计索引时同时考虑 WHERE、ORDER BY、GROUP BY
 
--- 优化：创建复合索引
-CREATE INDEX idx_age_ctime ON users(age, create_time);
+-- 查询模式：
+-- SELECT * FROM orders 
+-- WHERE user_id = ? AND status = ? 
+-- ORDER BY created_at DESC 
+-- LIMIT ?
 
--- 现在可以直接使用索引排序
-```
+-- 最佳索引：
+CREATE INDEX idx_optimal ON orders(user_id, status, created_at DESC);
 
-#### 案例 3：JOIN 优化
-
-```sql
--- 确保被驱动表的连接列有索引
-SELECT * FROM orders o 
-JOIN users u ON o.user_id = u.id;
-
--- 确保 user_id 有索引
-CREATE INDEX idx_user_id ON orders(user_id);
+-- 验证：
+EXPLAIN SELECT * FROM orders 
+WHERE user_id = 100 AND status = 1 
+ORDER BY created_at DESC 
+LIMIT 10;
+-- Extra: Using index condition（无 filesort）
 ```
 
 ---
 
-## 七、索引失效场景
+## 四、生产环境索引问题诊断与调优
 
-### 7.1 常见失效场景总结
+### 4.1 索引失效的深层原因分析
 
-| 场景 | 示例 | 说明 |
-|------|------|------|
-| 违反最左前缀 | `INDEX(a,b)` 查 `WHERE b=1` | 缺少最左列 |
-| 对列做函数操作 | `WHERE YEAR(time)=2024` | 索引列参与运算 |
-| 隐式类型转换 | `WHERE phone=13800138000` | 字符串列用数字查 |
-| 使用 != 或 <> | `WHERE status!=1` | 可能全表扫描 |
-| 使用 IS NULL | `WHERE name IS NULL` | 可能失效 |
-| LIKE 通配符在前 | `WHERE name LIKE '%张'` | 无法使用索引 |
-| OR 条件不当 | `WHERE a=1 OR b=2` | b 无索引则失效 |
-| 数据类型不匹配 | 字符串 vs 数字 | 隐式转换 |
-| 查询条件使用参数 | `WHERE id=@id`（存储过程） | 可能失效 |
-| 全表扫描更快 | 小表、高选择性条件 | 优化器选择 |
-
-### 7.2 验证索引是否生效
+索引失效不仅限于 "对列做函数操作"，还有很多隐藏陷阱。
 
 ```sql
--- 使用 EXPLAIN 分析
-EXPLAIN SELECT * FROM users WHERE username = '张三';
+-- 陷阱 1: 隐式字符集转换
+-- 表: name VARCHAR(50) CHARACTER SET utf8mb4
+SELECT * FROM users WHERE name = '张三';
+-- 如果连接字符集是 latin1，会发生隐式转换，导致索引失效
 
--- 关键字段
--- type: 访问类型（system > const > eq_ref > ref > range > index > ALL）
--- possible_keys: 可能使用的索引
--- key: 实际使用的索引
--- rows: 扫描的行数
--- Extra: 额外信息（Using index 表示覆盖索引）
+-- 陷阱 2: 多表 JOIN 的字符集/排序规则不一致
+-- table_a.name utf8mb4_general_ci
+-- table_b.name utf8mb4_unicode_ci
+SELECT * FROM table_a JOIN table_b ON table_a.name = table_b.name;
+-- 会发生字符集转换，索引失效
+
+-- 陷阱 3: 数据类型隐式转换（不止是字符串 vs 数字）
+-- 表: id VARCHAR(20)
+SELECT * FROM t WHERE id = 123;
+-- 实际执行: WHERE CAST(id AS SIGNED) = 123，索引失效
+
+-- 陷阱 4: NOT IN 和 <> 的优化器选择
+SELECT * FROM orders WHERE status != 0;
+-- 如果 status 只有 0 和 1，且数据分布 1:1，优化器可能选择全表扫描
+
+-- 陷阱 5: 日期范围的边界问题
+SELECT * FROM logs WHERE DATE(created_at) = '2024-01-15';
+-- 优化：
+SELECT * FROM logs 
+WHERE created_at >= '2024-01-15 00:00:00' 
+  AND created_at < '2024-01-16 00:00:00';
+
+-- 陷阱 6: 前缀索引与排序
+CREATE INDEX idx_name_prefix ON users(name(10));
+SELECT * FROM users WHERE name LIKE '张%' ORDER BY name;
+-- 虽然可以用索引过滤，但 ORDER BY 需要全排序（Using filesort）
+-- 因为前缀索引不知道第 11 位之后的内容
 ```
 
----
+### 4.2 索引选择性陷阱与解决
 
-## 八、索引维护与监控
+```sql
+-- 问题：status 字段只有 0 和 1，但 99% 是 1，查询 WHERE status = 0
+-- 索引 idx_status 的选择性很低（0.5），但实际查询时选择性很高（status=0 的记录很少）
 
-### 8.1 查看索引信息
+-- 解决方案 1: 组合索引（低选择性 + 高选择性）
+CREATE INDEX idx_status_created_at ON orders(status, created_at);
+
+-- 解决方案 2: 条件索引（MySQL 不支持，但可用虚拟列变通）
+-- 创建虚拟列标记需要查询的数据
+ALTER TABLE orders ADD COLUMN is_pending TINYINT 
+    GENERATED ALWAYS AS (CASE WHEN status = 0 THEN 1 ELSE NULL END) STORED;
+CREATE INDEX idx_is_pending ON orders(is_pending);
+-- 查询: WHERE is_pending = 1
+
+-- 解决方案 3: 分区表
+-- 按 status 分区，status=0 的数据在一个小分区中
+```
+
+### 4.3 深分页问题的终极解决方案
+
+深分页是生产环境的经典性能问题。
+
+```sql
+-- 问题查询（百万级数据深分页）
+SELECT * FROM orders 
+WHERE status = 1 
+ORDER BY created_at DESC 
+LIMIT 1000000, 10;
+-- 需要扫描 1000010 行，然后丢弃前 1000000 行
+```
+
+**方案 1: 游标分页（推荐）**
+
+```sql
+-- 上一页最后一条记录的 created_at 和 id
+SELECT * FROM orders 
+WHERE status = 1 
+  AND (created_at < '2024-01-15 10:00:00' 
+       OR (created_at = '2024-01-15 10:00:00' AND id < 123456))
+ORDER BY created_at DESC, id DESC
+LIMIT 10;
+
+-- 索引: INDEX (status, created_at, id)
+-- 优势：O(log n) 时间复杂度，与页码无关
+-- 劣势：不支持跳转到任意页
+```
+
+**方案 2: 延迟关联 + 覆盖索引**
+
+```sql
+SELECT o.* 
+FROM orders o
+INNER JOIN (
+    SELECT id FROM orders 
+    WHERE status = 1 
+    ORDER BY created_at DESC 
+    LIMIT 1000000, 10
+) tmp ON o.id = tmp.id;
+
+-- 子查询只用覆盖索引 idx_status_ctime_id，在索引中完成排序和分页
+-- 只需回表 10 次
+```
+
+**方案 3: 预估分页（业务妥协）**
+
+```sql
+-- 对于超大数据量的 "跳到第 10000 页" 需求，改为估算
+SELECT COUNT(*) FROM orders WHERE status = 1; -- 假设 1000 万
+-- 第 10000 页 ≈ id > (1000万 / 每页10条 * 偏移) 的位置
+-- 或者使用 ES 等搜索引擎处理翻页
+```
+
+### 4.4 索引冗余与重复索引识别
 
 ```sql
 -- 查看表的索引
-SHOW INDEX FROM users;
+SHOW INDEX FROM orders;
 
--- 查看索引大小
+-- 冗余索引案例：
+-- INDEX idx_a (a)
+-- INDEX idx_ab (a, b)
+-- idx_a 是冗余的，因为 idx_ab 可以替代它
+
+-- 查找重复索引的查询
 SELECT 
-    table_name,
-    index_name,
-    ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)'
-FROM information_schema.TABLES
-WHERE table_schema = 'your_database'
-GROUP BY table_name, index_name;
-```
+    t.table_schema,
+    t.table_name,
+    t.index_name,
+    GROUP_CONCAT(t.column_name ORDER BY t.seq_in_index) AS columns
+FROM information_schema.statistics t
+WHERE t.table_schema = 'your_database'
+GROUP BY t.table_schema, t.table_name, t.index_name;
 
-### 8.2 索引维护操作
+-- 使用 pt-duplicate-key-checker 工具（Percona Toolkit）
+pt-duplicate-key-checker --host=localhost --user=root --password=xxx --database=your_db
 
-```sql
--- 删除索引
-DROP INDEX idx_username ON users;
-ALTER TABLE users DROP INDEX idx_username;
-
--- 重建索引（MySQL 8.0）
-ALTER TABLE users DROP INDEX idx_username, ADD INDEX idx_username(username);
-
--- 分析表（更新统计信息）
-ANALYZE TABLE users;
-
--- 优化表（整理碎片）
-OPTIMIZE TABLE users;
-```
-
-### 8.3 慢查询分析
-
-```sql
--- 开启慢查询日志
-SET GLOBAL slow_query_log = 'ON';
-SET GLOBAL long_query_time = 1;
-SET GLOBAL log_queries_not_using_indexes = 'ON';
-
--- 查看慢查询
-SELECT * FROM mysql.slow_log ORDER BY start_time DESC LIMIT 10;
-```
-
-### 8.4 查看索引使用情况
-
-```sql
--- 查看索引使用统计
-SELECT 
-    table_name,
-    index_name,
-    rows_selected,
-    rows_inserted,
-    rows_deleted,
-    rows_updated
-FROM performance_schema.table_io_waits_summary_by_index_usage
-WHERE index_name IS NOT NULL;
-
--- 查找未使用的索引
+-- 查找未使用的索引（MySQL 8.0）
 SELECT 
     object_schema,
     object_name,
@@ -589,39 +750,283 @@ SELECT
 FROM performance_schema.table_io_waits_summary_by_index_usage
 WHERE index_name IS NOT NULL 
     AND count_star = 0 
-    AND object_schema NOT IN ('mysql', 'performance_schema');
+    AND object_schema NOT IN ('mysql', 'performance_schema', 'sys')
+ORDER BY object_schema, object_name;
 ```
 
 ---
 
-## 九、总结
+## 五、InnoDB 索引的高阶特性
 
-### 9.1 索引设计 checklist
+### 5.1 自适应哈希索引（Adaptive Hash Index, AHI）
 
-- [ ] 是否为高频查询条件创建索引？
-- [ ] 复合索引是否遵循最左前缀原则？
-- [ ] 是否避免了在区分度低的列上建索引？
-- [ ] 是否考虑使用覆盖索引减少回表？
-- [ ] 索引数量是否适中（单表一般不超过 5 个）？
-- [ ] 是否定期检查并删除无用索引？
-- [ ] 是否避免了对索引列做函数操作？
-- [ ] 是否使用了正确的数据类型？
+InnoDB 在内存中维护了一个哈希表，用于加速等值查询。
 
-### 9.2 关键要点回顾
+```sql
+-- 查看 AHI 状态
+SHOW ENGINE INNODB STATUS\G
+-- -------------------------------------
+-- INSERT BUFFER AND ADAPTIVE HASH INDEX
+-- -------------------------------------
+-- Hash table size 2267, node heap has 1 buffer(s)
+-- Hash table size 2267, node heap has 1 buffer(s)
+-- ...
+-- 0.00 hash searches/s, 0.00 non-hash searches/s
 
-1. **B+ 树** 是 MySQL 默认的索引数据结构，适合范围查询和等值查询
-2. **聚簇索引** 决定数据物理存储顺序，非聚簇索引需要回表
-3. **覆盖索引** 可以避免回表，显著提高查询性能
-4. **最左前缀原则** 是复合索引使用的核心原则
-5. **索引选择性** 决定了索引的效率
-6. **索引维护** 需要权衡查询性能和写入性能
+-- AHI 命中率 = hash searches / (hash searches + non-hash searches)
+-- 如果命中率 > 90%，说明 AHI 很有效
+```
 
-### 9.3 延伸阅读
+**AHI 的工作机制：**
+1. 监控 B+ 树索引的查询模式
+2. 如果发现某些页被频繁以等值方式访问，为这些页构建哈希索引
+3. 下次等值查询时，先查 AHI，直接定位到页
 
-- [MySQL 官方文档 - 索引](https://dev.mysql.com/doc/refman/8.0/en/optimization-indexes.html)
-- [高性能 MySQL](https://book.douban.com/subject/23008813/)
-- [MySQL 技术内幕：InnoDB 存储引擎](https://book.douban.com/subject/24708143/)
+**AHI 的局限：**
+- 只支持等值查询（=）
+- 不适用于范围查询
+- 高并发写入时可能成为瓶颈（需要维护哈希表）
+
+```sql
+-- 关闭 AHI（如果 CPU 成为瓶颈且写入很多）
+SET GLOBAL innodb_adaptive_hash_index = OFF;
+```
+
+### 5.2  change Buffer 与二级索引
+
+change Buffer 是 InnoDB 的写优化机制，专门针对二级索引。
+
+```sql
+-- 查看 change buffer 状态
+SHOW VARIABLES LIKE 'innodb_change_buffer%';
+-- innodb_change_buffer_max_size = 25 （占缓冲池的 25%）
+-- innodb_change_buffering = all （INSERT/DELETE/UPDATE 都缓冲）
+```
+
+**change Buffer 原理：**
+1. 对于二级索引的 INSERT/UPDATE/DELETE，如果对应的数据页不在内存中
+2. 不立即读取磁盘页，而是将变更记录在 change Buffer 中
+3. 当该页被读入内存时（或后台 merge 线程），合并 change Buffer 中的变更
+4. 大幅减少随机 I/O
+
+**change Buffer 的收益：**
+- 写密集型负载下可提升 2-5 倍写入性能
+- 特别适合二级索引很多的表
+
+**change Buffer 的代价：**
+- 增加内存消耗（需要存储变更记录）
+- 读取时需要额外检查 change Buffer（CPU 开销）
+- 崩溃恢复时间更长（需要 merge change buffer）
+
+### 5.3 索引的在线 DDL（Online DDL）
+
+MySQL 5.6+ 支持在线索引操作，避免锁表。
+
+```sql
+-- MySQL 5.5: 创建索引会锁表（COPY 算法）
+ALTER TABLE orders ADD INDEX idx_test (user_id); -- 阻塞读写
+
+-- MySQL 5.6+: 在线 DDL（INPLACE 算法）
+ALTER TABLE orders ADD INDEX idx_test (user_id), ALGORITHM=INPLACE, LOCK=NONE;
+-- 允许并发读写
+
+-- 查看 DDL 进度（MySQL 8.0）
+SELECT * FROM performance_schema.events_stages_current 
+WHERE EVENT_NAME LIKE '%alter%';
+
+-- pt-online-schema-change（Percona Toolkit，适用于所有版本）
+pt-online-schema-change \
+    --alter "ADD INDEX idx_test (user_id)" \
+    --execute \
+    --max-load Threads_running=25 \
+    --critical-load Threads_running=50 \
+    --chunk-size=1000 \
+    D=your_db,t=orders
+```
 
 ---
 
-> **提示**：索引不是越多越好，需要根据实际查询场景合理设计。建议通过 `EXPLAIN` 分析查询计划，持续优化索引策略。
+## 六、实战案例：从慢查询到索引优化
+
+### 6.1 案例：电商订单查询优化
+
+**背景：**
+```sql
+CREATE TABLE orders (
+    id BIGINT PRIMARY KEY,
+    user_id INT NOT NULL,
+    status TINYINT NOT NULL,  -- 0=待支付, 1=已支付, 2=已发货, 3=已完成
+    pay_status TINYINT,       -- 支付状态
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME,
+    amount DECIMAL(10,2),
+    -- 其他字段...
+    INDEX idx_user (user_id),
+    INDEX idx_status (status),
+    INDEX idx_ctime (created_at)
+);
+
+-- 慢查询（平均 5 秒）
+SELECT * FROM orders 
+WHERE user_id = 12345 
+  AND status IN (0, 1)
+  AND created_at >= '2024-01-01'
+ORDER BY created_at DESC 
+LIMIT 20;
+```
+
+**问题分析：**
+```sql
+EXPLAIN SELECT * FROM orders 
+WHERE user_id = 12345 
+  AND status IN (0, 1)
+  AND created_at >= '2024-01-01'
+ORDER BY created_at DESC 
+LIMIT 20;
+
+-- 结果：
+-- type: ref
+-- key: idx_user
+-- rows: 50000  （用户有 5 万订单）
+-- Extra: Using where; Using filesort
+-- 问题：只用了 idx_user，然后在内存中过滤和排序
+```
+
+**优化方案：**
+
+```sql
+-- 步骤 1: 创建复合索引
+CREATE INDEX idx_user_status_ctime ON orders(user_id, status, created_at);
+
+-- 验证
+EXPLAIN SELECT * FROM orders 
+WHERE user_id = 12345 
+  AND status IN (0, 1)
+  AND created_at >= '2024-01-01'
+ORDER BY created_at DESC 
+LIMIT 20;
+
+-- 结果：
+-- type: range
+-- key: idx_user_status_ctime
+-- rows: 1000
+-- Extra: Using index condition（无 filesort）
+-- 查询时间：50ms
+```
+
+**进一步优化（覆盖索引）：**
+
+```sql
+-- 如果业务只需要部分字段
+SELECT id, user_id, status, created_at, amount FROM orders 
+WHERE user_id = 12345 
+  AND status IN (0, 1)
+  AND created_at >= '2024-01-01'
+ORDER BY created_at DESC 
+LIMIT 20;
+
+-- 创建覆盖索引
+CREATE INDEX idx_cover ON orders(user_id, status, created_at, amount);
+-- Extra: Using index（完全覆盖）
+-- 查询时间：5ms
+```
+
+### 6.2 案例：社交 Feed 流的时间线查询
+
+**背景：** 查询用户关注的人的动态，按时间倒序。
+
+```sql
+CREATE TABLE feeds (
+    id BIGINT PRIMARY KEY,
+    author_id INT NOT NULL,
+    content TEXT,
+    created_at DATETIME NOT NULL,
+    INDEX idx_author_ctime (author_id, created_at)
+);
+
+-- 查询：获取关注用户的 Feed（IN 列表可能很长）
+SELECT * FROM feeds 
+WHERE author_id IN (100, 101, 102, ..., 500)  -- 400 个关注
+  AND created_at > '2024-01-01'
+ORDER BY created_at DESC 
+LIMIT 20;
+```
+
+**问题：**
+- IN 列表太长，优化器可能放弃使用索引
+- 即使使用索引，需要合并 400 个索引扫描结果
+
+**解决方案：**
+
+```sql
+-- 方案 1: 限制 IN 列表长度，分多次查询在应用层合并
+-- 每次查 50 个，查 8 次，在应用层归并排序
+
+-- 方案 2: 使用临时表（适用于关注数极多的场景）
+CREATE TEMPORARY TABLE tmp_following (user_id INT PRIMARY KEY);
+INSERT INTO tmp_following VALUES (100), (101), ...;
+
+SELECT f.* 
+FROM feeds f
+JOIN tmp_following t ON f.author_id = t.user_id
+WHERE f.created_at > '2024-01-01'
+ORDER BY f.created_at DESC 
+LIMIT 20;
+
+-- 方案 3: 使用推送模式（写扩散）替代拉取模式
+-- 每个用户有一个时间线表，关注后发件箱写入粉丝收件箱
+```
+
+---
+
+## 七、索引设计 Checklist
+
+### 7.1 设计阶段
+
+- [ ] **主键选择**：使用自增整数（BIGINT UNSIGNED），避免 UUID/MD5 等随机值
+- [ ] **选择性分析**：使用 `COUNT(DISTINCT col) / COUNT(*)` 评估索引价值
+- [ ] **查询覆盖度**：分析 TOP 10 慢查询，确保高频查询走索引
+- [ ] **索引合并**：检查是否可以合并多个单列索引为复合索引
+- [ ] **排序优化**：为 `ORDER BY` 和 `GROUP BY` 设计合适的索引顺序
+- [ ] **写放大评估**：计算索引带来的写入性能损耗（每多一个索引，写操作多一次 I/O）
+
+### 7.2 上线前验证
+
+- [ ] **EXPLAIN 分析**：所有核心查询使用 EXPLAIN 验证索引使用
+- [ ] **边界测试**：测试深分页、大 IN 列表等边界场景
+- [ ] **并发测试**：模拟高并发写入，检查锁竞争
+- [ ] **空间估算**：评估索引占用空间（`SHOW TABLE STATUS`）
+
+### 7.3 生产监控
+
+- [ ] **慢查询日志**：开启 `log_queries_not_using_indexes`
+- [ ] **索引使用监控**：定期检查 `performance_schema.table_io_waits_summary_by_index_usage`
+- [ ] **锁等待监控**：关注 `performance_schema.data_lock_waits`
+- [ ] **定期清理**：删除未使用的索引，重建碎片化严重的索引
+
+---
+
+## 八、总结
+
+### 核心要点
+
+1. **页是索引的基本单位**：理解 16KB 页的物理结构，才能明白为什么顺序插入比随机插入快、为什么页分裂会降低性能。
+
+2. **索引即锁**：InnoDB 的锁是基于索引的，索引设计直接影响并发性能。
+
+3. **覆盖索引是银弹**：在合适的场景下，覆盖索引可以将查询性能提升 10-100 倍。
+
+4. **最左前缀是铁律**：复合索引的列顺序必须基于查询模式精心设计，等值查询列在前，范围查询列在后。
+
+5. **没有银弹**：索引是空间换时间的权衡，过多索引会严重影响写入性能。
+
+### 延伸阅读
+
+- [《MySQL 技术内幕：InnoDB 存储引擎》](https://book.douban.com/subject/24708143/)
+- [《高性能 MySQL》第四版](https://book.douban.com/subject/35136348/)
+- [MySQL 8.0 Reference Manual - Optimization and Indexes](https://dev.mysql.com/doc/refman/8.0/en/optimization-indexes.html)
+- [InnoDB 存储引擎源码分析](http://mysql.taobao.org/monthly/)
+
+---
+
+> **核心原则**：索引不是魔法，它是数据结构（B+ 树）的空间换时间实现。理解底层页结构、锁机制、查询优化器的行为，才能设计出真正高效的索引。
