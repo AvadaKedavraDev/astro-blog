@@ -100,6 +100,6 @@ export default defineConfig({
             plugins: [pluginCollapsibleSections()],
         }), 
         icon(),
-        solid()
+        solid(),
     ],
 });
