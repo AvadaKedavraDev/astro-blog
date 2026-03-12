@@ -1669,3 +1669,38 @@ article.theme-dark .card-base {
 
 
 
+
+/* ===== 灯箱内图片样式优化 ===== */
+#image-lightbox #lightbox-img {
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 生成的 SVG 样式优化 */
+.prose-custom .mermaid svg {
+  max-width: 100%;
+  height: auto;
+  display: inline-block;
+}
+
+/* 图表容器滚动条样式 */
+.prose-custom .mermaid::-webkit-scrollbar {
+  height: 6px;
+}
+
+.prose-custom .mermaid::-webkit-scrollbar-track {
+  background: var(--muted);
+  border-radius: 3px;
+}
+
+.prose-custom .mermaid::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.prose-custom .mermaid::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* ===== Mermaid 图表结束 ===== */
