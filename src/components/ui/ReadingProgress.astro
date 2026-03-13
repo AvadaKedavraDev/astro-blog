@@ -105,8 +105,13 @@
       delayedInit();
     }
     
-    // 监听 Swup 页面切换事件
-    document.addEventListener('swup:contentReplaced', delayedInit);
-    document.addEventListener('astro:page-load', delayedInit);
+    // Swup 页面过渡兼容 - 使用 SwupCompat
+    if (window.SwupCompat) {
+      window.SwupCompat.onPageView(delayedInit);
+    } else {
+      // 降级处理
+      document.addEventListener('swup:contentReplaced', delayedInit);
+      document.addEventListener('astro:page-load', delayedInit);
+    }
   })();
 </script>

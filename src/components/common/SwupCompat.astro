@@ -2,7 +2,7 @@
 /**
  * @component SwupCompat
  * @description Swup 兼容性工具组件，提供统一的生命周期事件管理
- * @features onPageView、onContentReplace、beforeContentReplace API
+ * @features onPageView、beforeContentReplace API
  * @usage 在 BaseLayout 中引用，其他组件通过 window.SwupCompat 访问
  */
 ---
@@ -20,7 +20,6 @@
   // 保留已有的回调（如果存在）
   const existingCallbacks = window.SwupCompat?.callbacks || {
     'page:view': [],
-    'content:replace': [],
     'content:replace:before': []
   };
   
@@ -29,7 +28,6 @@
     // 回调注册表（保留已有的）
     callbacks: {
       'page:view': [...existingCallbacks['page:view']],
-      'content:replace': [...existingCallbacks['content:replace']],
       'content:replace:before': [...existingCallbacks['content:replace:before']]
     },
     
@@ -53,23 +51,6 @@
       }
       
       return () => this.off('page:view', callback);
-    },
-    
-    // 注册内容替换后回调
-    onContentReplace(callback, options = {}) {
-      const { immediate = true } = options;
-      
-      this.callbacks['content:replace'].push(callback);
-      
-      if (immediate && document.readyState !== 'loading') {
-        try {
-          callback();
-        } catch (e) {
-          console.error('SwupCompat: 初始回调执行失败:', e);
-        }
-      }
-      
-      return () => this.off('content:replace', callback);
     },
     
     // 注册内容替换前回调
@@ -192,7 +173,6 @@
       // 监听 Swup 标准事件（旧版兼容）- 仅当新版 hooks 不可用时使用
       document.addEventListener('swup:contentReplaced', () => {
         if (usingNewHooks) return; // 如果已使用新版 hooks，跳过旧版事件
-        this.emit('content:replace');
         this.runScripts(); // 手动触发脚本执行
         this.initCodeGroups(); // 初始化 rehype-code-group
         requestAnimationFrame(() => {
@@ -222,7 +202,6 @@
           
           // page:view 在内容替换完成后触发
           window.swup.hooks.on('page:view', () => {
-            this.emit('content:replace');
             this.runScripts(); // 手动触发脚本执行
             this.initCodeGroups(); // 初始化 rehype-code-group
             // 延迟触发 page:view，确保 DOM 已更新

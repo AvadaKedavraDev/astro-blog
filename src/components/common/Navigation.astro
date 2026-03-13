@@ -26,8 +26,7 @@ const navItems: NavItem[] = [
     icon: 'lucide:folder',
     children: [
       { label: '工具箱', href: '/links', icon: 'lucide:box' },
-      { label: '图示', href: '/visualizer', icon: 'lucide:git-graph' },
-      { label: '代谢仪表盘', href: '/health-dashboard', icon: 'lucide:activity' }
+      { label: '图示', href: '/visualizer', icon: 'lucide:git-graph' }
     ]
   }
 ];
@@ -35,8 +34,12 @@ const navItems: NavItem[] = [
 const currentPath = Astro.url.pathname;
 ---
 
-<header class="fixed top-0 left-0 right-0 z-50 glass" data-current-path={currentPath}>
-  <nav class="container-wide h-16 flex items-center justify-between">
+<header class="fixed top-0 left-0 right-0 z-50 transition-all duration-500" id="main-nav" data-current-path={currentPath}>
+  <!-- 背景层 - 动态切换 -->
+  <div class="nav-bg absolute inset-0 transition-all duration-500" 
+       style="opacity: 0; background-color: transparent; backdrop-filter: blur(24px);"></div>
+  
+  <nav class="container-wide h-16 flex items-center justify-between relative z-10">
     <!-- Logo -->
     <a href="/" class="text-lg font-semibold tracking-tight hover:opacity-70 transition-opacity flex items-center gap-2 group">
       <Icon name="lucide:moon" class="w-5 h-5 text-indigo-500 group-hover:animate-pulse" />
@@ -265,10 +268,84 @@ const currentPath = Astro.url.pathname;
       });
     }
     
+    // ========== 导航栏背景切换 ==========
+    function initNavBackground() {
+      const nav = document.getElementById('main-nav');
+      const navBg = nav?.querySelector('.nav-bg');
+      if (!nav || !navBg) return;
+      
+      // 检测是否在首页 Hero 区域（有动态背景）
+      const path = window.location.pathname;
+      const isHomePage = path === '/' || path === '/index.html';
+      const hasAnimatedBg = document.querySelector('.animated-bg') !== null;
+      
+      // 辅助函数：应用玻璃态样式
+      function applyGlassStyle() {
+        const bgVar = getComputedStyle(document.documentElement).getPropertyValue('--background').trim() || '#fafafa';
+        const borderVar = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#e5e5e5';
+        navBg.style.backgroundColor = bgVar.includes('#') ? bgVar + 'CC' : 'rgba(250,250,250,0.8)';
+        navBg.style.borderBottom = '1px solid ' + (borderVar.includes('#') ? borderVar + '80' : 'rgba(229,229,229,0.5)');
+      }
+      
+      // 辅助函数：清除背景
+      function clearBackground() {
+        navBg.style.backgroundColor = 'transparent';
+        navBg.style.borderBottom = 'none';
+      }
+      
+      if (!isHomePage || !hasAnimatedBg) {
+        // 非首页或无动态背景，始终显示玻璃态背景
+        navBg.style.opacity = '1';
+        applyGlassStyle();
+        return;
+      }
+      
+      // 首页：找到动态背景所在的 section
+      const animatedBg = document.querySelector('.animated-bg');
+      const heroSection = animatedBg?.closest('section');
+      
+      // 首页：根据滚动位置切换背景
+      function updateNavBg() {
+        const scrollY = window.scrollY || window.pageYOffset;
+        // 滚动超过 50px 后显示背景
+        const threshold = 50;
+        
+        if (scrollY > threshold) {
+          // 显示玻璃态背景
+          navBg.style.opacity = '1';
+          applyGlassStyle();
+        } else {
+          // 完全透明
+          navBg.style.opacity = '0';
+          clearBackground();
+        }
+      }
+      
+      // 初始状态 - 确保透明
+      navBg.style.opacity = '0';
+      clearBackground();
+      
+      // 延迟执行一次以确保正确初始化
+      setTimeout(updateNavBg, 50);
+      
+      // 监听滚动
+      let ticking = false;
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            updateNavBg();
+            ticking = false;
+          });
+          ticking = true;
+        }
+      }, { passive: true });
+    }
+    
     // 初始化
     function init() {
       updateNavHighlight();
       initMobileMenu();
+      initNavBackground();
     }
     
     // 页面加载时初始化

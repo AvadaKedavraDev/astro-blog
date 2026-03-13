@@ -1,0 +1,328 @@
+---
+/**
+ * @component AnimatedBackground
+ * @description 首页动态背景组件，提供微妙的渐变网格动画
+ * @features 渐变网格、鼠标视差效果、滚动淡出、性能优化（GPU加速）
+ * @usage 在首页 Hero Section 使用
+ */
+---
+
+<div class="animated-bg" aria-hidden="true" id="hero-bg">
+  {/* 基础渐变层 - 延伸到全屏高度 */}
+  <div class="gradient-base"></div>
+  
+  {/* 动态网格 */}
+  <div class="gradient-mesh" id="gradient-mesh">
+    <div class="mesh-blob mesh-1"></div>
+    <div class="mesh-blob mesh-2"></div>
+    <div class="mesh-blob mesh-3"></div>
+    <div class="mesh-blob mesh-4"></div>
+  </div>
+  
+  {/* 噪点纹理层（增加质感） */}
+  <div class="noise-overlay"></div>
+  
+  {/* 底部渐变淡出 */}
+  <div class="fade-overlay"></div>
+</div>
+
+<style>
+  .animated-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* 基础渐变 - 随主题变化 */
+  .gradient-base {
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 20% 30%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.04) 0%, transparent 60%);
+    transition: opacity 0.5s ease;
+  }
+
+  :global(.dark) .gradient-base {
+    background: 
+      radial-gradient(ellipse at 20% 30%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.06) 0%, transparent 60%);
+  }
+
+  /* 动态网格 */
+  .gradient-mesh {
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    animation: mesh-rotate 60s linear infinite;
+    will-change: transform;
+    transform: translate(var(--parallax-x, 0), var(--parallax-y, 0));
+  }
+
+  .mesh-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    animation: blob-float 20s ease-in-out infinite;
+    will-change: transform, opacity;
+  }
+
+  /* 渐变球体 1 - 左上 */
+  .mesh-1 {
+    width: 600px;
+    height: 600px;
+    top: 20%;
+    left: 15%;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.2));
+    animation-delay: 0s;
+    animation-duration: 25s;
+  }
+
+  /* 渐变球体 2 - 右下 */
+  .mesh-2 {
+    width: 500px;
+    height: 500px;
+    top: 50%;
+    left: 60%;
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.25), rgba(168, 85, 247, 0.15));
+    animation-delay: -5s;
+    animation-duration: 30s;
+  }
+
+  /* 渐变球体 3 - 中央 */
+  .mesh-3 {
+    width: 400px;
+    height: 400px;
+    top: 40%;
+    left: 40%;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(99, 102, 241, 0.1));
+    animation-delay: -10s;
+    animation-duration: 22s;
+  }
+
+  /* 渐变球体 4 - 右上 */
+  .mesh-4 {
+    width: 350px;
+    height: 350px;
+    top: 15%;
+    left: 70%;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(59, 130, 246, 0.15));
+    animation-delay: -15s;
+    animation-duration: 28s;
+  }
+
+  :global(.dark) .mesh-blob {
+    opacity: 0.25;
+    filter: blur(100px);
+  }
+
+  /* 噪点纹理 */
+  .noise-overlay {
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  :global(.dark) .noise-overlay {
+    opacity: 0.04;
+  }
+
+  /* 底部渐变淡出 - 与内容区域自然过渡 */
+  .fade-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40%;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      var(--background) 100%
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* 动画定义 */
+  @keyframes mesh-rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes blob-float {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 0.4;
+    }
+    25% {
+      transform: translate(30px, -30px) scale(1.05);
+      opacity: 0.35;
+    }
+    50% {
+      transform: translate(-20px, 20px) scale(0.95);
+      opacity: 0.45;
+    }
+    75% {
+      transform: translate(20px, 30px) scale(1.02);
+      opacity: 0.3;
+    }
+  }
+
+  :global(.dark) .mesh-blob {
+    animation-name: blob-float-dark;
+  }
+
+  @keyframes blob-float-dark {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 0.25;
+    }
+    25% {
+      transform: translate(30px, -30px) scale(1.05);
+      opacity: 0.2;
+    }
+    50% {
+      transform: translate(-20px, 20px) scale(0.95);
+      opacity: 0.3;
+    }
+    75% {
+      transform: translate(20px, 30px) scale(1.02);
+      opacity: 0.18;
+    }
+  }
+
+  /* 减少动画偏好 */
+  @media (prefers-reduced-motion: reduce) {
+    .gradient-mesh {
+      animation: none;
+    }
+    .mesh-blob {
+      animation: none;
+    }
+  }
+
+  /* 移动端优化 */
+  @media (max-width: 768px) {
+    .mesh-blob {
+      filter: blur(60px);
+      opacity: 0.3;
+    }
+    .mesh-1 { width: 300px; height: 300px; }
+    .mesh-2 { width: 250px; height: 250px; }
+    .mesh-3 { width: 200px; height: 200px; }
+    .mesh-4 { display: none; }
+  }
+</style>
+
+<script is:inline>
+  // @ts-nocheck
+  (function() {
+    const bg = document.getElementById('hero-bg');
+    const mesh = document.getElementById('gradient-mesh');
+    if (!bg || !mesh) return;
+    
+    // ========== 鼠标视差效果 ==========
+    let rafId = null;
+    let mouseX = 0, mouseY = 0;
+    let currentX = 0, currentY = 0;
+    
+    // 仅在非移动设备启用
+    if (!window.matchMedia('(pointer: coarse)').matches) {
+      let lastMove = 0;
+      document.addEventListener('mousemove', (e) => {
+        const now = Date.now();
+        if (now - lastMove < 50) return;
+        lastMove = now;
+        
+        mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+        mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+      }, { passive: true });
+    }
+    
+    // ========== 滚动淡出效果 ==========
+    let scrollProgress = 0;
+    
+    function handleScroll() {
+      const scrollY = window.scrollY;
+      const heroHeight = bg.parentElement?.offsetHeight || window.innerHeight;
+      // 在前 60% 的 hero 区域逐渐淡出
+      scrollProgress = Math.min(scrollY / (heroHeight * 0.6), 1);
+      
+      // 应用淡出效果
+      bg.style.opacity = 1 - scrollProgress * 0.8;
+      
+      // 同时降低动画强度
+      mesh.style.animationDuration = (60 + scrollProgress * 60) + 's';
+    }
+    
+    // 节流滚动事件
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+    
+    // ========== 动画循环 ==========
+    function animate() {
+      // 缓动效果
+      currentX += (mouseX - currentX) * 0.05;
+      currentY += (mouseY - currentY) * 0.05;
+      
+      // 应用变换（视差 + 基础旋转）
+      const baseTransform = mesh.style.transform || '';
+      const parallaxX = currentX * -20;
+      const parallaxY = currentY * -20;
+      mesh.style.setProperty('--parallax-x', parallaxX + 'px');
+      mesh.style.setProperty('--parallax-y', parallaxY + 'px');
+      
+      rafId = requestAnimationFrame(animate);
+    }
+    
+    // ========== IntersectionObserver 优化 ==========
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (!rafId) animate();
+        } else {
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+          }
+        }
+      });
+    }, { threshold: 0 });
+    
+    observer.observe(bg);
+    
+    // 初始化
+    handleScroll();
+    
+    // 页面不可见时暂停
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      } else if (!document.hidden && !rafId) {
+        const rect = bg.getBoundingClientRect();
+        if (rect.bottom > 0) animate();
+      }
+    });
+  })();
+</script>

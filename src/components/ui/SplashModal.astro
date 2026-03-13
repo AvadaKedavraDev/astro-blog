@@ -299,6 +299,7 @@ const closeButtonStyles = {
   if (window.SwupCompat) {
     window.SwupCompat.onPageView(initSplashModals);
   } else {
+    // 降级处理
     document.addEventListener('swup:contentReplaced', initSplashModals);
     document.addEventListener('astro:page-load', initSplashModals);
   }

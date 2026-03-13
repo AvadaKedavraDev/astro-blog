@@ -267,14 +267,14 @@ const uid = Math.random().toString(36).substring(2, 11);
             return false;
         }
 
-        // 标准事件（兼容旧版 Swup）
+        // 降级处理：标准事件（兼容旧版 Swup）
         document.addEventListener('swup:contentReplaced', () => {
             nukeAllTypewriters();
             init();
         });
         document.addEventListener('swup:beforeContentReplace', nukeAllTypewriters);
         
-        // Astro View Transitions 兼容
+        // 降级处理：Astro View Transitions 兼容
         document.addEventListener('astro:page-load', () => {
             nukeAllTypewriters();
             init();

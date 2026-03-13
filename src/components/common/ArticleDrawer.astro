@@ -252,6 +252,7 @@
             addVisualHints();
         });
     } else {
+        // 降级处理
         document.addEventListener('astro:page-load', addVisualHints);
         document.addEventListener('swup:contentReplaced', addVisualHints);
     }

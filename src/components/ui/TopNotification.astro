@@ -209,6 +209,7 @@ const componentId = `top-notify-${Math.random().toString(36).substr(2, 9)}`;
   if (window.SwupCompat) {
     window.SwupCompat.onPageView(initTopNotifications);
   } else {
+    // 降级处理
     document.addEventListener('swup:contentReplaced', initTopNotifications);
     document.addEventListener('astro:page-load', initTopNotifications);
   }

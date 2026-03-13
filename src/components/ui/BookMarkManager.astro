@@ -212,6 +212,13 @@ function generateColor(str: string): string {
         }
 
         initBookmarkManager();
-        document.addEventListener('astro:page-load', initBookmarkManager);
+        
+        // Swup 页面过渡兼容 - 使用 SwupCompat
+        if (window.SwupCompat) {
+            window.SwupCompat.onPageView(initBookmarkManager);
+        } else {
+            // 降级处理
+            document.addEventListener('astro:page-load', initBookmarkManager);
+        }
     })();
 </script>

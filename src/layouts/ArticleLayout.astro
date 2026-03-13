@@ -732,6 +732,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
     if (window.SwupCompat) {
         window.SwupCompat.onPageView(init);
     } else {
+        // 降级处理
         document.addEventListener('swup:contentReplaced', init);
         document.addEventListener('astro:page-load', init);
     }

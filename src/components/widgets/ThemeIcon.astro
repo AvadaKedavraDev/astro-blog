@@ -174,11 +174,17 @@ const iconSizes = {
     // 立即初始化
     window.themeManager.init();
 
-    // Astro View Transitions 生命周期兼容
-    // 注意：如果使用 View Transitions，需要在页面切换后重新确认初始化状态
-    document.addEventListener("astro:page-load", () => {
-        window.themeManager.init();
-    });
+    // Swup 页面过渡兼容 - 使用 SwupCompat
+    if (window.SwupCompat) {
+        window.SwupCompat.onPageView(() => {
+            window.themeManager.init();
+        });
+    } else {
+        // 降级处理
+        document.addEventListener("astro:page-load", () => {
+            window.themeManager.init();
+        });
+    }
 
     // 清理（可选，防止内存泄漏）
     document.addEventListener("astro:before-swap", () => {

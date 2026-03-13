@@ -13,7 +13,6 @@ declare interface SwupInstance {
 // SwupCompat 类型
 declare interface SwupCompatCallbacks {
   'page:view': Array<() => void>;
-  'content:replace': Array<() => void>;
   'content:replace:before': Array<() => void>;
 }
 
@@ -21,7 +20,6 @@ declare interface SwupCompatInstance {
   callbacks: SwupCompatCallbacks;
   __isReady__: boolean;
   onPageView: (callback: () => void, options?: { immediate?: boolean }) => (() => void);
-  onContentReplace: (callback: () => void, options?: { immediate?: boolean }) => (() => void);
   beforeContentReplace: (callback: () => void) => (() => void);
   off: (event: keyof SwupCompatCallbacks, callback: () => void) => void;
   emit: (event: keyof SwupCompatCallbacks) => void;
