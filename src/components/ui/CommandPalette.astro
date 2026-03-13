@@ -1,0 +1,682 @@
+---
+/**
+ * @component CommandPalette
+ * @description 命令面板组件 - 现代博客标配功能
+ * @features 快捷键唤起(Cmd/Ctrl+K)、文章搜索、快速导航、主题切换、键盘导航
+ * @usage 在 BaseLayout 中引用
+ */
+import { Icon } from "astro-icon/components";
+
+// 导航命令配置
+const navCommands = [
+  { id: 'home', label: '首页', href: '/', icon: 'lucide:home', shortcut: 'G H' },
+  { id: 'blog', label: '文章', href: '/blog', icon: 'lucide:file-text', shortcut: 'G B' },
+  { id: 'about', label: '关于', href: '/about', icon: 'lucide:user', shortcut: 'G A' },
+  { id: 'tags', label: '标签', href: '/tags', icon: 'lucide:tag', shortcut: 'G T' },
+  { id: 'search', label: '搜索页面', href: '/search', icon: 'lucide:search', shortcut: 'G S' },
+  { id: 'links', label: '工具箱', href: '/links', icon: 'lucide:box', shortcut: 'G L' },
+  { id: 'visualizer', label: '算法可视化', href: '/visualizer', icon: 'lucide:git-graph', shortcut: 'G V' },
+];
+
+// 操作命令配置
+const actionCommands = [
+  { id: 'theme', label: '切换主题', icon: 'lucide:sun-moon', action: 'toggleTheme', shortcut: 'G D' },
+  { id: 'top', label: '返回顶部', icon: 'lucide:arrow-up-to-line', action: 'scrollToTop', shortcut: 'G ↑' },
+  { id: 'copy', label: '复制当前链接', icon: 'lucide:link', action: 'copyLink', shortcut: 'G C' },
+];
+---
+
+<!-- Command Palette 触发按钮 (仅桌面端显示) -->
+<button
+  id="cmd-palette-trigger"
+  class="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground bg-muted/50 hover:bg-muted border border-border rounded-lg transition-all duration-200"
+  aria-label="打开命令面板"
+>
+  <Icon name="lucide:search" class="w-4 h-4" />
+  <span class="text-xs">搜索</span>
+  <kbd class="hidden lg:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-sans font-medium bg-background border border-border rounded">
+    <span class="cmd-key">⌘</span>
+    <span>K</span>
+  </kbd>
+</button>
+
+<!-- Command Palette 遮罩层 -->
+<div
+  id="cmd-palette-overlay"
+  class="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm opacity-0 invisible transition-all duration-200"
+  aria-hidden="true"
+>
+  <!-- Command Palette 面板 -->
+  <div
+    id="cmd-palette-panel"
+    class="absolute top-[20%] left-1/2 -translate-x-1/2 w-full max-w-2xl mx-4 scale-95 opacity-0 transition-all duration-200"
+    role="dialog"
+    aria-modal="true"
+    aria-label="命令面板"
+  >
+    <div class="bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
+      <!-- 搜索输入框 -->
+      <div class="flex items-center gap-3 px-4 py-3 border-b border-border">
+        <Icon name="lucide:search" class="w-5 h-5 text-muted-foreground" />
+        <input
+          type="text"
+          id="cmd-palette-input"
+          class="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-base outline-none"
+          placeholder="搜索文章或输入命令..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <kbd class="hidden sm:inline-flex items-center px-2 py-1 text-xs font-sans text-muted-foreground bg-muted rounded border border-border">
+          ESC
+        </kbd>
+      </div>
+
+      <!-- 搜索结果区域 -->
+      <div
+        id="cmd-palette-content"
+        class="max-h-[60vh] overflow-y-auto scrollbar-thin"
+      >
+        <!-- 加载状态 -->
+        <div id="cmd-palette-loading" class="hidden py-8 text-center">
+          <div class="w-8 h-8 mx-auto mb-3 rounded-full border-2 border-indigo-200 border-t-indigo-500 animate-spin"></div>
+          <p class="text-sm text-muted-foreground">正在加载搜索...</p>
+        </div>
+
+        <!-- 默认内容 -->
+        <div id="cmd-palette-default">
+          <!-- 快速导航 -->
+          <div class="cmd-section" data-section="navigation">
+            <div class="px-4 py-2 text-xs font-medium text-muted-foreground bg-muted/50">
+              快速导航
+            </div>
+            <div class="cmd-list">
+              {navCommands.map((cmd) => (
+                <button
+                  class="cmd-item w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-muted transition-colors"
+                  data-type="nav"
+                  data-href={cmd.href}
+                  data-id={cmd.id}
+                >
+                  <Icon name={cmd.icon} class="w-4 h-4 text-muted-foreground" />
+                  <span class="flex-1 text-sm text-foreground">{cmd.label}</span>
+                  <kbd class="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-sans text-muted-foreground bg-background border border-border rounded">
+                    {cmd.shortcut.split(' ').map((key) => (
+                      <span>{key}</span>
+                    ))}
+                  </kbd>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <!-- 操作命令 -->
+          <div class="cmd-section" data-section="actions">
+            <div class="px-4 py-2 text-xs font-medium text-muted-foreground bg-muted/50">
+              操作
+            </div>
+            <div class="cmd-list">
+              {actionCommands.map((cmd) => (
+                <button
+                  class="cmd-item w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-muted transition-colors"
+                  data-type="action"
+                  data-action={cmd.action}
+                  data-id={cmd.id}
+                >
+                  <Icon name={cmd.icon} class="w-4 h-4 text-muted-foreground" />
+                  <span class="flex-1 text-sm text-foreground">{cmd.label}</span>
+                  <kbd class="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-sans text-muted-foreground bg-background border border-border rounded">
+                    {cmd.shortcut.split(' ').map((key) => (
+                      <span>{key}</span>
+                    ))}
+                  </kbd>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <!-- 搜索结果 -->
+        <div id="cmd-palette-search-results" class="hidden">
+          <div class="px-4 py-2 text-xs font-medium text-muted-foreground bg-muted/50">
+            搜索结果
+          </div>
+          <div id="cmd-search-list" class="cmd-list">
+            <!-- 动态插入搜索结果 -->
+          </div>
+          <div id="cmd-no-results" class="hidden py-8 text-center">
+            <Icon name="lucide:file-x" class="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
+            <p class="text-sm text-muted-foreground">未找到相关结果</p>
+          </div>
+        </div>
+
+        <!-- 页脚提示 -->
+        <div class="flex items-center justify-between px-4 py-2 text-[11px] text-muted-foreground bg-muted/30 border-t border-border">
+          <div class="flex items-center gap-3">
+            <span class="flex items-center gap-1">
+              <kbd class="px-1 py-0.5 bg-background border border-border rounded">↑↓</kbd>
+              <span>选择</span>
+            </span>
+            <span class="flex items-center gap-1">
+              <kbd class="px-1 py-0.5 bg-background border border-border rounded">↵</kbd>
+              <span>确认</span>
+            </span>
+          </div>
+          <span class="flex items-center gap-1">
+            <kbd class="px-1 py-0.5 bg-background border border-border rounded">esc</kbd>
+            <span>关闭</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline data-swup-ignore-script>
+  // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
+  (function() {
+    // DOM 元素
+    let overlay, panel, input, trigger;
+    let isOpen = false;
+    let selectedIndex = -1;
+    let pagefind = null;
+    let searchTimeout = null;
+    let currentItems = [];
+
+    // 初始化
+    function init() {
+      overlay = document.getElementById('cmd-palette-overlay');
+      panel = document.getElementById('cmd-palette-panel');
+      input = document.getElementById('cmd-palette-input');
+      trigger = document.getElementById('cmd-palette-trigger');
+
+      if (!overlay || !panel || !input) return;
+
+      // 绑定事件
+      bindEvents();
+      
+      // 尝试预加载 Pagefind
+      preloadPagefind();
+    }
+
+    // 绑定事件
+    function bindEvents() {
+      // 触发按钮点击
+      trigger?.addEventListener('click', open);
+
+      // 快捷键
+      document.addEventListener('keydown', handleKeydown);
+
+      // 遮罩层点击关闭
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close();
+      });
+
+      // 输入框输入事件
+      input.addEventListener('input', handleInput);
+
+      // 使用事件委托处理命令项点击
+      panel.addEventListener('click', (e) => {
+        const item = e.target.closest('.cmd-item');
+        if (item) {
+          executeCommand(item);
+        }
+      });
+    }
+
+    // 处理键盘事件
+    function handleKeydown(e) {
+      // Cmd/Ctrl + K 打开
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        if (isOpen) {
+          close();
+        } else {
+          open();
+        }
+        return;
+      }
+
+      if (!isOpen) {
+        // G + 字母 快捷导航
+        if (e.key === 'g' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+          // 等待下一个按键
+          const nextKey = waitForNextKey();
+          if (nextKey) {
+            handleGotoShortcut(nextKey);
+          }
+        }
+        return;
+      }
+
+      // ESC 关闭
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+        return;
+      }
+
+      // 上下箭头导航
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        navigateItems(e.key === 'ArrowDown' ? 1 : -1);
+        return;
+      }
+
+      // Enter 执行
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const selected = getSelectedItem();
+        if (selected) {
+          executeCommand(selected);
+        }
+        return;
+      }
+    }
+
+    // 等待下一个按键（用于 G 快捷导航）
+    function waitForNextKey() {
+      return new Promise((resolve) => {
+        const handler = (e) => {
+          document.removeEventListener('keydown', handler);
+          resolve(e.key.toLowerCase());
+        };
+        document.addEventListener('keydown', handler, { once: true });
+        // 超时取消
+        setTimeout(() => {
+          document.removeEventListener('keydown', handler);
+          resolve(null);
+        }, 500);
+      });
+    }
+
+    // 处理 G 快捷导航
+    function handleGotoShortcut(key) {
+      const shortcuts = {
+        'h': '/',
+        'b': '/blog',
+        'a': '/about',
+        't': '/tags',
+        's': '/search',
+        'l': '/links',
+        'v': '/visualizer',
+        'd': 'theme',
+      };
+
+      const target = shortcuts[key];
+      if (target) {
+        if (target === 'theme') {
+          toggleTheme();
+        } else {
+          window.location.href = target;
+        }
+      }
+    }
+
+    // 打开命令面板
+    function open() {
+      isOpen = true;
+      overlay.classList.remove('invisible', 'opacity-0');
+      overlay.classList.add('opacity-100');
+      panel.classList.remove('scale-95', 'opacity-0');
+      panel.classList.add('scale-100', 'opacity-100');
+      
+      // 聚焦输入框
+      setTimeout(() => input.focus(), 50);
+      
+      // 重置状态
+      resetState();
+      
+      // 禁用页面滚动
+      document.body.style.overflow = 'hidden';
+    }
+
+    // 关闭命令面板
+    function close() {
+      isOpen = false;
+      overlay.classList.add('invisible', 'opacity-0');
+      overlay.classList.remove('opacity-100');
+      panel.classList.add('scale-95', 'opacity-0');
+      panel.classList.remove('scale-100', 'opacity-100');
+      
+      // 恢复页面滚动
+      document.body.style.overflow = '';
+      
+      // 清空输入
+      input.value = '';
+      resetState();
+    }
+
+    // 重置状态
+    function resetState() {
+      selectedIndex = -1;
+      currentItems = [];
+      showDefault();
+      updateSelection();
+    }
+
+    // 显示默认内容
+    function showDefault() {
+      document.getElementById('cmd-palette-default')?.classList.remove('hidden');
+      document.getElementById('cmd-palette-search-results')?.classList.add('hidden');
+      document.getElementById('cmd-palette-loading')?.classList.add('hidden');
+      
+      // 获取所有默认命令项
+      currentItems = Array.from(panel.querySelectorAll('#cmd-palette-default .cmd-item'));
+    }
+
+    // 处理输入
+    function handleInput(e) {
+      const query = e.target.value.trim();
+      
+      if (!query) {
+        showDefault();
+        return;
+      }
+
+      // 显示加载状态
+      document.getElementById('cmd-palette-default')?.classList.add('hidden');
+      document.getElementById('cmd-palette-loading')?.classList.remove('hidden');
+
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => performSearch(query), 200);
+    }
+
+    // 预加载 Pagefind
+    async function preloadPagefind() {
+      try {
+        const response = await fetch('/pagefind/pagefind.js', { method: 'HEAD' });
+        if (!response.ok) return;
+        
+        const module = await import('/pagefind/pagefind.js');
+        pagefind = module;
+        await pagefind.init();
+      } catch (err) {
+        console.log('[CommandPalette] Pagefind not available');
+      }
+    }
+
+    // 执行搜索
+    async function performSearch(query) {
+      if (!pagefind) {
+        // 如果没有 Pagefind，执行本地过滤
+        filterLocalCommands(query);
+        return;
+      }
+
+      try {
+        const search = await pagefind.search(query);
+        const results = await Promise.all(
+          (search.results || []).slice(0, 5).map(r => r.data())
+        );
+        
+        renderSearchResults(results, query);
+      } catch (err) {
+        console.error('[CommandPalette] Search error:', err);
+        filterLocalCommands(query);
+      }
+    }
+
+    // 本地命令过滤
+    function filterLocalCommands(query) {
+      const allItems = Array.from(panel.querySelectorAll('#cmd-palette-default .cmd-item'));
+      const filtered = allItems.filter(item => {
+        const label = item.querySelector('span')?.textContent?.toLowerCase() || '';
+        return label.includes(query.toLowerCase());
+      });
+
+      if (filtered.length === 0) {
+        showNoResults();
+      } else {
+        // 创建过滤后的结果视图
+        const searchList = document.getElementById('cmd-search-list');
+        const resultsContainer = document.getElementById('cmd-palette-search-results');
+        
+        searchList.innerHTML = filtered.map(item => item.outerHTML).join('');
+        currentItems = Array.from(searchList.querySelectorAll('.cmd-item'));
+        
+        document.getElementById('cmd-palette-default')?.classList.add('hidden');
+        document.getElementById('cmd-palette-loading')?.classList.add('hidden');
+        document.getElementById('cmd-no-results')?.classList.add('hidden');
+        resultsContainer?.classList.remove('hidden');
+        
+        // 重新绑定数据属性
+        currentItems.forEach((item, index) => {
+          item.setAttribute('data-index', index);
+        });
+      }
+    }
+
+    // 渲染搜索结果
+    function renderSearchResults(results, query) {
+      const searchList = document.getElementById('cmd-search-list');
+      const resultsContainer = document.getElementById('cmd-palette-search-results');
+      const noResults = document.getElementById('cmd-no-results');
+
+      document.getElementById('cmd-palette-loading')?.classList.add('hidden');
+
+      if (results.length === 0) {
+        showNoResults();
+        return;
+      }
+
+      noResults?.classList.add('hidden');
+
+      // 渲染结果
+      searchList.innerHTML = results.map((result, index) => `
+        <button
+          class="cmd-item w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-muted transition-colors"
+          data-type="search"
+          data-href="${result.url}"
+          data-index="${index}"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground mt-0.5 flex-shrink-0">
+            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>
+            <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+            <path d="M10 9H8"/>
+            <path d="M16 13H8"/>
+            <path d="M16 17H8"/>
+          </svg>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium text-foreground truncate">${highlightText(result.meta?.title || '无标题', query)}</div>
+            <div class="text-xs text-muted-foreground mt-0.5 line-clamp-2">${highlightText(result.excerpt || '', query)}</div>
+          </div>
+        </button>
+      `).join('');
+
+      currentItems = Array.from(searchList.querySelectorAll('.cmd-item'));
+      resultsContainer?.classList.remove('hidden');
+    }
+
+    // 显示无结果
+    function showNoResults() {
+      document.getElementById('cmd-palette-default')?.classList.add('hidden');
+      document.getElementById('cmd-palette-loading')?.classList.add('hidden');
+      document.getElementById('cmd-no-results')?.classList.remove('hidden');
+      document.getElementById('cmd-palette-search-results')?.classList.remove('hidden');
+      currentItems = [];
+    }
+
+    // 高亮文本
+    function highlightText(text, query) {
+      if (!query) return text;
+      const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+      return text.replace(regex, '<mark class="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-0.5 rounded">$1</mark>');
+    }
+
+    // 转义正则字符
+    function escapeRegex(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // 导航项目
+    function navigateItems(direction) {
+      if (currentItems.length === 0) return;
+
+      selectedIndex += direction;
+      
+      // 循环选择
+      if (selectedIndex < 0) {
+        selectedIndex = currentItems.length - 1;
+      } else if (selectedIndex >= currentItems.length) {
+        selectedIndex = 0;
+      }
+
+      updateSelection();
+    }
+
+    // 更新选择状态
+    function updateSelection() {
+      currentItems.forEach((item, index) => {
+        if (index === selectedIndex) {
+          item.classList.add('bg-muted', 'selected');
+          item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        } else {
+          item.classList.remove('bg-muted', 'selected');
+        }
+      });
+    }
+
+    // 获取选中的项目
+    function getSelectedItem() {
+      if (selectedIndex >= 0 && selectedIndex < currentItems.length) {
+        return currentItems[selectedIndex];
+      }
+      return currentItems[0];
+    }
+
+    // 执行命令
+    function executeCommand(item) {
+      const type = item.dataset.type;
+      const href = item.dataset.href;
+      const action = item.dataset.action;
+
+      switch (type) {
+        case 'nav':
+        case 'search':
+          if (href) {
+            close();
+            window.location.href = href;
+          }
+          break;
+        case 'action':
+          executeAction(action);
+          break;
+      }
+    }
+
+    // 执行操作
+    function executeAction(action) {
+      switch (action) {
+        case 'toggleTheme':
+          toggleTheme();
+          close();
+          break;
+        case 'scrollToTop':
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          close();
+          break;
+        case 'copyLink':
+          copyCurrentLink();
+          close();
+          break;
+      }
+    }
+
+    // 切换主题
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.classList.contains('dark');
+      
+      if (isDark) {
+        html.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        html.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+      
+      // 触发自定义事件
+      window.dispatchEvent(new CustomEvent('themechange', {
+        detail: { theme: isDark ? 'light' : 'dark' }
+      }));
+    }
+
+    // 复制当前链接
+    async function copyCurrentLink() {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        showToast('链接已复制到剪贴板');
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    }
+
+    // 显示提示
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 bg-foreground text-background text-sm rounded-lg shadow-lg z-[200] animate-fade-in';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 2000);
+    }
+
+    // 初始化
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+    // Swup 兼容
+    if (window.SwupCompat) {
+      window.SwupCompat.onPageView(() => {
+        // 重新获取 DOM 引用
+        setTimeout(init, 0);
+      });
+    }
+  })();
+</script>
+
+<style>
+  /* 命令面板滚动条样式 */
+  #cmd-palette-content::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  #cmd-palette-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  #cmd-palette-content::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--muted-foreground) 20%, transparent);
+    border-radius: 3px;
+  }
+  
+  #cmd-palette-content::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklch, var(--muted-foreground) 40%, transparent);
+  }
+
+  /* 选中项样式 */
+  .cmd-item.selected {
+    background-color: var(--muted);
+  }
+
+  /* 快捷键显示 */
+  kbd {
+    font-family: var(--font-ui);
+  }
+
+  /* 暗色模式适配 */
+  .dark .cmd-item:hover {
+    background-color: color-mix(in oklch, var(--muted) 80%, #ffffff 5%);
+  }
+
+  .dark .cmd-item.selected {
+    background-color: color-mix(in oklch, var(--muted) 70%, #ffffff 8%);
+  }
+</style>

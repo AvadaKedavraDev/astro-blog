@@ -1231,3 +1231,239 @@ article.theme-dark .card-base {
     opacity: 1 !important;
   }
 }
+
+
+/* ===== Expressive Code 复制按钮样式优化 ===== */
+.expressive-code .copy-button {
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: scale(0.9);
+}
+
+.expressive-code:hover .copy-button {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.expressive-code .copy-button:hover {
+  transform: scale(1.1);
+}
+
+
+/* ===== 微交互细节 ===== */
+
+/* 1. 链接下划线动画 - 从中心向两侧展开 */
+.link-hover-center {
+  position: relative;
+  display: inline-block;
+}
+
+.link-hover-center::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 1px;
+  background-color: currentColor;
+  transform: translateX(-50%);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.link-hover-center:hover::after {
+  width: 100%;
+}
+
+/* 2. 按钮磁性效果 - 鼠标靠近时轻微吸引 */
+.magnetic-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+
+/* 3. 卡片悬停 3D 倾斜效果 */
+.card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out;
+  will-change: transform;
+}
+
+/* 4. 文字渐变流光动画 */
+.gradient-text-animated {
+  background: linear-gradient(
+    90deg,
+    #3b82f6 0%,
+    #8b5cf6 25%,
+    #ec4899 50%,
+    #8b5cf6 75%,
+    #3b82f6 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shine 3s linear infinite;
+}
+
+.dark .gradient-text-animated {
+  background: linear-gradient(
+    90deg,
+    #60a5fa 0%,
+    #a78bfa 25%,
+    #f472b6 50%,
+    #a78bfa 75%,
+    #60a5fa 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* 5. 额外的微交互效果 */
+
+/* 按钮点击波纹效果 */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: scale(0);
+  opacity: 0;
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+.btn-ripple:active::after {
+  transform: scale(2);
+  opacity: 1;
+  transition: 0s;
+}
+
+/* 输入框聚焦时标签上浮效果 */
+.input-float {
+  position: relative;
+}
+
+.input-float input:focus ~ label,
+.input-float input:not(:placeholder-shown) ~ label {
+  transform: translateY(-1.5rem) scale(0.85);
+  color: var(--prose-link);
+}
+
+.input-float label {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.2s ease;
+  pointer-events: none;
+  color: var(--muted-foreground);
+}
+
+/* 图片悬停缩放效果 */
+.img-zoom {
+  overflow: hidden;
+}
+
+.img-zoom img {
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.img-zoom:hover img {
+  transform: scale(1.05);
+}
+
+/* 列表项滑入动画 */
+.slide-in-item {
+  opacity: 0;
+  transform: translateX(-20px);
+  animation: slideIn 0.5s ease forwards;
+}
+
+@keyframes slideIn {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 脉冲动画 */
+.pulse-soft {
+  animation: pulseSoft 2s ease-in-out infinite;
+}
+
+@keyframes pulseSoft {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+/* 呼吸边框效果 */
+.breathing-border {
+  position: relative;
+}
+
+.breathing-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(45deg, var(--prose-link), var(--prose-heading), var(--prose-link));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: breathing 2s ease-in-out infinite;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.breathing-border:hover::before {
+  opacity: 1;
+}
+
+@keyframes breathing {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .gradient-text-animated,
+  .pulse-soft,
+  .breathing-border::before,
+  .slide-in-item {
+    animation: none;
+  }
+  
+  .card-3d,
+  .magnetic-btn,
+  .img-zoom img {
+    transition: none;
+    transform: none;
+  }
+}

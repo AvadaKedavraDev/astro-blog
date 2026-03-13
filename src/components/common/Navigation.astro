@@ -2,10 +2,11 @@
 /**
  * @component Navigation
  * @description 顶部导航栏组件，支持桌面端和移动端响应式布局
- * @features 当前页高亮、移动端菜单、主题切换、Swup 兼容
+ * @features 当前页高亮、移动端菜单、主题切换、Swup 兼容、Command Palette
  * @usage 在 BaseLayout 中引用
  */
 import ThemeIcon from "@components/widgets/ThemeIcon.astro";
+import CommandPalette from "@components/ui/CommandPalette.astro";
 import { Icon } from "astro-icon/components";
 
 interface NavItem {
@@ -88,28 +89,22 @@ const currentPath = Astro.url.pathname;
         )
       ))}
       <div class="pl-3 ml-2 border-l border-border flex items-center gap-2">
-        <!-- Search Button -->
-        <a 
-          href="/search" 
-          class="w-8 h-8 rounded-full flex items-center justify-center interactive-btn"
-          aria-label="搜索"
-        >
-          <Icon name="lucide:search" class="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
-        </a>
+        <!-- Command Palette Trigger -->
+        <CommandPalette />
         <ThemeIcon size="sm" variant="icon" />
       </div>
     </div>
     
     <!-- Mobile Menu Button -->
     <div class="flex items-center gap-3 md:hidden">
-      <!-- Search Button Mobile -->
-      <a 
-        href="/search" 
+      <!-- Mobile Command Palette Trigger -->
+      <button
+        id="mobile-cmd-trigger"
         class="p-2 text-muted-foreground hover:text-foreground transition-colors"
         aria-label="搜索"
       >
         <Icon name="lucide:search" class="w-5 h-5" />
-      </a>
+      </button>
       <ThemeIcon size="sm" variant="icon" />
       <button
         id="mobile-menu-btn"
@@ -267,6 +262,18 @@ const currentPath = Astro.url.pathname;
         });
       });
     }
+
+    // 初始化移动端 Command Palette 触发
+    function initMobileCmdTrigger() {
+      const mobileTrigger = document.getElementById('mobile-cmd-trigger');
+      const desktopTrigger = document.getElementById('cmd-palette-trigger');
+      
+      if (mobileTrigger && desktopTrigger) {
+        mobileTrigger.addEventListener('click', () => {
+          desktopTrigger.click();
+        });
+      }
+    }
     
     // ========== 导航栏背景切换 ==========
     function initNavBackground() {
@@ -279,18 +286,21 @@ const currentPath = Astro.url.pathname;
       const isHomePage = path === '/' || path === '/index.html';
       const hasAnimatedBg = document.querySelector('.animated-bg') !== null;
       
-      // 辅助函数：应用玻璃态样式
+      // 使用 CSS 变量方式设置玻璃态样式
       function applyGlassStyle() {
-        const bgVar = getComputedStyle(document.documentElement).getPropertyValue('--background').trim() || '#fafafa';
-        const borderVar = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#e5e5e5';
-        navBg.style.backgroundColor = bgVar.includes('#') ? bgVar + 'CC' : 'rgba(250,250,250,0.8)';
-        navBg.style.borderBottom = '1px solid ' + (borderVar.includes('#') ? borderVar + '80' : 'rgba(229,229,229,0.5)');
+        // 直接设置 CSS 变量，让浏览器自动计算颜色
+        navBg.style.backgroundColor = 'color-mix(in oklch, var(--background) 80%, transparent)';
+        navBg.style.borderBottom = '1px solid color-mix(in oklch, var(--border) 50%, transparent)';
+        navBg.style.backdropFilter = 'blur(24px)';
+        navBg.style.webkitBackdropFilter = 'blur(24px)';
       }
       
       // 辅助函数：清除背景
       function clearBackground() {
         navBg.style.backgroundColor = 'transparent';
         navBg.style.borderBottom = 'none';
+        navBg.style.backdropFilter = 'none';
+        navBg.style.webkitBackdropFilter = 'none';
       }
       
       if (!isHomePage || !hasAnimatedBg) {
@@ -341,10 +351,36 @@ const currentPath = Astro.url.pathname;
       }, { passive: true });
     }
     
+    // 全局主题变化监听（只设置一次）
+    (function setupThemeListener() {
+      const nav = document.getElementById('main-nav');
+      const navBg = nav?.querySelector('.nav-bg');
+      if (!nav || !navBg) return;
+      
+      // 使用 MutationObserver 监听 html 元素的 class 变化（更可靠）
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            // 主题变化时，如果导航栏背景是显示的，更新样式
+            if (navBg.style.opacity === '1') {
+              navBg.style.backgroundColor = 'color-mix(in oklch, var(--background) 80%, transparent)';
+              navBg.style.borderBottom = '1px solid color-mix(in oklch, var(--border) 50%, transparent)';
+            }
+          }
+        });
+      });
+      
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    })();
+    
     // 初始化
     function init() {
       updateNavHighlight();
       initMobileMenu();
+      initMobileCmdTrigger();
       initNavBackground();
     }
     

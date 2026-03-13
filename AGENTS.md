@@ -34,7 +34,7 @@ moonpeak-astro/
 │   │   │   ├── ArticleNavigation.astro    # 文章上下篇导航
 │   │   │   └── RelatedPostsByTag.astro    # 相关文章推荐
 │   │   ├── common/          # 通用组件
-│   │   │   ├── Navigation.astro           # 顶部导航栏
+│   │   │   ├── Navigation.astro           # 顶部导航栏（集成 Command Palette）
 │   │   │   ├── Footer.astro               # 页脚（含建站时间统计）
 │   │   │   ├── TableOfContents.astro      # 文章目录（自动高亮）
 │   │   │   ├── Pagination.astro           # 分页组件
@@ -48,7 +48,10 @@ moonpeak-astro/
 │   │   │   ├── BookMarkManager.astro      # 书签管理器
 │   │   │   ├── SplashModal.astro          # 开屏弹窗
 │   │   │   ├── TopNotification.astro      # 顶部通知栏
-│   │   │   └── Image.astro                # 图片组件（灯箱）
+│   │   │   ├── Image.astro                # 图片组件（灯箱）
+│   │   │   ├── AnimatedBackground.astro   # 动态背景
+│   │   │   ├── MicroInteractions.astro    # 微交互效果（磁性按钮、3D卡片等）
+│   │   │   └── CommandPalette.astro       # 命令面板（Cmd+K）
 │   │   ├── widgets/         # 小部件
 │   │   │   ├── SEO.astro                  # SEO 元信息
 │   │   │   └── ThemeIcon.astro            # 主题切换按钮
@@ -221,6 +224,13 @@ import { getPosts } from "@lib/post";
 | `.tag-interactive` | 标签悬停反转 |
 | `.article-title-link` | 文章标题悬停 |
 | `.pagination-btn` | 分页按钮 |
+| `.link-hover-center` | 链接下划线从中心展开 |
+| `.magnetic-btn` | 磁性按钮效果（鼠标靠近吸引） |
+| `.card-3d` | 3D 卡片倾斜效果 |
+| `.gradient-text-animated` | 文字渐变流光动画 |
+| `.btn-ripple` | 按钮点击波纹效果 |
+| `.img-zoom` | 图片悬停缩放 |
+| `.breathing-border` | 呼吸边框效果 |
 
 ## 关键集成配置
 
@@ -269,6 +279,30 @@ if (window.SwupCompat) {
 - 搜索页面: `/search`
 - 自动排除 draft 文章
 - 开发模式下不可用，需构建后预览
+
+### Command Palette (命令面板)
+
+现代博客标配功能，位于 `src/components/ui/CommandPalette.astro`:
+
+**快捷键:**
+- `Cmd/Ctrl + K` - 打开/关闭命令面板
+- `↑/↓` - 导航选择
+- `Enter` - 执行选中项
+- `ESC` - 关闭面板
+
+**功能分类:**
+- **快速导航**: 首页(G+H)、文章(G+B)、关于(G+A)、标签(G+T)等
+- **操作命令**: 切换主题(G+D)、返回顶部、复制链接
+- **文章搜索**: 集成 Pagefind，实时搜索文章内容
+
+**使用方式:**
+```typescript
+// 组件已在 Navigation.astro 中集成
+import CommandPalette from "@components/ui/CommandPalette.astro";
+
+// 使用触发按钮
+<CommandPalette />
+```
 
 ### Remark/Rehype 插件
 
@@ -345,7 +379,17 @@ if (window.SwupCompat) {
 - 固定顶部，玻璃态效果
 - 响应式：桌面水平导航 / 移动端抽屉菜单
 - 当前页面高亮自动更新
-- 搜索入口、主题切换按钮
+- 集成 Command Palette（Cmd/Ctrl+K）
+- 主题切换按钮
+
+### CommandPalette (命令面板)
+
+- 快捷键 `Cmd/Ctrl + K` 唤起
+- 支持文章搜索（Pagefind 集成）
+- 快速导航跳转
+- 常用操作快捷方式
+- 键盘完全可控（方向键、Enter、ESC）
+- 移动端适配
 
 ### ArticleLayout (文章布局)
 
@@ -417,4 +461,4 @@ if (window.SwupCompat) {
 
 ---
 
-*最后更新: 2026-03-13*
+*最后更新: 2026-03-13* - 新增 Command Palette 功能
