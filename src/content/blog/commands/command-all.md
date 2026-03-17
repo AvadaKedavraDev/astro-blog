@@ -50,6 +50,13 @@ pinned: false
 
 ## Linux 常用命令
 
+### SSH 命令
+
+```shell 
+# 格式：ssh -L [本地端口]:[目标地址]:[目标端口] 用户@服务器
+ssh -L xxxx:localhost:xxxx root@xxx.xxx.xxx.xxx
+```
+
 ### 文件与目录操作
 
 | 命令         | 说明            | 示例               |
