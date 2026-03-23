@@ -2,7 +2,8 @@
 /**
  * @component SwupCompat
  * @description Swup 兼容性工具组件，提供统一的生命周期事件管理
- * @features onPageView、beforeContentReplace API
+ * @features onPageView、beforeContentReplace API、动画偏好检测、ARIA 支持
+ * @props propName - 属性说明
  * @usage 在 BaseLayout 中引用，其他组件通过 window.SwupCompat 访问
  */
 ---
@@ -16,6 +17,9 @@
   if (window.SwupCompat && window.SwupCompat.__isReady__) {
     return;
   }
+  
+  // 检测用户动画偏好
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   
   // 保留已有的回调（如果存在）
   const existingCallbacks = window.SwupCompat?.callbacks || {
@@ -31,26 +35,34 @@
       'content:replace:before': [...existingCallbacks['content:replace:before']]
     },
     
+    // 动画偏好
+    prefersReducedMotion,
+    
     // 是否已初始化事件监听
     __isReady__: false,
     
     // 注册页面视图回调（页面切换完成后）
     onPageView(callback, options = {}) {
-      const { immediate = true } = options;
+      const { immediate = true, respectMotionPreference = true } = options;
+      
+      // 如果用户偏好减少动画且选项启用，跳过动画相关的回调
+      const wrappedCallback = respectMotionPreference && this.prefersReducedMotion
+        ? () => { callback(); }
+        : callback;
       
       // 添加到注册表
-      this.callbacks['page:view'].push(callback);
+      this.callbacks['page:view'].push(wrappedCallback);
       
       // 立即执行一次（如果页面已加载）
       if (immediate && document.readyState !== 'loading') {
         try {
-          callback();
+          wrappedCallback();
         } catch (e) {
           console.error('SwupCompat: 初始回调执行失败:', e);
         }
       }
       
-      return () => this.off('page:view', callback);
+      return () => this.off('page:view', wrappedCallback);
     },
     
     // 注册内容替换前回调
@@ -86,10 +98,28 @@
     runScripts() {
       const scriptsPlugin = window.swup?.findPlugin('SwupScriptsPlugin');
       if (scriptsPlugin && scriptsPlugin.runScripts) {
-        console.log('[SwupCompat] Manually triggering runScripts');
         // 使用 call 绑定 this，确保方法内部能正确访问 this.options 和 this.swup
         scriptsPlugin.runScripts.call(scriptsPlugin);
       }
+    },
+    
+    // 配置 Scroll Plugin（官方推荐方式）
+    configureScrollPlugin(options = {}) {
+      const scrollPlugin = window.swup?.findPlugin('SwupScrollPlugin');
+      if (!scrollPlugin) return false;
+      
+      // 应用配置
+      if (options.offset !== undefined) {
+        scrollPlugin.options.offset = options.offset;
+      }
+      if (options.animateScroll !== undefined) {
+        scrollPlugin.options.animateScroll = options.animateScroll;
+      }
+      if (options.doScrollingRightAway !== undefined) {
+        scrollPlugin.options.doScrollingRightAway = options.doScrollingRightAway;
+      }
+      
+      return true;
     },
     
     // 清理动态添加的内容（在 Swup 导航前调用）
@@ -99,8 +129,16 @@
         delete group.dataset.swupCompatInitialized;
       });
       
-      // 清理 KaTeX 可能的问题（如果有客户端脚本）
-      // 注意：KaTeX 是服务端渲染的，通常不需要清理，但这里做保险处理
+      // 清理动态添加的微交互标记
+      document.querySelectorAll('[data-magnetic-init]').forEach((el) => {
+        delete el.dataset.magneticInit;
+      });
+      document.querySelectorAll('[data-card3d-init]').forEach((el) => {
+        delete el.dataset.card3dInit;
+      });
+      document.querySelectorAll('[data-ripple-init]').forEach((el) => {
+        delete el.dataset.rippleInit;
+      });
     },
     
     // 初始化 rehype-code-group 代码块多标签切换
@@ -163,6 +201,20 @@
       }
     },
     
+    // 更新 ARIA live 区域（用于屏幕阅读器）
+    updateA11yNotification(message) {
+      const liveRegion = document.getElementById('swup-aria-live');
+      if (liveRegion) {
+        liveRegion.textContent = message;
+        // 3秒后清空，避免重复读取
+        setTimeout(() => {
+          if (liveRegion.textContent === message) {
+            liveRegion.textContent = '';
+          }
+        }, 3000);
+      }
+    },
+    
     // 初始化事件监听
     init() {
       if (this.__isReady__) return;
@@ -176,7 +228,10 @@
         this.runScripts(); // 手动触发脚本执行
         this.initCodeGroups(); // 初始化 rehype-code-group
         requestAnimationFrame(() => {
-          setTimeout(() => this.emit('page:view'), 0);
+          setTimeout(() => {
+            this.emit('page:view');
+            this.updateA11yNotification('页面已加载');
+          }, 0);
         });
       });
       
@@ -184,6 +239,7 @@
         if (usingNewHooks) return;
         this.emit('content:replace:before');
         this.cleanup(); // 清理动态内容
+        this.updateA11yNotification('正在加载页面...');
       });
       
       // 监听 Swup hooks（新版）
@@ -198,6 +254,7 @@
           window.swup.hooks.on('content:replace', () => {
             this.emit('content:replace:before');
             this.cleanup(); // 清理动态内容
+            this.updateA11yNotification('正在加载页面...');
           });
           
           // page:view 在内容替换完成后触发
@@ -207,7 +264,14 @@
             // 延迟触发 page:view，确保 DOM 已更新
             requestAnimationFrame(() => {
               this.emit('page:view');
+              this.updateA11yNotification('页面已加载');
             });
+          });
+          
+          // 配置 Scroll Plugin
+          this.configureScrollPlugin({
+            offset: 96, // 导航栏高度 64px + 额外间距 32px
+            animateScroll: !this.prefersReducedMotion
           });
           
           return true;
@@ -233,6 +297,18 @@
         document.addEventListener('DOMContentLoaded', () => this.initCodeGroups());
       }
       
+      // 监听动画偏好变化
+      const motionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (motionMediaQuery.addEventListener) {
+        motionMediaQuery.addEventListener('change', (e) => {
+          this.prefersReducedMotion = e.matches;
+          // 重新配置 Scroll Plugin
+          this.configureScrollPlugin({
+            animateScroll: !e.matches
+          });
+        });
+      }
+      
       this.__isReady__ = true;
     }
   };
@@ -241,3 +317,13 @@
   window.SwupCompat.init();
 })();
 </script>
+
+<!-- ARIA live 区域，用于屏幕阅读器通知页面变化 -->
+<div 
+  id="swup-aria-live" 
+  aria-live="polite" 
+  aria-atomic="true" 
+  class="sr-only"
+  style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;"
+>
+</div>

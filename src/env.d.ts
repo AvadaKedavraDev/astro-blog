@@ -89,3 +89,10 @@ declare module '@swup/astro' {
     overlay: string;
   };
 }
+
+// 环境变量
+declare namespace App {
+  interface ImportMetaEnv {
+    readonly PUBLIC_IMG_BASE_URL: string;
+  }
+}

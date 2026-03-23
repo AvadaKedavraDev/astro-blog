@@ -1,70 +1,25 @@
 ---
 /**
  * @component SwupScrollConfig
- * @description Swup 滚动配置组件，配置锚点滚动 offset
- * @features 解决固定导航栏遮挡锚点的问题
- * @usage 在 BaseLayout 中引用
+ * @description Swup 滚动配置组件（已弃用，功能合并至 SwupCompat）
+ * @deprecated 自 2026-03-23 起，此组件的功能已合并到 SwupCompat.astro 中。
+ *             保留此组件是为了向后兼容，不再执行任何操作。
+ *             滚动配置现在通过 SwupCompat.configureScrollPlugin() 自动管理。
+ * 
+ * 滚动配置详情：
+ * - offset: 96px（导航栏高度 64px + 额外间距 32px）
+ * - animateScroll: 根据用户 prefers-reduced-motion 偏好自动设置
+ * 
+ * 如需自定义滚动配置，请修改 SwupCompat.astro 中的 configureScrollPlugin 调用。
  */
 ---
 
-<script is:inline data-swup-ignore-script>
-  // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
-  (function() {
-    // 导航栏高度 64px + 额外间距 32px = 96px
-    const SCROLL_OFFSET = 96;
-    
-    function configureSwupScroll() {
-      // 检查 Swup 是否已初始化
-      if (!window.swup) {
-        return false;
-      }
-      
-      // 检查 plugins 是否存在
-      if (!window.swup.plugins || !Array.isArray(window.swup.plugins)) {
-        return false;
-      }
-      
-      // 获取 Scroll Plugin 实例
-      const scrollPlugin = window.swup.plugins.find(p => p && p.name === 'SwupScrollPlugin');
-      if (!scrollPlugin) {
-        return false;
-      }
-      
-      // 配置 offset
-      if (scrollPlugin.options) {
-        scrollPlugin.options.offset = SCROLL_OFFSET;
-      }
-      
-      return true;
-    }
-    
-    // 尝试配置，如果失败则重试
-    function tryConfigure() {
-      if (!configureSwupScroll()) {
-        setTimeout(tryConfigure, 100);
-      }
-    }
-    
-    // 页面加载完成后尝试配置
-    if (document.readyState === 'complete') {
-      tryConfigure();
-    } else {
-      window.addEventListener('load', tryConfigure);
-    }
-    
-    // 使用 SwupCompat 在每次页面视图更新后重新配置
-    if (window.SwupCompat) {
-      window.SwupCompat.onPageView(tryConfigure);
-    } else {
-      // 降级处理
-      document.addEventListener('swup:contentReplaced', tryConfigure);
-      document.addEventListener('astro:page-load', tryConfigure);
-    }
-    
-    // 同时监听 swup:enable 事件
-    document.addEventListener('swup:enable', () => {
-      // Swup 启用后，等待 hooks 可用
-      setTimeout(tryConfigure, 100);
-    });
-  })();
-</script>
+<!-- 
+  此组件的功能已合并到 SwupCompat.astro 中。
+  为了向后兼容，保留此文件，但不再执行任何操作。
+  
+  滚动配置现在由 SwupCompat 自动管理：
+  - 通过 swup.hooks.on('page:view') 配置 Scroll Plugin
+  - 自动检测 prefers-reduced-motion 偏好
+  - 不再需要轮询查找插件实例
+-->

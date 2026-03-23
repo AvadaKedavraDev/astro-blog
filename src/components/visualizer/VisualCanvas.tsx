@@ -230,19 +230,19 @@ export default function VisualCanvas(props: VisualCanvasProps) {
         )}
         
         <g>
-          <For each={props.state.connections || []}>
+          <For each={props.state.connections || []} key={item => `${item.from}-${item.to}`}>
             {(conn) => renderConnection(conn, props.state.elements)}
           </For>
         </g>
         
         <g>
-          <For each={props.state.elements}>
+          <For each={props.state.elements} key="id">
             {(el) => renderElement(el)}
           </For>
         </g>
         
         <g>
-          <For each={props.state.highlights || []}>
+          <For each={props.state.highlights || []} key="targetId">
             {(hl) => renderHighlight(hl, props.state.elements)}
           </For>
         </g>

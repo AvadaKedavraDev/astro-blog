@@ -206,7 +206,7 @@ export default function VisualizerClient(props: VisualizerClientProps) {
               >
                 全部
               </button>
-              <For each={categories()}>
+              <For each={categories()} key={cat => cat}>
                 {(category) => (
                   <button
                     type="button"
@@ -242,7 +242,7 @@ export default function VisualizerClient(props: VisualizerClientProps) {
             {/* 有筛选时平铺展示 */}
             <Show when={searchQuery() || selectedCategory()}>
               <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <For each={filteredDemos()}>
+                <For each={filteredDemos()} key="id">
                   {(demo) => <DemoCard demo={demo} />}
                 </For>
               </div>
@@ -251,7 +251,7 @@ export default function VisualizerClient(props: VisualizerClientProps) {
             {/* 无筛选时按类别分组展示 */}
             <Show when={!searchQuery() && !selectedCategory()}>
               <div class="space-y-4">
-                <For each={Object.entries(groupedDemos())}>
+                <For each={Object.entries(groupedDemos())} key={([cat]) => cat}>
                   {([category, demos]) => (
                     <div>
                       {/* 类别标题 */}
@@ -264,7 +264,7 @@ export default function VisualizerClient(props: VisualizerClientProps) {
                       </div>
                       {/* 该类别下的演示 */}
                       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <For each={demos}>
+                        <For each={demos} key="id">
                           {(demo) => <DemoCard demo={demo} />}
                         </For>
                       </div>

@@ -1,32 +1,40 @@
 ---
 /**
- * @description 图片组件，支持图片加载失败时的占位符显示
- * @props src - 图片路径
- * @props alt - 图片描述
+ * @description 图片组件，支持本地开发和云端生产环境
+ * @features 
+ *   - 开发模式：使用 /local-images/ 访问本地图床
+ *   - 生产模式：使用 https://cdn.image.moonpeak.cn/ 访问云端图床
+ * @props src - 图片路径（支持完整URL、本地绝对路径、或仅文件名）
+ * @props alt - 图片描述（可选，建议填写以提升可访问性）
  * @props width - 宽度（可选）
  * @props height - 高度（可选）
  * @props class - 自定义类名（可选）
  */
 interface Props {
   src: string;
-  alt: string;
+  alt?: string;
   width?: string;
   height?: string;
   class?: string;
 }
 
-const { src, alt, width, height, class: className = '' } = Astro.props;
+const { src, alt = '', width, height, class: className = '' } = Astro.props;
+
+// 根据构建模式选择图床基础 URL
+// dev 模式：本地开发，使用 /local-images/ 目录联接
+// production 模式：生产构建，使用云端图床
+const IMG_BASE_URL = 'https://cdn.image.moonpeak.cn/';
 
 // 判断是否是完整 URL
 const isFullUrl = src.startsWith('http://') || src.startsWith('https://');
 
-// 如果不是完整 URL，且以 / 开头，则认为是本地图片
-// 如果不是完整 URL，且不以 / 开头，则拼接图床域名
+// 如果不是完整 URL，且以 / 开头，则认为是本地图片（如 /images/xxx.jpg）
+// 如果不是完整 URL，且不以 / 开头，则拼接图床域名（如 xxx.jpg → https://cdn.../xxx.jpg）
 const imageSrc = isFullUrl 
   ? src 
   : src.startsWith('/') 
     ? src 
-    : `https://cdn.image.moonpeak.cn/${src}`;
+    : `${IMG_BASE_URL}${src}`;
 ---
 
 <img 

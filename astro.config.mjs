@@ -42,6 +42,13 @@ export default defineConfig({
         plugins: [tailwindcss()],
     },
 
+    // 预取配置 - 提升页面切换速度
+    prefetch: {
+        // 预取策略：viewport - 当链接进入视口时预取
+        prefetchAll: true,
+        defaultStrategy: 'viewport',
+    },
+
     markdown: {
         // 解决MD 换行被破坏、注释挤在一起的问题
         // @ts-ignore - remark 插件类型版本不匹配，不影响运行

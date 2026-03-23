@@ -13,16 +13,16 @@
 
 ## 技术栈
 
-| 类别 | 技术 | 版本 |
-|------|------|------|
-| 框架 | [Astro](https://astro.build) | 5.x |
-| 样式 | [Tailwind CSS](https://tailwindcss.com) | 4.x |
-| 交互组件 | [SolidJS](https://www.solidjs.com) | 1.x |
-| 代码高亮 | [Expressive Code](https://expressive-code.com) | 0.41.x |
-| 图标 | [Lucide](https://lucide.dev) + [astro-icon](https://www.astroicon.dev) | - |
-| 搜索 | [Pagefind](https://pagefind.app) | 1.x |
-| 页面过渡 | [Swup](https://swup.js.org) | 4.x |
-| 数学公式 | [KaTeX](https://katex.org) | - |
+| 类别 | 技术 | 版本 | 用途 |
+|------|------|------|------|
+| 框架 | [Astro](https://astro.build) | 5.x | 静态站点生成 |
+| 样式 | [Tailwind CSS](https://tailwindcss.com) | 4.x | 原子化 CSS |
+| 交互组件 | [SolidJS](https://www.solidjs.com) | 1.x | 客户端交互 |
+| 代码高亮 | [Expressive Code](https://expressive-code.com) | 0.41.x | 代码块渲染 |
+| 图标 | [Lucide](https://lucide.dev) + [astro-icon](https://www.astroicon.dev) | - | 矢量图标 |
+| 搜索 | [Pagefind](https://pagefind.app) | 1.x | 静态搜索索引 |
+| 页面过渡 | [Swup](https://swup.js.org) | 4.x | 平滑页面切换 |
+| 数学公式 | [KaTeX](https://katex.org) | - | 数学排版 |
 
 ## 项目结构
 
@@ -40,7 +40,7 @@ moonpeak-astro/
 │   │   │   ├── Pagination.astro           # 分页组件
 │   │   │   ├── ArticleDrawer.astro        # 文章抽屉
 │   │   │   ├── SwupCompat.astro           # Swup 生命周期管理
-│   │   │   └── SwupScrollConfig.astro     # Swup 滚动配置
+│   │   │   └── SwupScrollConfig.astro     # Swup 滚动配置（已弃用，功能合并至 SwupCompat）
 │   │   ├── ui/              # UI 组件
 │   │   │   ├── ReadingProgress.astro      # 阅读进度条
 │   │   │   ├── ScrollToTop.astro          # 返回顶部
@@ -55,8 +55,12 @@ moonpeak-astro/
 │   │   ├── widgets/         # 小部件
 │   │   │   ├── SEO.astro                  # SEO 元信息
 │   │   │   └── ThemeIcon.astro            # 主题切换按钮
-│   │   └── lib/
-│   │       └── utils.ts                   # 工具函数 (cn)
+│   │   ├── lib/
+│   │   │   └── utils.ts                   # 工具函数 (cn)
+│   │   └── visualizer/      # 算法可视化
+│   │       ├── demos/                     # 可视化演示
+│   │       ├── store.ts                   # 状态管理
+│   │       └── types.ts                   # 类型定义
 │   ├── layouts/             # 布局组件
 │   │   ├── BaseLayout.astro               # 基础布局
 │   │   └── ArticleLayout.astro            # 文章页布局（三栏）
@@ -83,12 +87,15 @@ moonpeak-astro/
 │   │       ├── docker/                    # Docker
 │   │       ├── javaee/                    # Java EE
 │   │       ├── llm/                       # LLM/AI
+│   │       ├── middleware/                # 中间件
 │   │       ├── openclaw/                  # OpenClaw
 │   │       ├── spring/                    # Spring
 │   │       ├── test/                      # 测试/模板
 │   │       └── work/                      # 工作记录
 │   ├── lib/                 # 工具函数
 │   │   └── post.ts                        # 文章数据处理
+│   ├── plugins/             # 自定义插件
+│   │   └── remark-img-bed.mjs             # 图床图片转换
 │   ├── styles/              # 全局样式
 │   │   └── global.css                     # Tailwind + 自定义样式
 │   ├── content.config.ts    # 内容集合配置
@@ -101,7 +108,9 @@ moonpeak-astro/
 │   └── optimize-images.mjs  # 图片优化
 ├── astro.config.mjs         # Astro 配置
 ├── tsconfig.json            # TypeScript 配置
-└── package.json
+├── package.json             # 依赖管理
+├── .env                     # 环境变量（开发）
+└── .env.production          # 环境变量（生产）
 ```
 
 ## 构建命令
@@ -115,7 +124,18 @@ npm run build
 
 # 预览生产构建
 npm run preview
+
+# 仅运行 Astro CLI
+npm run astro
 ```
+
+### 构建流程说明
+
+1. `npm run build` 执行两步：
+   - `astro build` - 生成静态站点到 `dist/` 目录
+   - `npx pagefind --site dist` - 为 dist 内容生成搜索索引
+
+2. 搜索功能**仅在构建后可用**，开发模式会显示提示信息
 
 ## 路径别名 (tsconfig.json)
 
@@ -154,18 +174,29 @@ import { getPosts } from "@lib/post";
 
 ### 创建新文章
 
-1. 在 `src/content/blog/{category}/` 下创建 `.md` 文件
+1. 在 `src/content/blog/{category}/` 下创建 `.md` 或 `.mdx` 文件
 2. 参考 `src/content/blog/test/template.md` 了解完整 Markdown 功能
 3. 使用 `> [!note]`, `> [!tip]`, `> [!warning]` 等语法创建 Callout
 
-### 命令速查表目录
+### 文章模板示例
 
-`src/content/blog/commands/` 目录用于记录各类常用命令：
-- `template.md` - 命令速查表模板
-- `linux-cheatsheet.md` - Linux 命令
-- `kimicode-cheatsheet.md` - KimiCode 命令
+```markdown
+---
+title: "文章标题"
+pubDate: 2024-01-15
+description: "文章简介"
+tags: ["标签1", "标签2"]
+categories: ["分类"]
+author: "作者名"
+readingTime: 5
+coverImage: "/images/cover.jpg"
+draft: false
+---
 
-建议格式：使用三列表格（命令 | 说明 | 示例）
+## 正文开始
+
+正文内容...
+```
 
 ## 样式系统
 
@@ -185,6 +216,13 @@ import { getPosts } from "@lib/post";
   /* 文章阅读变量 */
   --article-font-size: 1.05rem;
   --article-line-height: 1.9;
+  
+  /* 字体变量 */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-code: "SF Mono", Menlo, Monaco, Consolas, monospace;
+  
+  /* 专业文档风格颜色变量 */
   --prose-text: #1f2937;
   --prose-heading: #1e40af;
   --prose-link: #2563eb;
@@ -201,7 +239,7 @@ import { getPosts } from "@lib/post";
 
 | 类名 | 用途 |
 |------|------|
-| `.prose-custom` | 文章正文样式（使用 CSS 变量） |
+| `.prose-custom` | 文章正文样式（使用 CSS 变量）|
 | `.container-narrow` | 窄版容器 (max-width: 48rem) |
 | `.container-medium` | 中等容器 (max-width: 64rem) |
 | `.container-wide` | 宽版容器 (max-width: 80rem) |
@@ -225,7 +263,7 @@ import { getPosts } from "@lib/post";
 | `.article-title-link` | 文章标题悬停 |
 | `.pagination-btn` | 分页按钮 |
 | `.link-hover-center` | 链接下划线从中心展开 |
-| `.magnetic-btn` | 磁性按钮效果（鼠标靠近吸引） |
+| `.magnetic-btn` | 磁性按钮效果（鼠标靠近吸引）|
 | `.card-3d` | 3D 卡片倾斜效果 |
 | `.gradient-text-animated` | 文字渐变流光动画 |
 | `.btn-ripple` | 按钮点击波纹效果 |
@@ -246,31 +284,193 @@ import { getPosts } from "@lib/post";
 - 主题: fade (100ms 淡入淡出)
 - 全局实例启用 (支持 Scroll Plugin)
 - 选择器: `a[href]:not([data-no-swup]):not([href^="#"])`
+- **可访问性**: 内置 ARIA live 区域，支持屏幕阅读器通知
+- **动画偏好**: 自动检测 `prefers-reduced-motion`，尊重用户偏好
+
+#### 配置说明
+
+Swup 配置在 `astro.config.mjs` 中：
+
+```javascript
+swup({
+    theme: [Theme.fade, {
+        duration: 100,      // 必须与 CSS 动画时长一致
+        delay: 0,
+        easing: 'ease-in-out',
+    }],
+    globalInstance: true,   // 启用全局实例以支持插件配置
+    // 其他选项由 @swup/astro 自动处理
+}),
+```
+
+**重要**: CSS 动画时长（`global.css` 中的 `.transition-fade`）必须与 JS 配置的 `duration` 保持一致（100ms），否则会导致动画不同步。
 
 ### SwupCompat 组件
 
-统一的生命周期管理工具，提供以下 API：
+统一的生命周期管理工具，位于 `src/components/common/SwupCompat.astro`，遵循 Swup 官方最佳实践，提供以下功能：
+
+#### API 参考
 
 ```typescript
 // 页面切换完成后执行（最常用）
-window.SwupCompat.onPageView(callback, { immediate: true })
+window.SwupCompat.onPageView(callback, { 
+  immediate: true,              // 是否立即执行一次
+  respectMotionPreference: true // 是否尊重用户的减少动画偏好
+})
 
 // 内容替换前执行（用于清理）
 window.SwupCompat.beforeContentReplace(callback)
 
 // 移除回调
 window.SwupCompat.off(event, callback)
+
+// 触发回调
+window.SwupCompat.emit(event)
+
+// 初始化代码组（rehype-code-group）
+window.SwupCompat.initCodeGroups()
+
+// 运行脚本插件
+window.SwupCompat.runScripts()
+
+// 配置 Scroll Plugin（官方推荐方式）
+window.SwupCompat.configureScrollPlugin({
+  offset: 96,                   // 滚动偏移量（像素）
+  animateScroll: true,          // 是否启用平滑滚动
+  doScrollingRightAway: false   // 是否在内容替换前就开始滚动
+})
+
+// 清理动态内容（在页面切换前自动调用）
+window.SwupCompat.cleanup()
+
+// 更新 ARIA 通知（屏幕阅读器支持）
+window.SwupCompat.updateA11yNotification('页面已加载')
+
+// 动画偏好检测
+window.SwupCompat.prefersReducedMotion  // boolean
+
+// 内部状态（只读）
+window.SwupCompat.__isReady__  // boolean - 是否已完成初始化
 ```
+
+#### 特性
+
+- **动画偏好支持**: 自动检测 `prefers-reduced-motion` 媒体查询，尊重用户减少动画的偏好
+- **ARIA 可访问性**: 内置 ARIA live 区域，页面切换时向屏幕阅读器发送通知
+- **Scroll Plugin 配置**: 通过 Swup hooks 在初始化时配置，而非轮询修改（遵循官方最佳实践）
+- **向后兼容**: 同时支持 Swup 4.x 新版 hooks (`swup.hooks.on`) 和旧版事件 (`swup:contentReplaced`)
+- **动态偏好监听**: 自动监听系统动画偏好变化，实时调整 Scroll Plugin 配置
+
+#### 使用最佳实践
+
+**1. 基本用法 - 页面切换后初始化**
+```javascript
+<script is:inline data-swup-ignore-script>
+  (function() {
+    function init() {
+      // 组件初始化逻辑
+      console.log('组件已初始化');
+    }
+    
+    if (window.SwupCompat) {
+      window.SwupCompat.onPageView(init);
+    } else {
+      // 降级处理
+      document.addEventListener('astro:page-load', init);
+    }
+    
+    // 首次加载执行
+    init();
+  })();
+</script>
+```
+
+**2. 尊重动画偏好**
+```javascript
+<script is:inline data-swup-ignore-script>
+  (function() {
+    function initAnimation() {
+      // 检查动画偏好
+      if (window.SwupCompat?.prefersReducedMotion) {
+        // 用户偏好减少动画，使用简单过渡
+        document.body.classList.add('reduced-motion');
+      } else {
+        // 正常动画
+        document.body.classList.add('full-animation');
+      }
+    }
+    
+    if (window.SwupCompat) {
+      // respectMotionPreference 默认为 true
+      window.SwupCompat.onPageView(initAnimation);
+    }
+    
+    initAnimation();
+  })();
+</script>
+```
+
+**3. 清理逻辑 - 页面切换前执行**
+```javascript
+<script is:inline data-swup-ignore-script>
+  (function() {
+    let eventListeners = [];
+    
+    function init() {
+      // 添加事件监听
+      const handler = () => console.log('事件触发');
+      document.addEventListener('custom-event', handler);
+      eventListeners.push(handler);
+    }
+    
+    function cleanup() {
+      // 清理事件监听
+      eventListeners.forEach(handler => {
+        document.removeEventListener('custom-event', handler);
+      });
+      eventListeners = [];
+    }
+    
+    if (window.SwupCompat) {
+      window.SwupCompat.onPageView(init);
+      window.SwupCompat.beforeContentReplace(cleanup);
+    }
+    
+    init();
+  })();
+</script>
+```
+
+#### 与 SwupScrollConfig 的关系
+
+`SwupScrollConfig.astro` 已弃用，其功能已合并至 `SwupCompat.astro`。滚动配置现在通过 `configureScrollPlugin()` 方法在 Swup hooks 中自动执行：
+
+- **offset**: 96px（导航栏 64px + 间距 32px）
+- **animateScroll**: 根据 `prefers-reduced-motion` 自动设置
+
+如需自定义滚动配置，可直接修改 `SwupCompat.astro` 中的 `configureScrollPlugin` 调用。
 
 **使用示例**:
 ```javascript
-if (window.SwupCompat) {
-  window.SwupCompat.onPageView(init);
-} else {
-  // 降级处理
-  document.addEventListener('swup:contentReplaced', init);
-  document.addEventListener('astro:page-load', init);
-}
+<script is:inline data-swup-ignore-script>
+  (function() {
+    function init() {
+      // 组件初始化逻辑
+    }
+    
+    if (window.SwupCompat) {
+      // 使用 SwupCompat 注册回调
+      window.SwupCompat.onPageView(init);
+    } else {
+      // 降级处理
+      document.addEventListener('swup:contentReplaced', init);
+      document.addEventListener('astro:page-load', init);
+    }
+    
+    // 首次加载执行
+    init();
+  })();
+</script>
 ```
 
 ### Pagefind (搜索)
@@ -289,6 +489,7 @@ if (window.SwupCompat) {
 - `↑/↓` - 导航选择
 - `Enter` - 执行选中项
 - `ESC` - 关闭面板
+- `G + [字母]` - 快捷导航（如 G+H 到首页，G+B 到文章）
 
 **功能分类:**
 - **快速导航**: 首页(G+H)、文章(G+B)、关于(G+A)、标签(G+T)等
@@ -296,7 +497,7 @@ if (window.SwupCompat) {
 - **文章搜索**: 集成 Pagefind，实时搜索文章内容
 
 **使用方式:**
-```typescript
+```astro
 // 组件已在 Navigation.astro 中集成
 import CommandPalette from "@components/ui/CommandPalette.astro";
 
@@ -311,6 +512,23 @@ import CommandPalette from "@components/ui/CommandPalette.astro";
 - `remark-callouts` - Callout 提示框
 - `remark-math` + `rehype-katex` - 数学公式
 - `rehype-code-group` - 代码分组
+- `remark-img-bed` (自定义) - 图床图片路径转换
+
+### 图床配置
+
+自定义 remark 插件 `src/plugins/remark-img-bed.mjs` 处理图片路径：
+
+- **开发模式**: 图片路径转为 `/local-images/xxx.jpg`
+- **生产模式**: 图片路径转为 `https://cdn.image.moonpeak.cn/xxx.jpg`
+
+环境变量配置：
+```bash
+# .env (开发)
+PUBLIC_IMG_BASE_URL=/local-images/
+
+# .env.production
+PUBLIC_IMG_BASE_URL=https://cdn.image.moonpeak.cn/
+```
 
 ## 开发规范
 
@@ -323,6 +541,7 @@ import CommandPalette from "@components/ui/CommandPalette.astro";
  * @description 组件功能描述
  * @features 主要特性列表
  * @props propName - 属性说明
+ * @usage 使用示例
  */
 ---
 ```
@@ -336,6 +555,7 @@ import CommandPalette from "@components/ui/CommandPalette.astro";
  * @description 布局功能描述
  * @features 主要特性列表
  * @props propName - 属性说明
+ * @usage 使用示例
  */
 ---
 ```
@@ -353,11 +573,13 @@ import CommandPalette from "@components/ui/CommandPalette.astro";
 
 ### 命名规范
 
-- **组件**: PascalCase (e.g., `ArticleNavigation.astro`)
-- **工具函数**: camelCase (e.g., `getAdjacentPosts`)
-- **常量**: UPPER_SNAKE_CASE
-- **CSS 类**: kebab-case (e.g., `article-layout`)
-- **文件**: kebab-case
+| 类型 | 规范 | 示例 |
+|------|------|------|
+| 组件 | PascalCase | `ArticleNavigation.astro` |
+| 工具函数 | camelCase | `getAdjacentPosts` |
+| 常量 | UPPER_SNAKE_CASE | `SITE_BIRTH` |
+| CSS 类 | kebab-case | `article-layout` |
+| 文件 | kebab-case | `content.config.ts` |
 
 ### 客户端脚本规范
 
@@ -369,6 +591,108 @@ import CommandPalette from "@components/ui/CommandPalette.astro";
   (function() {
     // 脚本逻辑
   })();
+</script>
+```
+
+### SolidJS 组件规范
+
+#### 1. 列表渲染必须添加 key 属性
+
+为 `For` 组件添加 `key` 属性以优化渲染性能：
+
+```tsx
+// ✅ 推荐：使用字符串指定对象属性名
+<For each={items} key="id">
+  {(item) => <ItemComponent {...item} />}
+</For>
+
+// ✅ 推荐：使用函数自定义 key（接收列表项作为参数）
+<For each={connections} key={item => `${item.from}-${item.to}`}>
+  {(conn) => <ConnectionLine {...conn} />}
+</For>
+
+// ✅ 推荐：字符串数组使用值本身作为 key
+<For each={categories} key={cat => cat}>
+  {(category) => <CategoryButton name={category} />}
+</For>
+
+// ✅ 推荐：Object.entries 使用解构获取 key
+<For each={Object.entries(groupedItems)} key={([name]) => name}>
+  {([name, items]) => <Group name={name} items={items} />}
+</For>
+
+// ❌ 避免：不添加 key 属性
+<For each={items}>
+  {(item) => <ItemComponent {...item} />}
+</For>
+
+// ❌ 错误：key 中使用回调参数（此时还未定义）
+<For each={categories} key={category}>  {/* category 未定义！ */}
+  {(category) => <span>{category}</span>}
+</For>
+```
+
+**已添加 key 属性的组件**：
+- `VisualizerClient.tsx` - categories、demos
+- `VisualCanvas.tsx` - elements、connections、highlights  
+- `PanZoomCanvas.tsx` - elements、connections、highlights
+- `PlayerControls.tsx` - steps、speeds
+- `CodePanel.tsx` - codeLines
+
+#### 2. Store 使用最佳实践
+
+```tsx
+// ✅ 使用 produce 进行批量更新
+import { produce } from 'solid-js/store';
+
+setState(produce(s => {
+  s.player.currentStep = stepIndex;
+  s.player.progress = progress;
+}));
+
+// ✅ 分离状态和管理逻辑
+export function createVisualizerStore(config: Config) {
+  const [state, setState] = createStore({...});
+  const controls = { play, pause, stop };
+  return { state, controls };
+}
+```
+
+#### 3. 生命周期管理
+
+```tsx
+// ✅ 正确清理副作用
+onCleanup(() => {
+  if (playTimer) {
+    clearTimeout(playTimer);
+    playTimer = null;
+  }
+});
+
+// ✅ 组件卸载时停止操作
+onCleanup(() => {
+  store.controls.stop();
+});
+```
+
+### Swup 脚本标记
+
+对于需要在页面过渡后重新执行的脚本：
+
+```astro
+<!-- 普通脚本 - 不会被 Swup 重新执行 -->
+<script is:inline>
+  // 初始化逻辑
+</script>
+
+<!-- 需要 Swup 重新加载的脚本 -->
+<script data-swup-reload-script>
+  // 页面切换后重新执行
+</script>
+
+<!-- 忽略脚本（Swup Scripts Plugin 不执行） -->
+<script is:inline data-swup-ignore-script>
+  // 全局一次性脚本
 </script>
 ```
 
@@ -395,7 +719,7 @@ import CommandPalette from "@components/ui/CommandPalette.astro";
 
 - 三栏布局：左侧相关文章、中间正文、右侧目录
 - 支持侧边栏收起/展开（状态持久化到 localStorage）
-- 图片灯箱功能（点击放大）
+- 图片灯箱功能（点击放大、滚轮缩放、拖拽移动）
 - 阅读进度条
 
 ### ThemeIcon (主题切换)
@@ -417,14 +741,22 @@ import CommandPalette from "@components/ui/CommandPalette.astro";
 - 可配置建站日期（修改 `SITE_BIRTH` 常量）
 - ICP 备案信息展示
 
+## 环境变量
+
+| 变量名 | 环境 | 说明 |
+|--------|------|------|
+| `PUBLIC_IMG_BASE_URL` | 开发 | `/local-images/` |
+| `PUBLIC_IMG_BASE_URL` | 生产 | `https://cdn.image.moonpeak.cn/` |
+
 ## 性能优化
 
-1. **图片**: 使用 Sharp 进行优化
+1. **图片**: 使用 Sharp 进行优化，图床 CDN 加速
 2. **字体**: 系统字体优先，避免外部 CDN
 3. **JS**: 零 JS 默认，交互按需加载 (SolidJS 组件)
 4. **CSS**: Tailwind 4.x 按需生成，CSS 变量系统减少重复
 5. **搜索**: Pagefind 静态索引，无服务端依赖
 6. **Swup**: 页面过渡减少整页刷新
+7. **懒加载**: 图片使用 `loading="lazy"`
 
 ## 部署
 
@@ -434,8 +766,18 @@ import CommandPalette from "@components/ui/CommandPalette.astro";
 - Netlify
 - GitHub Pages
 - Cloudflare Pages
+- Docker (nginx)
 
 构建输出目录: `dist/`
+
+### Docker 部署示例
+
+```dockerfile
+FROM nginx:alpine
+COPY dist/ /usr/share/nginx/html/
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+```
 
 ## 注意事项
 
@@ -444,6 +786,109 @@ import CommandPalette from "@components/ui/CommandPalette.astro";
 3. **KaTeX 样式**: 数学公式需要 `/katex.min.css` 在 `BaseLayout` 中加载
 4. **Content Collections**: 修改 `content.config.ts` 后需重启开发服务器
 5. **搜索功能**: 仅在构建后可用，开发模式显示提示信息
+6. **图片路径**: 开发/生产环境使用不同的图床基础 URL
+
+### Swup 最佳实践
+
+1. **动画时长一致性**: CSS 中的 `.transition-fade` 动画时长（100ms）必须与 `astro.config.mjs` 中的 `duration` 配置保持一致
+2. **脚本标记**: 
+   - 一次性全局脚本使用 `data-swup-ignore-script`
+   - 需要每次页面切换后重新执行的脚本使用 `data-swup-reload-script`
+   - 使用 `SwupCompat.onPageView()` 注册回调替代直接监听事件
+3. **动画偏好**: 始终尊重用户的 `prefers-reduced-motion` 设置，可通过 `SwupCompat.prefersReducedMotion` 检测
+4. **Scroll Plugin**: 不要直接修改 `scrollPlugin.options`，使用 `SwupCompat.configureScrollPlugin()` 或等待 Swup hooks
+
+## 优化功能参考
+
+### OptimizedImage 组件
+
+使用 Astro 原生 Image API 自动优化图片：
+
+```astro
+---
+import OptimizedImage from '@components/ui/OptimizedImage.astro';
+import coverImage from '../assets/cover.jpg';
+---
+
+<!-- 本地导入图片 - 自动格式转换、尺寸优化 -->
+<OptimizedImage 
+  src={coverImage} 
+  alt="封面图" 
+  width={800} 
+  height={400}
+  quality={85}
+  format="webp"
+/>
+
+<!-- 远程图片 -->
+<OptimizedImage 
+  src="https://cdn.example.com/image.jpg" 
+  alt="远程图片" 
+  width={800} 
+  height={400}
+/>
+```
+
+**特性**：
+- 自动格式转换（WebP/AVIF）
+- 响应式尺寸
+- 懒加载
+- Retina 屏幕支持
+
+### 容器查询（Container Queries）
+
+基于容器宽度的响应式设计，而非视口：
+
+```astro
+<!-- 标记容器 -->
+<div class="cq-container">
+  <!-- 基于容器宽度的响应式 -->
+  <div class="@lg:text-lg @lg:grid-cols-2">
+    内容
+  </div>
+</div>
+```
+
+**预定义类**：
+| 类名 | 说明 |
+|------|------|
+| `.cq-container` | 标记为容器查询容器 |
+| `.cq-text-lg` | 容器 >= 32rem 时文字变大 |
+| `.cq-grid-2` | 容器 >= 28rem 时2列网格 |
+
+### 预取（Prefetch）
+
+自动预取视口内的链接，加速页面切换：
+
+```astro
+<!-- 自动预取 -->
+<a href="/blog/post/">文章</a>
+
+<!-- 禁用预取 -->
+<a href="/external/" data-astro-prefetch="false">外部链接</a>
+```
+
+### Content Schema 增强
+
+支持更多 Frontmatter 字段：
+
+```md
+---
+title: "文章标题"
+featured: true              # 置顶
+updatedDate: 2024-03-21     # 更新日期
+seo:
+  title: "自定义 SEO 标题"
+  description: "自定义描述"
+series:
+  name: "系列名称"
+  order: 1
+relatedPosts:
+  - post-1
+  - post-2
+license: "CC-BY-4.0"
+---
+```
 
 ## 扩展建议
 
@@ -458,7 +903,82 @@ import CommandPalette from "@components/ui/CommandPalette.astro";
 1. **XSS 防护**: Astro 默认对输出进行转义
 2. **外部链接**: 使用 `rel="noopener"` 防止标签页钓鱼
 3. **依赖更新**: 定期运行 `npm audit` 检查漏洞
+4. **输入验证**: 内容集合使用 Zod Schema 验证
+
+## 故障排除
+
+### 搜索不工作
+- 确保已运行 `npm run build` 生成 Pagefind 索引
+- 开发模式下搜索功能不可用
+
+### 样式不生效
+- 检查是否正确导入 `global.css`
+- Tailwind 4.x 使用 `@import` 而非 `@tailwind` 指令
+
+### Swup 过渡异常
+- 确保 `SwupCompat` 组件已加载
+- 检查脚本是否有 `data-swup-ignore-script` 标记
+
+### 图片不显示
+- 开发环境检查 `PUBLIC_IMG_BASE_URL` 配置
+- 确保图片路径正确（相对路径会被转换）
+
+### Swup 页面初始化问题
+
+**如果创建需要客户端数据加载的页面，可以使用 `SwupCompat`：**
+
+1. 使用 `<script is:inline data-swup-ignore-script>` 标记脚本
+2. 使用 `window.SwupCompat.onPageView(callback)` 注册页面切换回调
+3. 在回调函数中执行数据加载逻辑
+
+**示例：**
+```javascript
+<script is:inline data-swup-ignore-script>
+  (function() {
+    function loadData() {
+      // 加载数据逻辑
+    }
+    
+    if (window.SwupCompat) {
+      window.SwupCompat.onPageView(loadData);
+    }
+    
+    // 首次加载执行
+    loadData();
+  })();
+</script>
+```
+
+### Swup 动画不同步
+
+**症状**: 页面过渡时动画闪烁或时长不一致
+
+**解决方案**:
+1. 检查 `astro.config.mjs` 中的 `duration` 是否与 `global.css` 中的 `.transition-fade` 动画时长一致（都应为 100ms）
+2. 确保 CSS 选择器正确：
+   ```css
+   html.is-changing .transition-fade { /* 动画开始状态 */ }
+   html.is-animating .transition-fade { /* 动画执行状态 */ }
+   ```
+
+### Swup Scroll Plugin 不生效
+
+**症状**: 锚点跳转时被导航栏遮挡
+
+**解决方案**:
+1. 确保 `SwupCompat` 组件已正确加载
+2. 检查控制台是否有 `[SwupCompat] Binding to swup hooks` 日志
+3. 确认 `configureScrollPlugin({ offset: 96 })` 中的 offset 值是否正确
+
+### 减少动画偏好被忽略
+
+**症状**: 用户设置了减少动画但页面仍有动画效果
+
+**解决方案**:
+1. 使用 `window.SwupCompat.prefersReducedMotion` 检测用户偏好
+2. 确保 `onPageView` 的 `respectMotionPreference` 选项为 `true`（默认值）
+3. CSS 动画也应添加 `@media (prefers-reduced-motion: reduce)` 媒体查询
 
 ---
 
-*最后更新: 2026-03-13* - 新增 Command Palette 功能
+*最后更新: 2026-03-23* - 优化 Swup 组件；添加 OptimizedImage 组件、容器查询、Prefetch 配置；完善 Content Schema
