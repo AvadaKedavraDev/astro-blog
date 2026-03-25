@@ -2,7 +2,7 @@
 /**
  * @component AnimatedBackground
  * @description 首页动态背景组件，提供微妙的渐变网格动画
- * @features 渐变网格、鼠标视差效果、滚动淡出、性能优化（GPU加速）
+ * @features 渐变网格、鼠标视差效果、IntersectionObserver 淡出、性能优化（GPU加速）、Scroll Snap 适配
  * @usage 在首页 Hero Section 使用
  */
 ---
@@ -226,7 +226,7 @@
   }
 </style>
 
-<script is:inline>
+<script is:inline data-swup-ignore-script>
   // @ts-nocheck
   (function() {
     const bg = document.getElementById('hero-bg');
@@ -237,6 +237,7 @@
     let rafId = null;
     let mouseX = 0, mouseY = 0;
     let currentX = 0, currentY = 0;
+    let isVisible = true;
     
     // 仅在非移动设备启用
     if (!window.matchMedia('(pointer: coarse)').matches) {
@@ -251,42 +252,50 @@
       }, { passive: true });
     }
     
-    // ========== 滚动淡出效果 ==========
-    let scrollProgress = 0;
+    // ========== IntersectionObserver 控制可见性和淡出 ==========
+    // 使用多阈值检测，实现平滑的淡入淡出效果
+    const visibilityObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const ratio = entry.intersectionRatio;
+        
+        // 根据可见比例调整透明度和动画
+        if (ratio > 0) {
+          isVisible = true;
+          // 可见度越高，opacity 越高
+          // ratio 从 0 到 1，opacity 从 0.2 到 1
+          const opacity = 0.2 + ratio * 0.8;
+          bg.style.opacity = opacity;
+          
+          // 可见度影响动画速度
+          const duration = 90 - ratio * 30; // 60s to 90s
+          mesh.style.animationDuration = duration + 's';
+          
+          if (!rafId) animate();
+        } else {
+          isVisible = false;
+          bg.style.opacity = '0';
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+          }
+        }
+      });
+    }, { 
+      threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+      rootMargin: '-10% 0px -10% 0px'
+    });
     
-    function handleScroll() {
-      const scrollY = window.scrollY;
-      const heroHeight = bg.parentElement?.offsetHeight || window.innerHeight;
-      // 在前 60% 的 hero 区域逐渐淡出
-      scrollProgress = Math.min(scrollY / (heroHeight * 0.6), 1);
-      
-      // 应用淡出效果
-      bg.style.opacity = 1 - scrollProgress * 0.8;
-      
-      // 同时降低动画强度
-      mesh.style.animationDuration = (60 + scrollProgress * 60) + 's';
-    }
-    
-    // 节流滚动事件
-    let ticking = false;
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }, { passive: true });
+    visibilityObserver.observe(bg);
     
     // ========== 动画循环 ==========
     function animate() {
+      if (!isVisible) return;
+      
       // 缓动效果
       currentX += (mouseX - currentX) * 0.05;
       currentY += (mouseY - currentY) * 0.05;
       
-      // 应用变换（视差 + 基础旋转）
-      const baseTransform = mesh.style.transform || '';
+      // 应用视差变换
       const parallaxX = currentX * -20;
       const parallaxY = currentY * -20;
       mesh.style.setProperty('--parallax-x', parallaxX + 'px');
@@ -295,34 +304,30 @@
       rafId = requestAnimationFrame(animate);
     }
     
-    // ========== IntersectionObserver 优化 ==========
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          if (!rafId) animate();
-        } else {
-          if (rafId) {
-            cancelAnimationFrame(rafId);
-            rafId = null;
-          }
-        }
-      });
-    }, { threshold: 0 });
-    
-    observer.observe(bg);
-    
-    // 初始化
-    handleScroll();
+    // 初始化动画
+    animate();
     
     // 页面不可见时暂停
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && rafId) {
         cancelAnimationFrame(rafId);
         rafId = null;
-      } else if (!document.hidden && !rafId) {
-        const rect = bg.getBoundingClientRect();
-        if (rect.bottom > 0) animate();
+      } else if (!document.hidden && !rafId && isVisible) {
+        animate();
       }
     });
+    
+    // Swup 页面切换后重新初始化
+    if (window.SwupCompat) {
+      window.SwupCompat.onPageView(() => {
+        // 重新获取元素（因为 DOM 可能已经更新）
+        const newBg = document.getElementById('hero-bg');
+        const newMesh = document.getElementById('gradient-mesh');
+        if (newBg && newMesh && !rafId) {
+          isVisible = true;
+          animate();
+        }
+      });
+    }
   })();
 </script>

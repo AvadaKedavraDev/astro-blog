@@ -317,23 +317,31 @@ const currentPath = Astro.url.pathname;
       // 首页：根据滚动位置切换背景
       function updateNavBg() {
         const scrollY = window.scrollY || window.pageYOffset;
-        // 滚动超过 50px 后显示背景
-        const threshold = 50;
+        // 滚动超过 80px 后显示完整背景
+        const threshold = 80;
         
         if (scrollY > threshold) {
-          // 显示玻璃态背景
+          // 显示完整玻璃态背景
           navBg.style.opacity = '1';
           applyGlassStyle();
         } else {
-          // 完全透明
-          navBg.style.opacity = '0';
-          clearBackground();
+          // 顶部微弱背景，保证可读性的同时与 Hero 背景融合
+          const progress = scrollY / threshold;
+          const opacity = 0.3 + progress * 0.7; // 0.3 ~ 1
+          navBg.style.opacity = String(opacity);
+          navBg.style.backgroundColor = 'color-mix(in oklch, var(--background) 40%, transparent)';
+          navBg.style.backdropFilter = 'blur(12px)';
+          navBg.style.webkitBackdropFilter = 'blur(12px)';
+          navBg.style.borderBottom = '1px solid color-mix(in oklch, var(--border) 30%, transparent)';
         }
       }
       
-      // 初始状态 - 确保透明
-      navBg.style.opacity = '0';
-      clearBackground();
+      // 首页初始状态 - 微弱背景
+      navBg.style.opacity = '0.3';
+      navBg.style.backgroundColor = 'color-mix(in oklch, var(--background) 40%, transparent)';
+      navBg.style.backdropFilter = 'blur(12px)';
+      navBg.style.webkitBackdropFilter = 'blur(12px)';
+      navBg.style.borderBottom = '1px solid color-mix(in oklch, var(--border) 30%, transparent)';
       
       // 延迟执行一次以确保正确初始化
       setTimeout(updateNavBg, 50);

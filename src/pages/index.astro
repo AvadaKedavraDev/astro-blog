@@ -3,29 +3,51 @@ import BaseLayout from "@layouts/BaseLayout.astro";
 import TypeWriter from "@components/ui/TypeWriter.astro";
 import AnimatedBackground from "@components/ui/AnimatedBackground.astro";
 import { getCollection } from "astro:content";
+import { getAllTags } from "@lib/post";
+import { Icon } from "astro-icon/components";
+
+// 获取所有文章
+const allPosts = await getCollection("blog");
+const postsCount = allPosts.length;
 
 // 获取最新 3 篇文章
-const posts = (await getCollection("blog"))
+const posts = allPosts
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
+
+// 获取所有标签
+const tagCounts = await getAllTags();
+const topTags = Array.from(tagCounts.entries())
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 8);
+
+// 建站时间
+const SITE_BIRTH = "2025-03-31T00:00:00";
+
+// 计算运行天数
+const birth = new Date(SITE_BIRTH);
+const now = new Date();
+const runningDays = Math.floor((now.getTime() - birth.getTime()) / 86400000);
 ---
 
-
 <BaseLayout title="首页">
+  <!-- Scroll Snap Container -->
+  <main class="scroll-snap-container">
   <!-- Hero Section -->
-  <section class="min-h-[90vh] flex flex-col justify-center items-center relative px-6 overflow-hidden">
+  <section class="snap-section min-h-[90vh] flex flex-col justify-center items-center relative px-6 overflow-hidden" data-section="hero">
     <!-- 动态背景 -->
     <AnimatedBackground />
 
     <div class="relative z-10 text-center max-w-3xl mx-auto">
       <!-- 标签 -->
-      <!--<div class="mb-6 animate-fade-in" style="animation-delay: 0.1s">-->
-      <!--  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">-->
-      <!--    欢迎来到我的博客-->
-      <!--  </span>-->
-      <!--</div>-->
+      <div class="mb-6 animate-fade-in" style="animation-delay: 0.1s">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-muted/80 text-muted-foreground border border-border/50">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          已运行 {runningDays} 天 · 共 {postsCount} 篇文章
+        </span>
+      </div>
 
-      <!-- 主标题 - 调整字体大小 -->
+      <!-- 主标题 -->
       <h1 class="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight mb-6 animate-fade-in-up" style="animation-delay: 0.2s">
         <span class="gradient-text">
           <TypeWriter text="思考、记录、分享" speed={150} delay={300} />
@@ -39,53 +61,91 @@ const posts = (await getCollection("blog"))
 
       <!-- CTA 按钮 -->
       <div class="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in" style="animation-delay: 1s">
-        <a href="/blog" class="btn px-8 py-3 text-base rounded-full">
+        <a href="/blog" class="btn px-8 py-3 text-base rounded-full hover:scale-105 transition-transform">
+          <Icon name="lucide:book-open" class="w-4 h-4 mr-2" />
           浏览文章
         </a>
-        <a href="/about" class="btn-ghost px-8 py-3 text-base rounded-full">
+        <a href="/about" class="btn-ghost px-8 py-3 text-base rounded-full hover:bg-muted transition-colors">
+          <Icon name="lucide:user" class="w-4 h-4 mr-2" />
           了解更多
+        </a>
+      </div>
+
+      <!-- 社交链接 -->
+      <div class="flex justify-center gap-3 mt-10 animate-fade-in" style="animation-delay: 1.2s">
+        <a href="https://github.com/AvadaKedavraDev" target="_blank" rel="noopener" 
+           class="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all hover:scale-110">
+          <Icon name="lucide:github" class="w-5 h-5" />
+        </a>
+        <a href="mailto:moonpeak1999@gmail.com" 
+           class="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all hover:scale-110">
+          <Icon name="lucide:mail" class="w-5 h-5" />
+        </a>
+        <a href="/rss.xml" 
+           class="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all hover:scale-110">
+          <Icon name="lucide:rss" class="w-5 h-5" />
         </a>
       </div>
     </div>
 
-    <!-- 滚动提示 -->
-    <div class="absolute bottom-12 left-1/2 -translate-x-1/2 animate-bounce">
-      <a href="#latest" class="text-muted-foreground hover:text-foreground transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-        </svg>
+    <!-- 滚动指示器 -->
+    <div class="absolute bottom-12 left-1/2 -translate-x-1/2 scroll-indicator">
+      <a href="#latest" class="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group">
+        <span class="text-xs tracking-wider opacity-60 group-hover:opacity-100 transition-opacity">向下滚动</span>
+        <div class="w-6 h-10 rounded-full border-2 border-current flex items-start justify-center p-1.5">
+          <div class="w-1 h-2 bg-current rounded-full scroll-dot"></div>
+        </div>
       </a>
     </div>
   </section>
 
+  <!-- 数据统计栏 -->
+  <section class="py-8 px-6 border-y border-border/40 bg-muted/30" data-section="stats">
+    <div class="container-narrow">
+      <div class="grid grid-cols-3 gap-4 text-center stagger-animate">
+        <div class="stat-item">
+          <div class="text-2xl md:text-3xl font-bold text-foreground">{postsCount}</div>
+          <div class="text-xs md:text-sm text-muted-foreground mt-1">篇文章</div>
+        </div>
+        <div class="stat-item">
+          <div class="text-2xl md:text-3xl font-bold text-foreground">{tagCounts.size}</div>
+          <div class="text-xs md:text-sm text-muted-foreground mt-1">个标签</div>
+        </div>
+        <div class="stat-item">
+          <div class="text-2xl md:text-3xl font-bold text-foreground">{runningDays}</div>
+          <div class="text-xs md:text-sm text-muted-foreground mt-1">天运行</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Latest Posts Section -->
-  <section id="latest" class="py-24 px-6">
+  <section id="latest" class="snap-section py-24 px-6 border-t border-border/40" data-section="articles">
     <div class="container-narrow">
       <!-- Section Header -->
-      <div class="flex items-end justify-between mb-10">
+      <div class="flex items-end justify-between mb-10 stagger-animate">
         <div>
           <h2 class="text-xl md:text-2xl font-semibold tracking-tight mb-1">最新文章</h2>
           <p class="text-sm text-muted-foreground">探索最近的思考与创作</p>
         </div>
-        <a href="/blog" class="hidden sm:flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <a href="/blog" class="hidden sm:flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors group">
           查看全部
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-          </svg>
+          <Icon name="lucide:arrow-right" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </a>
       </div>
 
-      <!-- Posts Grid -->
-      <div class="space-y-6">
+      <!-- Posts List -->
+      <div class="space-y-0 stagger-animate">
         {posts.map((post, index) => (
           <article
-            class="group"
+            class="post-item group"
             style={`animation-delay: ${index * 0.1}s`}
           >
             <a href={`/blog/${post.slug}/`} class="block">
-              <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 py-5 list-item-base">
+              <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 py-6 px-4 -mx-4 rounded-xl transition-all duration-300 hover:bg-muted/50">
                 <!-- Date -->
-                <time class="text-sm text-muted-foreground font-mono shrink-0 w-20">
+                <time class="text-sm text-muted-foreground font-mono shrink-0 w-20 flex items-center gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-500/60 group-hover:bg-indigo-500 transition-colors"></span>
                   {post.data.pubDate.toLocaleDateString('zh-CN', {
                     month: 'short',
                     day: 'numeric'
@@ -94,62 +154,443 @@ const posts = (await getCollection("blog"))
 
                 <!-- Content -->
                 <div class="flex-1 min-w-0">
-                  <h3 class="text-base md:text-lg font-medium text-foreground transition-colors truncate group-hover:opacity-80">
+                  <h3 class="text-base md:text-lg font-medium text-foreground transition-colors truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                     {post.data.title}
                   </h3>
                   {post.data.description && (
-                    <p class="text-sm text-muted-foreground mt-0.5 line-clamp-1">
+                    <p class="text-sm text-muted-foreground mt-1 line-clamp-1 group-hover:text-muted-foreground/80">
                       {post.data.description}
                     </p>
+                  )}
+                  
+                  <!-- Tags -->
+                  {post.data.tags && post.data.tags.length > 0 && (
+                    <div class="flex flex-wrap gap-1.5 mt-2">
+                      {post.data.tags.slice(0, 3).map(tag => (
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-muted group-hover:bg-background border border-border/50 text-muted-foreground transition-colors">
+                          {tag}
+                        </span>
+                      ))}
+                      {post.data.tags.length > 3 && (
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs text-muted-foreground">
+                          +{post.data.tags.length - 3}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
 
                 <!-- Arrow -->
-                <div class="hidden md:block opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
-                  <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                  </svg>
+                <div class="hidden md:flex items-center justify-center w-8 h-8 rounded-full bg-transparent group-hover:bg-indigo-500/10 transition-all">
+                  <Icon name="lucide:arrow-right" class="w-4 h-4 text-muted-foreground group-hover:text-indigo-500 transition-all transform group-hover:translate-x-0.5" />
                 </div>
               </div>
             </a>
+            
+            <!-- Divider (not for last item) -->
+            {index < posts.length - 1 && (
+              <div class="h-px bg-gradient-to-r from-transparent via-border to-transparent mx-4"></div>
+            )}
           </article>
         ))}
       </div>
 
       <!-- Mobile View All -->
-      <div class="mt-8 sm:hidden">
-        <a href="/blog" class="btn-ghost w-full justify-center">
+      <div class="mt-8 sm:hidden stagger-animate">
+        <a href="/blog" class="btn-ghost w-full justify-center rounded-full">
           查看全部文章
+          <Icon name="lucide:arrow-right" class="w-4 h-4 ml-1" />
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tags Cloud Section -->
+  <section id="tags" class="snap-section py-20 px-6 border-t border-border/40 bg-gradient-to-b from-muted/20 to-transparent" data-section="tags">
+    <div class="container-narrow">
+    <div class="container-narrow">
+      <div class="text-center mb-10 stagger-animate">
+        <h2 class="text-xl md:text-2xl font-semibold tracking-tight mb-2">标签云</h2>
+        <p class="text-sm text-muted-foreground">按主题探索文章</p>
+      </div>
+      
+      <div class="flex flex-wrap justify-center gap-3 stagger-animate">
+        {topTags.map(([tag, count], index) => (
+          <a
+            href={`/tags/${tag}`}
+            class="tag-cloud-item group"
+            style={`animation-delay: ${index * 0.05}s`}
+          >
+            <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-card border border-border hover:border-indigo-300 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all duration-300 hover:scale-105 hover:shadow-sm">
+              <span class="text-sm font-medium text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{tag}</span>
+              <span class="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">{count}</span>
+            </span>
+          </a>
+        ))}
+      </div>
+      
+      <div class="text-center mt-8 stagger-animate">
+        <a href="/tags" class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors group">
+          查看全部标签
+          <Icon name="lucide:arrow-right" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </a>
       </div>
     </div>
   </section>
 
   <!-- Newsletter / Contact Section -->
-  <section class="py-20 px-6 border-t border-border">
-    <div class="container-narrow text-center">
-      <h2 class="text-xl md:text-2xl font-semibold tracking-tight mb-3">
-        保持联系
-      </h2>
-      <p class="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-        如果你对我的文章感兴趣，或者想交流技术话题，欢迎通过以下方式联系我。
-      </p>
-      <div class="flex justify-center gap-3">
-        <a href="mailto:moonpeak1999@gmail.com" class="btn rounded-full text-sm px-6 py-2.5">
-          发送邮件
-        </a>
-        <a href="https://github.com/AvadaKedavraDev" target="_blank" rel="noopener" class="btn-ghost rounded-full text-sm px-6 py-2.5">
-          GitHub
-        </a>
+  <section id="contact" class="snap-section py-20 px-6 border-t border-border/40" data-section="contact">
+    <div class="container-narrow text-center stagger-animate">
+      <div class="max-w-md mx-auto">
+        <div class="w-12 h-12 rounded-full bg-indigo-100/80 dark:bg-indigo-900/20 flex items-center justify-center mx-auto mb-4 border border-indigo-200/50 dark:border-indigo-800/30">
+          <Icon name="lucide:mail" class="w-6 h-6 text-indigo-600 dark:text-indigo-300" />
+        </div>
+        <h2 class="text-xl md:text-2xl font-semibold tracking-tight mb-3">
+          保持联系
+        </h2>
+        <p class="text-sm text-muted-foreground mb-6">
+          如果你对我的文章感兴趣，或者想交流技术话题，欢迎通过以下方式联系我。
+        </p>
+        <div class="flex justify-center gap-3">
+          <a href="mailto:moonpeak1999@gmail.com" class="btn rounded-full text-sm px-6 py-2.5 hover:scale-105 transition-transform">
+            <Icon name="lucide:send" class="w-4 h-4 mr-1.5" />
+            发送邮件
+          </a>
+          <a href="https://github.com/AvadaKedavraDev" target="_blank" rel="noopener" class="btn-ghost rounded-full text-sm px-6 py-2.5 hover:bg-muted transition-colors">
+            <Icon name="lucide:github" class="w-4 h-4 mr-1.5" />
+            GitHub
+          </a>
+        </div>
       </div>
     </div>
   </section>
-</BaseLayout>
 
-<style>
-  /* 初始隐藏动画元素 */
-  .animate-fade-in,
-  .animate-fade-in-up {
-    opacity: 0;
-  }
-</style>
+  <!-- Section Navigation Dots -->
+  <nav class="section-nav" aria-label="页面区块导航">
+    <button class="nav-dot active" data-target="hero" aria-label="首页" title="首页"></button>
+    <button class="nav-dot" data-target="stats" aria-label="统计" title="统计"></button>
+    <button class="nav-dot" data-target="articles" aria-label="最新文章" title="最新文章"></button>
+    <button class="nav-dot" data-target="tags" aria-label="标签云" title="标签云"></button>
+    <button class="nav-dot" data-target="contact" aria-label="联系" title="联系"></button>
+  </nav>
+  </main>
+
+  <style>
+    /* Scroll Snap 容器 */
+    .scroll-snap-container {
+      scroll-snap-type: y proximity;
+      scroll-behavior: smooth;
+    }
+
+    /* 滚动吸附区块 */
+    .snap-section {
+      scroll-snap-align: start;
+    }
+
+    /* Hero 区块占满视口 */
+    .snap-section[data-section="hero"] {
+      min-height: calc(100vh - 64px);
+    }
+
+    /* 区块导航点 */
+    .section-nav {
+      position: fixed;
+      right: 1.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .nav-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .nav-dot:hover {
+      background: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
+      transform: scale(1.2);
+    }
+
+    .nav-dot.active {
+      background: var(--foreground);
+      transform: scale(1.3);
+    }
+
+    .nav-dot::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      transition: border-color 0.3s ease;
+    }
+
+    .nav-dot.active::before {
+      border-color: color-mix(in oklch, var(--foreground) 30%, transparent);
+    }
+
+    /* 移动端隐藏导航点 */
+    @media (max-width: 768px) {
+      .section-nav {
+        display: none;
+      }
+    }
+
+    /* 初始隐藏动画元素 */
+    .animate-fade-in,
+    .animate-fade-in-up {
+      opacity: 0;
+    }
+
+    /* 滚动指示器动画 */
+    .scroll-indicator {
+      animation: fade-in-up 0.8s ease 1.4s forwards;
+      opacity: 0;
+    }
+
+    .scroll-dot {
+      animation: scroll-bounce 2s infinite;
+    }
+
+    @keyframes scroll-bounce {
+      0%, 100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      50% {
+        transform: translateY(12px);
+        opacity: 0.3;
+      }
+    }
+
+    /* Stagger 动画基础 */
+    .stagger-animate > * {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: stagger-fade-in-up 0.6s ease forwards;
+    }
+
+    @keyframes stagger-fade-in-up {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 标签云动画 */
+    .tag-cloud-item {
+      opacity: 0;
+      transform: scale(0.9);
+      animation: tag-pop-in 0.4s ease forwards;
+    }
+
+    @keyframes tag-pop-in {
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* 文章项悬停效果增强 */
+    .post-item {
+      transition: transform 0.3s ease;
+    }
+
+    .post-item:hover {
+      transform: translateX(4px);
+    }
+
+    /* 统计项动画 */
+    .stat-item {
+      opacity: 0;
+      transform: translateY(10px);
+      animation: stat-fade-in 0.5s ease forwards;
+    }
+
+    .stat-item:nth-child(1) { animation-delay: 0s; }
+    .stat-item:nth-child(2) { animation-delay: 0.1s; }
+    .stat-item:nth-child(3) { animation-delay: 0.2s; }
+
+    @keyframes stat-fade-in {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 渐变文字 */
+    .gradient-text {
+      background: linear-gradient(to right, #171717, #525252);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    :global(.dark) .gradient-text {
+      background: linear-gradient(to right, #cae4fe, #9ed9d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  </style>
+
+  <!-- Scroll Snap 控制脚本 -->
+  <script is:inline data-swup-ignore-script>
+    (function() {
+      const container = document.querySelector('.scroll-snap-container');
+      // 获取所有带 data-section 的区块（包括带和不带 snap-section 的）
+      const allSections = document.querySelectorAll('[data-section]');
+      // 获取仅带 snap-section 的区块（用于键盘导航和滚轮滚动）
+      const snapSections = document.querySelectorAll('.snap-section');
+      const dots = document.querySelectorAll('.nav-dot');
+      
+      if (!container || allSections.length === 0) return;
+
+      // 导航点点击事件
+      dots.forEach(dot => {
+        dot.addEventListener('click', () => {
+          const target = dot.dataset.target;
+          const targetSection = document.querySelector(`[data-section="${target}"]`);
+          if (targetSection) {
+            targetSection.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      });
+
+      // Intersection Observer 监听当前可见区块（用于更新导航点状态）
+      // 主要区块的观察器（用于大部分区块）
+      const mainObserverOptions = {
+        root: null,
+        rootMargin: '-40% 0px -40% 0px',
+        threshold: 0
+      };
+
+      // 薄条带区块（统计栏）的观察器（更宽松的检测区域）
+      const thinObserverOptions = {
+        root: null,
+        rootMargin: '-20% 0px -20% 0px',
+        threshold: 0.5
+      };
+
+      let activeSection = 'hero';
+
+      const observerCallback = (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            activeSection = entry.target.dataset.section;
+            dots.forEach(dot => {
+              dot.classList.toggle('active', dot.dataset.target === activeSection);
+            });
+          }
+        });
+      };
+
+      const mainObserver = new IntersectionObserver(observerCallback, mainObserverOptions);
+      const thinObserver = new IntersectionObserver(observerCallback, thinObserverOptions);
+
+      // 分别观察不同类型的区块
+      allSections.forEach(section => {
+        // 统计栏是薄条带，使用更宽松的观察器
+        if (section.dataset.section === 'stats') {
+          thinObserver.observe(section);
+        } else {
+          mainObserver.observe(section);
+        }
+      });
+
+      // 键盘导航支持（仅针对带 snap-section 的区块）
+      let currentSectionIndex = 0;
+      
+      function scrollToSection(index) {
+        if (index >= 0 && index < snapSections.length) {
+          snapSections[index].scrollIntoView({ behavior: 'smooth' });
+          currentSectionIndex = index;
+        }
+      }
+
+      document.addEventListener('keydown', (e) => {
+        // 忽略输入框中的键盘事件
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
+        switch(e.key) {
+          case 'ArrowDown':
+          case 'PageDown':
+            e.preventDefault();
+            scrollToSection(currentSectionIndex + 1);
+            break;
+          case 'ArrowUp':
+          case 'PageUp':
+            e.preventDefault();
+            scrollToSection(currentSectionIndex - 1);
+            break;
+          case 'Home':
+            e.preventDefault();
+            scrollToSection(0);
+            break;
+          case 'End':
+            e.preventDefault();
+            scrollToSection(snapSections.length - 1);
+            break;
+        }
+      });
+
+      // 鼠标滚轮平滑滚动（仅针对带 snap-section 的区块）
+      let isScrolling = false;
+      let scrollTimeout;
+
+      container.addEventListener('wheel', (e) => {
+        // 清除之前的定时器
+        clearTimeout(scrollTimeout);
+        
+        scrollTimeout = setTimeout(() => {
+          isScrolling = false;
+        }, 150);
+
+        // 如果正在滚动，不处理
+        if (isScrolling) return;
+
+        // 检测滚动方向并切换到相邻区块
+        const delta = e.deltaY;
+        const threshold = 50;
+
+        if (Math.abs(delta) > threshold) {
+          isScrolling = true;
+          
+          // 找到当前可见的 snap 区块
+          const visibleSection = Array.from(snapSections).find(section => {
+            const rect = section.getBoundingClientRect();
+            return rect.top >= -100 && rect.top <= 100;
+          });
+
+          if (visibleSection) {
+            const currentIndex = Array.from(snapSections).indexOf(visibleSection);
+            
+            if (delta > 0 && currentIndex < snapSections.length - 1) {
+              e.preventDefault();
+              scrollToSection(currentIndex + 1);
+            } else if (delta < 0 && currentIndex > 0) {
+              e.preventDefault();
+              scrollToSection(currentIndex - 1);
+            }
+          }
+        }
+      }, { passive: false });
+
+      // 清理函数
+      return () => {
+        mainObserver.disconnect();
+        thinObserver.disconnect();
+        clearTimeout(scrollTimeout);
+      };
+    })();
+  </script>
+</BaseLayout>

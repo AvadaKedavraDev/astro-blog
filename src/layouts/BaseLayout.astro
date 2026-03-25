@@ -121,5 +121,23 @@ const fullTitle = title === "首页" ? "Moonpeak" : `${title} — Moonpeak`;
     )}
 
     <slot name="footer-scripts" />
+
+    {/* 考试系统数据层初始化（开发调试用途） */}
+    <script>
+      // @ts-nocheck
+      // 动态导入考试系统模块，挂载到 window 供控制台调试
+      import('../lib/examDB.ts').then(m => {
+        if (typeof window !== 'undefined') {
+          window.examDB = m.examDB;
+          console.log('[ExamDB] 已加载，可用 examDB 访问');
+        }
+      });
+      import('../lib/examStore.ts').then(m => {
+        if (typeof window !== 'undefined') {
+          window.examStore = m.examStore;
+          console.log('[ExamStore] 已加载，可用 examStore 访问');
+        }
+      });
+    </script>
   </body>
 </html>
