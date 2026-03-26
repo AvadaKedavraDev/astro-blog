@@ -39,8 +39,16 @@ moonpeak-astro/
 │   │   │   ├── TableOfContents.astro      # 文章目录（自动高亮）
 │   │   │   ├── Pagination.astro           # 分页组件
 │   │   │   ├── ArticleDrawer.astro        # 文章抽屉
+│   │   │   ├── FansWall.astro             # 粉丝墙
 │   │   │   ├── SwupCompat.astro           # Swup 生命周期管理
 │   │   │   └── SwupScrollConfig.astro     # Swup 滚动配置（已弃用，功能合并至 SwupCompat）
+│   │   ├── exam/            # 考试系统组件
+│   │   │   ├── Badge.astro                # 徽章组件
+│   │   │   ├── QuestionCard.astro         # 题目卡片
+│   │   │   ├── InteractiveQuestionCard.astro  # 交互式题目卡片
+│   │   │   ├── ProgressBar.astro          # 进度条
+│   │   │   ├── FavoriteButton.tsx         # 收藏按钮（SolidJS）
+│   │   │   └── OptionGroup.tsx            # 选项组（SolidJS）
 │   │   ├── ui/              # UI 组件
 │   │   │   ├── ReadingProgress.astro      # 阅读进度条
 │   │   │   ├── ScrollToTop.astro          # 返回顶部
@@ -49,8 +57,12 @@ moonpeak-astro/
 │   │   │   ├── SplashModal.astro          # 开屏弹窗
 │   │   │   ├── TopNotification.astro      # 顶部通知栏
 │   │   │   ├── Image.astro                # 图片组件（灯箱）
+│   │   │   ├── OptimizedImage.astro       # 优化图片组件
 │   │   │   ├── AnimatedBackground.astro   # 动态背景
 │   │   │   ├── MicroInteractions.astro    # 微交互效果（磁性按钮、3D卡片等）
+│   │   │   ├── TiltCard.astro             # 倾斜卡片效果
+│   │   │   ├── FloatingSymbols.astro      # 浮动符号背景
+│   │   │   ├── GeometricGrid.astro        # 几何网格背景
 │   │   │   └── CommandPalette.astro       # 命令面板（Cmd+K）
 │   │   ├── widgets/         # 小部件
 │   │   │   ├── SEO.astro                  # SEO 元信息
@@ -60,10 +72,17 @@ moonpeak-astro/
 │   │   └── visualizer/      # 算法可视化
 │   │       ├── demos/                     # 可视化演示
 │   │       ├── store.ts                   # 状态管理
-│   │       └── types.ts                   # 类型定义
+│   │       ├── types.ts                   # 类型定义
+│   │       ├── AlgorithmVisualizer.tsx    # 可视化主组件
+│   │       ├── VisualCanvas.tsx           # 可视化画布
+│   │       ├── PanZoomCanvas.tsx          # 平缩放画布
+│   │       ├── PlayerControls.tsx         # 播放器控制
+│   │       ├── CodePanel.tsx              # 代码面板
+│   │       └── VisualizerClient.tsx       # 客户端包装器
 │   ├── layouts/             # 布局组件
 │   │   ├── BaseLayout.astro               # 基础布局
-│   │   └── ArticleLayout.astro            # 文章页布局（三栏）
+│   │   ├── ArticleLayout.astro            # 文章页布局（三栏）
+│   │   └── ExamLayout.astro               # 考试页面布局
 │   ├── pages/               # 页面路由
 │   │   ├── index.astro                    # 首页
 │   │   ├── blog/                          # 文章列表/详情
@@ -73,27 +92,40 @@ moonpeak-astro/
 │   │   ├── tags/                          # 标签页
 │   │   │   ├── index.astro                # 标签列表
 │   │   │   └── [tag].astro                # 单个标签页
+│   │   ├── exam/                          # 考试系统
+│   │   │   ├── index.astro                # 考试首页
+│   │   │   └── practice/[subject]/[id].astro  # 练习题页面
 │   │   ├── about.astro                    # 关于页面
 │   │   ├── search.astro                   # 搜索页面 (Pagefind)
 │   │   ├── links.astro                    # 工具箱页面
 │   │   ├── fanswall.astro                 # 粉丝墙页面
+│   │   ├── resume.astro                   # 简历页面
 │   │   ├── remote.astro                   # 远程页面
-│   │   └── visualizer.astro               # 算法可视化页面
-│   ├── content/             # 内容集合（博客文章）
-│   │   └── blog/
-│   │       ├── astro/                     # Astro 相关
-│   │       ├── commands/                  # 命令速查表
-│   │       ├── database/                  # 数据库
-│   │       ├── docker/                    # Docker
-│   │       ├── javaee/                    # Java EE
-│   │       ├── llm/                       # LLM/AI
-│   │       ├── middleware/                # 中间件
-│   │       ├── openclaw/                  # OpenClaw
-│   │       ├── spring/                    # Spring
-│   │       ├── test/                      # 测试/模板
-│   │       └── work/                      # 工作记录
+│   │   ├── visualizer.astro               # 算法可视化页面
+│   │   ├── exam-demo.astro                # 考试演示页面
+│   │   └── exam-demo-interactive.astro    # 交互式考试演示
+│   ├── content/             # 内容集合
+│   │   ├── blog/                          # 博客文章（Markdown）
+│   │   │   ├── astro/                     # Astro 相关
+│   │   │   ├── commands/                  # 命令速查表
+│   │   │   ├── database/                  # 数据库
+│   │   │   ├── docker/                    # Docker
+│   │   │   ├── javaee/                    # Java EE
+│   │   │   ├── llm/                       # LLM/AI
+│   │   │   ├── middleware/                # 中间件
+│   │   │   ├── openclaw/                  # OpenClaw
+│   │   │   ├── spring/                    # Spring
+│   │   │   ├── test/                      # 测试/模板
+│   │   │   ├── deploy/                    # 部署相关
+│   │   │   └── work/                      # 工作记录
+│   │   └── questions/                     # 题库数据（YAML/JSON）
+│   │       └── system-architect/          # 系统架构设计师题库
 │   ├── lib/                 # 工具函数
-│   │   └── post.ts                        # 文章数据处理
+│   │   ├── post.ts                        # 文章数据处理
+│   │   ├── examDB.ts                      # 考试系统数据库
+│   │   └── examStore.ts                   # 考试状态管理
+│   ├── types/               # 类型定义
+│   │   └── exam.ts                        # 考试系统类型
 │   ├── plugins/             # 自定义插件
 │   │   └── remark-img-bed.mjs             # 图床图片转换
 │   ├── styles/              # 全局样式
@@ -103,9 +135,13 @@ moonpeak-astro/
 ├── public/                  # 静态资源
 │   ├── fonts/               # 本地字体文件
 │   ├── images/              # 图片资源
-│   └── favicon*.svg/png     # 网站图标
+│   ├── local-images/        # 本地开发图片
+│   ├── favicon*.svg/png     # 网站图标
+│   ├── katex.min.css        # KaTeX 样式
+│   └── robots.txt           # 爬虫规则
 ├── scripts/                 # 构建脚本
-│   └── optimize-images.mjs  # 图片优化
+│   ├── optimize-images.mjs  # 图片优化
+│   └── optimize-favicon.mjs # Favicon 优化
 ├── astro.config.mjs         # Astro 配置
 ├── tsconfig.json            # TypeScript 配置
 ├── package.json             # 依赖管理
@@ -150,6 +186,9 @@ import { getPosts } from "@lib/post";
 // @layouts/*   -> src/layouts/*
 // @lib/*       -> src/lib/*
 // @utils/*     -> src/utils/*
+// @assets/*    -> src/assets/*
+// @constants/* -> src/constants/*
+// @i18n/*      -> src/i18n/*
 // @/*          -> src/*
 ```
 
@@ -157,8 +196,9 @@ import { getPosts } from "@lib/post";
 
 文章使用 Astro Content Collections 管理，配置在 `src/content.config.ts`:
 
+### 博客文章 Schema
+
 ```typescript
-// 博客文章 Schema
 {
   title: string;           // 必填 - 文章标题
   pubDate: Date;           // 必填 - 发布日期
@@ -168,7 +208,40 @@ import { getPosts } from "@lib/post";
   author?: string;         // 可选 - 作者
   readingTime?: number;    // 可选 - 阅读时间(分钟)
   coverImage?: string;     // 可选 - 封面图路径
-  draft?: boolean;         // 可选 - 是否为草稿
+  image?: string;          // 可选 - 兼容旧字段
+  draft?: boolean;         // 可选 - 是否为草稿，默认 false
+  featured?: boolean;      // 可选 - 是否置顶，默认 false
+  pinned?: boolean;        // 可选 - 置顶标记（等同于 featured）
+  updatedDate?: Date;      // 可选 - 更新日期
+  aliases?: string[];      // 可选 - URL 别名/重定向
+  relatedPosts?: string[]; // 可选 - 相关文章引用
+  series?: {               // 可选 - 系列文章
+    name: string;
+    order: number;
+  };
+  seo?: {                  // 可选 - SEO 设置
+    title?: string;
+    description?: string;
+    noindex?: boolean;
+    nofollow?: boolean;
+  };
+  license?: string;        // 可选 - 版权信息
+}
+```
+
+### 题库 Schema
+
+```typescript
+{
+  id: string;              // 必填 - 题目唯一标识
+  chapter: string;         // 必填 - 所属章节
+  difficulty: number;      // 必填 - 难度 1-5
+  type: 'single' | 'multiple' | 'judge';  // 必填 - 题目类型
+  subject: string;         // 可选 - 科目，默认 'system-architect'
+  content: string;         // 必填 - 题目内容
+  options?: Option[];      // 可选 - 选项列表
+  explanation: string;     // 必填 - 答案解析
+  knowledgePoints: string[];  // 必填 - 知识点标签
 }
 ```
 
@@ -263,12 +336,14 @@ draft: false
 | `.article-title-link` | 文章标题悬停 |
 | `.pagination-btn` | 分页按钮 |
 | `.link-hover-center` | 链接下划线从中心展开 |
-| `.magnetic-btn` | 磁性按钮效果（鼠标靠近吸引）|
-| `.card-3d` | 3D 卡片倾斜效果 |
-| `.gradient-text-animated` | 文字渐变流光动画 |
-| `.btn-ripple` | 按钮点击波纹效果 |
-| `.img-zoom` | 图片悬停缩放 |
-| `.breathing-border` | 呼吸边框效果 |
+
+### 容器查询类名
+
+| 类名 | 说明 |
+|------|------|
+| `.cq-container` | 标记为容器查询容器 |
+| `.cq-text-sm/base/lg` | 基于容器宽度的响应式文本 |
+| `.cq-grid-1/2/3` | 基于容器宽度的网格布局 |
 
 ## 关键集成配置
 
@@ -353,14 +428,6 @@ window.SwupCompat.prefersReducedMotion  // boolean
 window.SwupCompat.__isReady__  // boolean - 是否已完成初始化
 ```
 
-#### 特性
-
-- **动画偏好支持**: 自动检测 `prefers-reduced-motion` 媒体查询，尊重用户减少动画的偏好
-- **ARIA 可访问性**: 内置 ARIA live 区域，页面切换时向屏幕阅读器发送通知
-- **Scroll Plugin 配置**: 通过 Swup hooks 在初始化时配置，而非轮询修改（遵循官方最佳实践）
-- **向后兼容**: 同时支持 Swup 4.x 新版 hooks (`swup.hooks.on`) 和旧版事件 (`swup:contentReplaced`)
-- **动态偏好监听**: 自动监听系统动画偏好变化，实时调整 Scroll Plugin 配置
-
 #### 使用最佳实践
 
 **1. 基本用法 - 页面切换后初始化**
@@ -441,38 +508,6 @@ window.SwupCompat.__isReady__  // boolean - 是否已完成初始化
 </script>
 ```
 
-#### 与 SwupScrollConfig 的关系
-
-`SwupScrollConfig.astro` 已弃用，其功能已合并至 `SwupCompat.astro`。滚动配置现在通过 `configureScrollPlugin()` 方法在 Swup hooks 中自动执行：
-
-- **offset**: 96px（导航栏 64px + 间距 32px）
-- **animateScroll**: 根据 `prefers-reduced-motion` 自动设置
-
-如需自定义滚动配置，可直接修改 `SwupCompat.astro` 中的 `configureScrollPlugin` 调用。
-
-**使用示例**:
-```javascript
-<script is:inline data-swup-ignore-script>
-  (function() {
-    function init() {
-      // 组件初始化逻辑
-    }
-    
-    if (window.SwupCompat) {
-      // 使用 SwupCompat 注册回调
-      window.SwupCompat.onPageView(init);
-    } else {
-      // 降级处理
-      document.addEventListener('swup:contentReplaced', init);
-      document.addEventListener('astro:page-load', init);
-    }
-    
-    // 首次加载执行
-    init();
-  })();
-</script>
-```
-
 ### Pagefind (搜索)
 
 - 在构建时自动生成索引
@@ -496,15 +531,6 @@ window.SwupCompat.__isReady__  // boolean - 是否已完成初始化
 - **操作命令**: 切换主题(G+D)、返回顶部、复制链接
 - **文章搜索**: 集成 Pagefind，实时搜索文章内容
 
-**使用方式:**
-```astro
-// 组件已在 Navigation.astro 中集成
-import CommandPalette from "@components/ui/CommandPalette.astro";
-
-// 使用触发按钮
-<CommandPalette />
-```
-
 ### Remark/Rehype 插件
 
 - `remark-gfm` - GitHub Flavored Markdown
@@ -525,6 +551,7 @@ import CommandPalette from "@components/ui/CommandPalette.astro";
 ```bash
 # .env (开发)
 PUBLIC_IMG_BASE_URL=/local-images/
+PUBLIC_QUIZ_API_URL=http://localhost:3001/api
 
 # .env.production
 PUBLIC_IMG_BASE_URL=https://cdn.image.moonpeak.cn/
@@ -616,11 +643,6 @@ PUBLIC_IMG_BASE_URL=https://cdn.image.moonpeak.cn/
   {(category) => <CategoryButton name={category} />}
 </For>
 
-// ✅ 推荐：Object.entries 使用解构获取 key
-<For each={Object.entries(groupedItems)} key={([name]) => name}>
-  {([name, items]) => <Group name={name} items={items} />}
-</For>
-
 // ❌ 避免：不添加 key 属性
 <For each={items}>
   {(item) => <ItemComponent {...item} />}
@@ -631,13 +653,6 @@ PUBLIC_IMG_BASE_URL=https://cdn.image.moonpeak.cn/
   {(category) => <span>{category}</span>}
 </For>
 ```
-
-**已添加 key 属性的组件**：
-- `VisualizerClient.tsx` - categories、demos
-- `VisualCanvas.tsx` - elements、connections、highlights  
-- `PanZoomCanvas.tsx` - elements、connections、highlights
-- `PlayerControls.tsx` - steps、speeds
-- `CodePanel.tsx` - codeLines
 
 #### 2. Store 使用最佳实践
 
@@ -705,6 +720,7 @@ onCleanup(() => {
 - 当前页面高亮自动更新
 - 集成 Command Palette（Cmd/Ctrl+K）
 - 主题切换按钮
+- 下拉菜单支持
 
 ### CommandPalette (命令面板)
 
@@ -741,22 +757,91 @@ onCleanup(() => {
 - 可配置建站日期（修改 `SITE_BIRTH` 常量）
 - ICP 备案信息展示
 
+## 考试系统
+
+项目包含完整的软考（系统架构设计师）题库功能：
+
+### 数据层
+
+- **examDB.ts**: 客户端数据持久化（localStorage）
+  - 错题本管理
+  - 收藏题目管理
+  - 答题历史记录
+  
+- **examStore.ts**: 全局状态管理
+  - 答题状态
+  - 练习进度
+  - 统计信息
+
+### 题目数据结构
+
+题库数据存储在 `src/content/questions/system-architect/` 目录下，使用 YAML 格式：
+
+```yaml
+id: "sa-001"
+chapter: "计算机系统基础"
+difficulty: 3
+type: "single"
+subject: "system-architect"
+content: "题目内容..."
+options:
+  - id: "A"
+    text: "选项A内容"
+    isCorrect: true
+  - id: "B"
+    text: "选项B内容"
+    isCorrect: false
+explanation: "答案解析..."
+knowledgePoints: ["知识点1", "知识点2"]
+```
+
+### 功能特性
+
+- 章节练习
+- 随机练习
+- 错题本复习
+- 收藏题目
+- 答题统计
+- 进度追踪
+
+## 算法可视化
+
+项目包含算法可视化框架，用于演示数据结构和算法：
+
+### 支持的演示类型
+
+- 数组操作
+- 链表操作
+- 哈希表（HashMap）
+- 树结构
+- 图算法
+
+### 组件架构
+
+- **AlgorithmVisualizer.tsx**: 主容器组件
+- **VisualCanvas.tsx**: SVG 渲染画布
+- **PanZoomCanvas.tsx**: 支持平移缩放的画布
+- **PlayerControls.tsx**: 播放控制（播放/暂停/步进/速度）
+- **CodePanel.tsx**: 代码高亮和当前执行行指示
+
 ## 环境变量
 
 | 变量名 | 环境 | 说明 |
 |--------|------|------|
 | `PUBLIC_IMG_BASE_URL` | 开发 | `/local-images/` |
 | `PUBLIC_IMG_BASE_URL` | 生产 | `https://cdn.image.moonpeak.cn/` |
+| `PUBLIC_QUIZ_API_URL` | 开发 | `http://localhost:3001/api` |
 
 ## 性能优化
 
 1. **图片**: 使用 Sharp 进行优化，图床 CDN 加速
-2. **字体**: 系统字体优先，避免外部 CDN
+2. **字体**: 系统字体优先，本地字体文件，避免外部 CDN
 3. **JS**: 零 JS 默认，交互按需加载 (SolidJS 组件)
 4. **CSS**: Tailwind 4.x 按需生成，CSS 变量系统减少重复
 5. **搜索**: Pagefind 静态索引，无服务端依赖
 6. **Swup**: 页面过渡减少整页刷新
 7. **懒加载**: 图片使用 `loading="lazy"`
+8. **预取**: 基于视口的链接预取（Prefetch）
 
 ## 部署
 
@@ -797,131 +882,6 @@ EXPOSE 80
    - 使用 `SwupCompat.onPageView()` 注册回调替代直接监听事件
 3. **动画偏好**: 始终尊重用户的 `prefers-reduced-motion` 设置，可通过 `SwupCompat.prefersReducedMotion` 检测
 4. **Scroll Plugin**: 不要直接修改 `scrollPlugin.options`，使用 `SwupCompat.configureScrollPlugin()` 或等待 Swup hooks
-
-## 优化功能参考
-
-### OptimizedImage 组件
-
-使用 Astro 原生 Image API 自动优化图片：
-
-```astro
----
-import OptimizedImage from '@components/ui/OptimizedImage.astro';
-import coverImage from '../assets/cover.jpg';
----
-
-<!-- 本地导入图片 - 自动格式转换、尺寸优化 -->
-<OptimizedImage 
-  src={coverImage} 
-  alt="封面图" 
-  width={800} 
-  height={400}
-  quality={85}
-  format="webp"
-/>
-
-<!-- 远程图片 -->
-<OptimizedImage 
-  src="https://cdn.example.com/image.jpg" 
-  alt="远程图片" 
-  width={800} 
-  height={400}
-/>
-```
-
-**特性**：
-- 自动格式转换（WebP/AVIF）
-- 响应式尺寸
-- 懒加载
-- Retina 屏幕支持
-
-### 容器查询（Container Queries）
-
-基于容器宽度的响应式设计，而非视口：
-
-```astro
-<!-- 标记容器 -->
-<div class="cq-container">
-  <!-- 基于容器宽度的响应式 -->
-  <div class="@lg:text-lg @lg:grid-cols-2">
-    内容
-  </div>
-</div>
-```
-
-**预定义类**：
-| 类名 | 说明 |
-|------|------|
-| `.cq-container` | 标记为容器查询容器 |
-| `.cq-text-lg` | 容器 >= 32rem 时文字变大 |
-| `.cq-grid-2` | 容器 >= 28rem 时2列网格 |
-
-### 预取（Prefetch）
-
-自动预取视口内的链接，加速页面切换：
-
-```astro
-<!-- 自动预取 -->
-<a href="/blog/post/">文章</a>
-
-<!-- 禁用预取 -->
-<a href="/external/" data-astro-prefetch="false">外部链接</a>
-```
-
-### Content Schema 增强
-
-支持更多 Frontmatter 字段：
-
-```md
----
-title: "文章标题"
-featured: true              # 置顶
-updatedDate: 2024-03-21     # 更新日期
-seo:
-  title: "自定义 SEO 标题"
-  description: "自定义描述"
-series:
-  name: "系列名称"
-  order: 1
-relatedPosts:
-  - post-1
-  - post-2
-license: "CC-BY-4.0"
----
-```
-
-## 扩展建议
-
-- **新页面**: 在 `src/pages/` 创建 `.astro` 文件
-- **新组件**: 根据功能放入 `components/{category}/`
-- **新布局**: 在 `layouts/` 创建并继承 `BaseLayout`
-- **新工具函数**: 在 `lib/` 创建并导出
-- **样式修改**: 优先使用 Tailwind 类，复杂样式在 `global.css`
-
-## 安全考虑
-
-1. **XSS 防护**: Astro 默认对输出进行转义
-2. **外部链接**: 使用 `rel="noopener"` 防止标签页钓鱼
-3. **依赖更新**: 定期运行 `npm audit` 检查漏洞
-4. **输入验证**: 内容集合使用 Zod Schema 验证
-
-## 故障排除
-
-### 搜索不工作
-- 确保已运行 `npm run build` 生成 Pagefind 索引
-- 开发模式下搜索功能不可用
-
-### 样式不生效
-- 检查是否正确导入 `global.css`
-- Tailwind 4.x 使用 `@import` 而非 `@tailwind` 指令
-
-### Swup 过渡异常
-- 确保 `SwupCompat` 组件已加载
-- 检查脚本是否有 `data-swup-ignore-script` 标记
-
-### 图片不显示
-- 开发环境检查 `PUBLIC_IMG_BASE_URL` 配置
-- 确保图片路径正确（相对路径会被转换）
 
 ### Swup 页面初始化问题
 
@@ -979,6 +939,36 @@ license: "CC-BY-4.0"
 2. 确保 `onPageView` 的 `respectMotionPreference` 选项为 `true`（默认值）
 3. CSS 动画也应添加 `@media (prefers-reduced-motion: reduce)` 媒体查询
 
+## 安全考虑
+
+1. **XSS 防护**: Astro 默认对输出进行转义
+2. **外部链接**: 使用 `rel="noopener"` 防止标签页钓鱼
+3. **依赖更新**: 定期运行 `npm audit` 检查漏洞
+4. **输入验证**: 内容集合使用 Zod Schema 验证
+
+## 故障排除
+
+### 搜索不工作
+- 确保已运行 `npm run build` 生成 Pagefind 索引
+- 开发模式下搜索功能不可用
+
+### 样式不生效
+- 检查是否正确导入 `global.css`
+- Tailwind 4.x 使用 `@import` 而非 `@tailwind` 指令
+
+### Swup 过渡异常
+- 确保 `SwupCompat` 组件已加载
+- 检查脚本是否有 `data-swup-ignore-script` 标记
+
+### 图片不显示
+- 开发环境检查 `PUBLIC_IMG_BASE_URL` 配置
+- 确保图片路径正确（相对路径会被转换）
+
+### 题库数据不加载
+- 检查 `src/content/questions/` 目录结构
+- 确保 YAML 格式正确，符合 Zod Schema
+- 修改配置后需重启开发服务器
+
 ---
 
-*最后更新: 2026-03-23* - 优化 Swup 组件；添加 OptimizedImage 组件、容器查询、Prefetch 配置；完善 Content Schema
+*最后更新: 2026-03-26* - 添加考试系统、算法可视化、容器查询等文档

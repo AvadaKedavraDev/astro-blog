@@ -113,20 +113,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
             </div>
         </header>
 
-        {/* Cover Image - 在 card 外部 */}
-        {coverImage && (
-                <div class="px-4 sm:px-6 mb-6">
-                    <div class="max-w-7xl mx-auto">
-                        <div class="max-w-4xl">
-                            <img
-                                    src={coverImage}
-                                    alt={title}
-                                    class="w-full aspect-[2.5/1] object-cover rounded-xl shadow-sm"
-                            />
-                        </div>
-                    </div>
-                </div>
-        )}
+        {/* Cover Image - 已整合到文章卡片内部 */}
 
         {/* Main Content Area - 三栏 Card 布局 */}
         <div class="px-4 sm:px-6 pb-16">
@@ -213,7 +200,18 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
 
                     {/* ========== 中间主内容 - 文章 Card ========== */}
                     <main class="flex-1 min-w-0">
-                        <article class="card-base min-h-150">
+                        <article class="card-base min-h-150 overflow-hidden">
+                            {/* 封面图 - 整合在卡片顶部，全宽显示 */}
+                            {coverImage && (
+                                <div class="w-full overflow-hidden rounded-t-xl">
+                                    <img
+                                        src={coverImage}
+                                        alt={title}
+                                        class="w-full aspect-[21/9] object-cover"
+                                    />
+                                </div>
+                            )}
+                            
                             {/* 文章内容区 */}
                             <div class="p-6 md:p-8 lg:p-10">
                                 <div class="prose-custom max-w-none">

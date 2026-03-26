@@ -248,6 +248,14 @@
           console.log('[SwupCompat] Binding to swup hooks');
           usingNewHooks = true; // 标记使用新版 hooks
           
+          // 配置 Scroll Plugin - 尽早配置，确保在滚动发生前生效
+          // 禁用 Swup 的平滑滚动动画，由 CSS scroll-behavior: smooth 控制，避免冲突
+          this.configureScrollPlugin({
+            offset: 96, // 导航栏高度 64px + 额外间距 32px
+            animateScroll: false, // 禁用 Swup 的动画，避免与 CSS 冲突
+            doScrollingRightAway: false // 在内容替换后滚动
+          });
+          
           // 注意：Swup 4.x 的 hooks 命名
           // 'content:replace' 在内容替换前触发（对应旧版的 beforeContentReplace）
           // 'page:view' 在页面视图更新后触发（对应旧版的 contentReplaced）
@@ -266,12 +274,6 @@
               this.emit('page:view');
               this.updateA11yNotification('页面已加载');
             });
-          });
-          
-          // 配置 Scroll Plugin
-          this.configureScrollPlugin({
-            offset: 96, // 导航栏高度 64px + 额外间距 32px
-            animateScroll: !this.prefersReducedMotion
           });
           
           return true;
@@ -302,9 +304,9 @@
       if (motionMediaQuery.addEventListener) {
         motionMediaQuery.addEventListener('change', (e) => {
           this.prefersReducedMotion = e.matches;
-          // 重新配置 Scroll Plugin
+          // 重新配置 Scroll Plugin - 保持 animateScroll: false，由 CSS 控制
           this.configureScrollPlugin({
-            animateScroll: !e.matches
+            animateScroll: false
           });
         });
       }
