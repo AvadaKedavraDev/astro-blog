@@ -35,6 +35,9 @@ Ollama 是一个开源的大语言模型本地运行框架，支持 macOS、Linu
 # 访问 https://ollama.com/download/windows
 # 下载 OllamaSetup.exe 并运行
 
+# 更改盘符默认安装位置
+.\OllamaSetup.exe /DIR="D:\Program Files\Ollama"
+
 # 2. 验证安装
 ollama --version
 
