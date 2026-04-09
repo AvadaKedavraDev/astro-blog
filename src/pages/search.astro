@@ -4,7 +4,7 @@ import { Icon } from "astro-icon/components";
 ---
 
 <BaseLayout title="搜索" description="搜索文章">
-  <script is:inline data-swup-ignore-script>
+  <script is:inline>
     (function() {
       'use strict';
       
@@ -125,7 +125,7 @@ import { Icon } from "astro-icon/components";
           
           return `
             <article class="search-result group">
-              <a href="${url}" class="block" data-swup-link>
+              <a href="${url}" class="block" data-astro-transition>
                 <div class="result-card">
                   <h3 class="result-title">${highlightText(title, query)}</h3>
                   <p class="result-excerpt">${highlightText(excerpt, query)}</p>
@@ -155,12 +155,10 @@ import { Icon } from "astro-icon/components";
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       }
       
-      // 清理
-      if (window.SwupCompat) {
-        window.SwupCompat.beforeContentReplace(() => {
-          window.__searchInitialized = false;
-        });
-      }
+      // 清理 - View Transitions 兼容
+      document.addEventListener('astro:before-swap', () => {
+        window.__searchInitialized = false;
+      });
       
       // 启动
       initSearch();

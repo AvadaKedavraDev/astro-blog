@@ -3,7 +3,7 @@
  * @component TableOfContents
  * @description 文章目录组件，自动高亮当前阅读位置
  * @props headings - Markdown 标题数组（显示 H2、H3 和 H4）
- * @features IntersectionObserver 优化、平滑滚动、Swup 兼容
+ * @features IntersectionObserver 优化、平滑滚动、View Transitions 兼容
  * @usage 在 ArticleLayout 中传入 headings 数据
  */
 import type { MarkdownHeading } from 'astro';
@@ -43,7 +43,7 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
   // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
   (function() {
     let tocObserver = null;
-    let isInitialized = false;
+    let activeId = '';
     
     function initTOC() {
       // 清理旧的 observer
@@ -66,8 +66,6 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
         return;
       }
       
-      console.log('[TableOfContents] initializing with', headings.length, 'headings');
-      
       const visibleHeadings = new Map();
       
       // 使用 IntersectionObserver 优化性能
@@ -78,17 +76,23 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
         
         const activeEntries = Array.from(visibleHeadings.entries()).filter(([_, visible]) => visible);
         
-        let activeId = '';
+        let nextActiveId = '';
         
         if (activeEntries.length > 0) {
-          activeId = activeEntries[0][0];
+          nextActiveId = activeEntries[0][0];
         } else {
           const scrollY = window.scrollY + 100;
-          activeId = headings
+          nextActiveId = headings
             .filter(h => h.offsetTop <= scrollY)
             .pop()?.id || '';
         }
         
+        if (!nextActiveId || nextActiveId === activeId) {
+          return;
+        }
+
+        activeId = nextActiveId;
+
         if (activeId) {
           tocItems.forEach((item, index) => {
             const link = tocLinks[index];
@@ -105,7 +109,7 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
               if (container) {
                 const containerRect = container.getBoundingClientRect();
                 if (itemRect.top < containerRect.top || itemRect.bottom > containerRect.bottom) {
-                  item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                  item.scrollIntoView({ behavior: 'auto', block: 'nearest' });
                 }
               }
             } else {
@@ -127,11 +131,10 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
         }
       });
       
-      isInitialized = true;
       
       // 立即执行一次高亮
       const scrollY = window.scrollY + 100;
-      const activeId = headings
+      activeId = headings
         .filter(h => h.offsetTop <= scrollY)
         .pop()?.id || '';
       
@@ -161,19 +164,7 @@ const filteredHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
       });
     }
     
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', delayedInit);
-    } else {
-      delayedInit();
-    }
-    
-    // Swup 页面过渡兼容 - 使用 SwupCompat
-    if (window.SwupCompat) {
-      window.SwupCompat.onPageView(delayedInit);
-    } else {
-      // 降级处理
-      document.addEventListener('swup:contentReplaced', delayedInit);
-      document.addEventListener('astro:page-load', delayedInit);
-    }
+    // ClientRouter 页面加载和过渡后初始化
+    document.addEventListener('astro:page-load', delayedInit);
   })();
 </script>

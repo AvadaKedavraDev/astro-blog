@@ -4,7 +4,7 @@
  * @description 深浅色模式切换按钮
  * @props size - 按钮尺寸 sm/md/lg（默认md）
  * @props variant - 显示样式 icon/button（默认icon）
- * @features 全局单例模式、localStorage 持久化、触觉反馈、Swup 兼容
+ * @features 全局单例模式、localStorage 持久化、触觉反馈、View Transitions 兼容
  * @usage 在 Navigation 组件中使用
  */
 // 暗黑切换组件
@@ -81,18 +81,13 @@ const iconSizes = {
 
 {/* 主题管理逻辑 - 使用全局单例模式 */}
 <script>
-    // 类型定义（在 .astro 文件中可省略，但有助于 IDE 提示）
-    interface ThemeManager {
-        initialized: boolean;
-        toggle: () => void;
-        init: () => void;
-        destroy: () => void;
-    }
-
     // 全局单例，确保即使脚本被多次执行（View Transitions）也不会重复绑定
     if (!window.themeManager) {
         window.themeManager = {
             initialized: false,
+            handleClick: undefined,
+            handleKeydown: undefined,
+            handleStorage: undefined,
 
             toggle() {
                 const isDark = document.documentElement.classList.toggle("dark");
@@ -102,8 +97,8 @@ const iconSizes = {
                 localStorage.setItem("theme", theme);
 
                 // 触觉反馈（移动端）
-                if (window.navigator?.vibrate) {
-                    navigator.vibrate(10);
+                if (typeof window.navigator.vibrate === "function") {
+                    window.navigator.vibrate(10);
                 }
 
                 // 触发自定义事件供其他组件监听
@@ -158,9 +153,15 @@ const iconSizes = {
             destroy() {
                 if (!this.initialized) return;
 
-                document.removeEventListener("click", this.handleClick);
-                document.removeEventListener("keydown", this.handleKeydown);
-                window.removeEventListener("storage", this.handleStorage);
+                if (this.handleClick) {
+                    document.removeEventListener("click", this.handleClick);
+                }
+                if (this.handleKeydown) {
+                    document.removeEventListener("keydown", this.handleKeydown);
+                }
+                if (this.handleStorage) {
+                    window.removeEventListener("storage", this.handleStorage);
+                }
 
                 this.initialized = false;
             },
@@ -172,19 +173,12 @@ const iconSizes = {
     }
 
     // 立即初始化
-    window.themeManager.init();
+    window.themeManager?.init();
 
-    // Swup 页面过渡兼容 - 使用 SwupCompat
-    if (window.SwupCompat) {
-        window.SwupCompat.onPageView(() => {
-            window.themeManager.init();
-        });
-    } else {
-        // 降级处理
-        document.addEventListener("astro:page-load", () => {
-            window.themeManager.init();
-        });
-    }
+    // View Transitions 页面过渡兼容
+    document.addEventListener("astro:page-load", () => {
+        window.themeManager?.init();
+    });
 
     // 清理（可选，防止内存泄漏）
     document.addEventListener("astro:before-swap", () => {

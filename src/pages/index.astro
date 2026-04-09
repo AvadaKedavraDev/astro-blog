@@ -2,18 +2,15 @@
 import BaseLayout from "@layouts/BaseLayout.astro";
 import TypeWriter from "@components/ui/TypeWriter.astro";
 import AnimatedBackground from "@components/ui/AnimatedBackground.astro";
-import { getCollection } from "astro:content";
-import { getAllTags } from "@lib/post";
+import { getAllTags, getPublishedPosts } from "@lib/post";
 import { Icon } from "astro-icon/components";
 
-// 获取所有文章
-const allPosts = await getCollection("blog");
+// 获取所有已发布文章
+const allPosts = await getPublishedPosts();
 const postsCount = allPosts.length;
 
 // 获取最新 3 篇文章
-const posts = allPosts
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
+const posts = allPosts.slice(0, 3);
 
 // 获取所有标签
 const tagCounts = await getAllTags();
@@ -38,25 +35,29 @@ const runningDays = Math.floor((now.getTime() - birth.getTime()) / 86400000);
     <!-- 动态背景 -->
     <AnimatedBackground />
 
-    <div class="relative z-10 text-center max-w-3xl mx-auto">
+    <div class="relative z-[1] text-center max-w-3xl mx-auto">
       <!-- 标签 -->
-      <div class="mb-6 animate-fade-in" style="animation-delay: 0.1s">
+      <div class="mb-4 animate-fade-in" style="animation-delay: 0.1s">
         <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-muted/80 text-muted-foreground border border-border/50">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           已运行 {runningDays} 天 · 共 {postsCount} 篇文章
         </span>
       </div>
 
-      <!-- 主标题 -->
-      <h1 class="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight mb-6 animate-fade-in-up" style="animation-delay: 0.2s">
-        <span class="gradient-text">
-          <TypeWriter text="思考、记录、分享" speed={150} delay={300} />
-        </span>
-      </h1>
+      <!-- 主图 -->
+      <!-- overflow:hidden 配合负 margin 裁掉 logo.png 上下多余空白 -->
+      <div class="hero-image-wrapper animate-fade-in-up overflow-hidden" style="animation-delay: 0.2s">
+        <img 
+          src="/logo.png"
+          alt="Moonpeak" 
+          class="hero-image w-full max-w-100 mx-auto"
+          style="margin-top: -13%; margin-bottom: -13%;"
+        />
+      </div>
 
       <!-- 副标题 -->
-      <p class="text-base md:text-lg text-muted-foreground max-w-lg mx-auto mb-10 leading-relaxed animate-fade-in" style="animation-delay: 0.8s">
-        这里是 Moonpeak 的个人空间，分享技术探索、生活感悟与创作灵感。
+      <p class="text-base md:text-lg text-muted-foreground max-w-lg mx-auto mt-6 mb-10 leading-relaxed animate-fade-in" style="animation-delay: 0.6s">
+        思考、记录、分享 —— 探索技术与生活的交汇点
       </p>
 
       <!-- CTA 按钮 -->
@@ -141,7 +142,7 @@ const runningDays = Math.floor((now.getTime() - birth.getTime()) / 86400000);
             class="post-item group"
             style={`animation-delay: ${index * 0.1}s`}
           >
-            <a href={`/blog/${post.slug}/`} class="block">
+            <a href={`/blog/${post.id}/`} class="block" data-astro-reload>
               <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 py-6 px-4 -mx-4 rounded-xl transition-all duration-300 hover:bg-muted/50">
                 <!-- Date -->
                 <time class="text-sm text-muted-foreground font-mono shrink-0 w-20 flex items-center gap-2">
@@ -443,7 +444,7 @@ const runningDays = Math.floor((now.getTime() - birth.getTime()) / 86400000);
   </style>
 
   <!-- Scroll Snap 控制脚本 -->
-  <script is:inline data-swup-ignore-script>
+  <script is:inline>
     (function() {
       const container = document.querySelector('.scroll-snap-container');
       // 获取所有带 data-section 的区块（包括带和不带 snap-section 的）
@@ -473,7 +474,7 @@ const runningDays = Math.floor((now.getTime() - birth.getTime()) / 86400000);
         threshold: 0
       };
 
-      // 薄条带区块（统计栏）的观察器（更宽松的检测区域）
+      // 薄条带区块（统计栏）的观察器（用更宽松的检测区域）
       const thinObserverOptions = {
         root: null,
         rootMargin: '-20% 0px -20% 0px',
@@ -481,6 +482,18 @@ const runningDays = Math.floor((now.getTime() - birth.getTime()) / 86400000);
       };
 
       let activeSection = 'hero';
+      let navigationLocked = false;
+
+      function prepareForLeave() {
+        if (navigationLocked) return;
+        navigationLocked = true;
+
+        container.style.scrollSnapType = 'none';
+        container.style.scrollBehavior = 'auto';
+
+        document.documentElement.style.scrollBehavior = 'auto';
+        document.body.style.scrollBehavior = 'auto';
+      }
 
       const observerCallback = (entries) => {
         entries.forEach(entry => {
@@ -547,6 +560,7 @@ const runningDays = Math.floor((now.getTime() - birth.getTime()) / 86400000);
       let scrollTimeout;
 
       container.addEventListener('wheel', (e) => {
+        if (navigationLocked) return;
         // 清除之前的定时器
         clearTimeout(scrollTimeout);
         
@@ -585,6 +599,21 @@ const runningDays = Math.floor((now.getTime() - birth.getTime()) / 86400000);
       }, { passive: false });
 
       // 清理函数
+      document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (!link) return;
+
+        const href = link.getAttribute('href');
+        if (!href) return;
+        if (href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+        if (link.target === '_blank' || link.hasAttribute('download')) return;
+
+        const url = new URL(link.href, window.location.href);
+        if (url.origin !== window.location.origin) return;
+
+        prepareForLeave();
+      }, true);
+
       return () => {
         mainObserver.disconnect();
         thinObserver.disconnect();
@@ -592,4 +621,5 @@ const runningDays = Math.floor((now.getTime() - birth.getTime()) / 86400000);
       };
     })();
   </script>
+
 </BaseLayout>

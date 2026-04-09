@@ -2,12 +2,13 @@
 /**
  * @component Navigation
  * @description 顶部导航栏组件，支持桌面端和移动端响应式布局
- * @features 当前页高亮、移动端菜单、主题切换、Swup 兼容、Command Palette
+ * @features 当前页高亮、移动端菜单、主题切换、View Transitions 兼容、Command Palette
  * @usage 在 BaseLayout 中引用
  */
 import ThemeIcon from "@components/widgets/ThemeIcon.astro";
 import CommandPalette from "@components/ui/CommandPalette.astro";
 import { Icon } from "astro-icon/components";
+import Image from "../ui/Image.astro";
 
 interface NavItem {
   label: string;
@@ -35,15 +36,15 @@ const navItems: NavItem[] = [
 const currentPath = Astro.url.pathname;
 ---
 
-<header class="fixed top-0 left-0 right-0 z-50 transition-all duration-500" id="main-nav" data-current-path={currentPath}>
+<header class="fixed top-0 left-0 right-0 z-50 transition-all duration-500 pointer-events-auto" id="main-nav" data-current-path={currentPath}>
   <!-- 背景层 - 动态切换 -->
-  <div class="nav-bg absolute inset-0 transition-all duration-500" 
+  <div class="nav-bg absolute inset-0 transition-all duration-500 pointer-events-none"
        style="opacity: 0; background-color: transparent; backdrop-filter: blur(24px);"></div>
   
   <nav class="container-wide h-16 flex items-center justify-between relative z-10">
     <!-- Logo -->
     <a href="/" class="text-lg font-semibold tracking-tight hover:opacity-70 transition-opacity flex items-center gap-2 group">
-      <Icon name="lucide:moon" class="w-5 h-5 text-indigo-500 group-hover:animate-pulse" />
+      <Image src="/logo.png" alt="Moonpeak logo" class="h-9 w-auto" />
       <span>Moonpeak</span>
     </a>
     
@@ -53,7 +54,7 @@ const currentPath = Astro.url.pathname;
         item.children ? (
           <div class="relative group -my-2">
             <button
-              class="nav-link relative px-4 py-2 text-sm rounded-lg nav-link-interactive flex items-center gap-2 group cursor-pointer"
+              class="nav-link relative px-4 py-2 text-sm rounded-lg border border-transparent nav-link-interactive flex items-center gap-2 group cursor-pointer"
               data-dropdown-trigger
             >
               <Icon name={item.icon} class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
@@ -66,7 +67,7 @@ const currentPath = Astro.url.pathname;
                   href={child.href}
                   data-nav-item
                   data-href={child.href}
-                  class="nav-link block px-4 py-2 text-sm nav-link-interactive"
+                  class="nav-link block px-4 py-2 text-sm rounded-lg border border-transparent nav-link-interactive"
                 >
                   <div class="flex items-center gap-2">
                     <Icon name={child.icon} class="w-4 h-4" />
@@ -81,10 +82,11 @@ const currentPath = Astro.url.pathname;
             href={item.href}
             data-nav-item
             data-href={item.href}
-            class="nav-link relative px-4 py-2 text-sm rounded-lg nav-link-interactive flex items-center gap-2 group"
+            class="nav-link relative px-4 py-2 text-sm rounded-lg border border-transparent nav-link-interactive flex items-center gap-2 group"
           >
             <Icon name={item.icon} class="w-4 h-4 transition-transform duration-300 group-hover:scale-110 group-hover:-translate-y-0.5" />
             <span>{item.label}</span>
+            <span class="nav-active-bar absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full opacity-0"></span>
           </a>
         )
       ))}
@@ -129,10 +131,10 @@ const currentPath = Astro.url.pathname;
         href="/search"
         data-mobile-nav-item
         data-href="/search"
-        class="mobile-nav-link block px-4 py-3 rounded-lg text-base nav-link-interactive"
+        class="mobile-nav-link block px-4 py-3 rounded-lg border border-transparent text-base nav-link-interactive"
       >
         <div class="flex items-center gap-3">
-          <Icon name="lucide:search" class="w-5 h-5" />
+          <Icon name="lucide:search" class="w-5 h-5" data-icon />
           <span class="nav-label">搜索</span>
         </div>
       </a>
@@ -149,10 +151,10 @@ const currentPath = Astro.url.pathname;
                   href={child.href}
                   data-mobile-nav-item
                   data-href={child.href}
-                  class="mobile-nav-link block px-4 py-3 rounded-lg text-base nav-link-interactive"
+                  class="mobile-nav-link block px-4 py-3 rounded-lg border border-transparent text-base nav-link-interactive"
                 >
                   <div class="flex items-center gap-3">
-                    <Icon name={child.icon} class="w-5 h-5" />
+              <Icon name={child.icon} class="w-5 h-5" data-icon />
                     <span class="nav-label">{child.label}</span>
                   </div>
                 </a>
@@ -164,10 +166,10 @@ const currentPath = Astro.url.pathname;
             href={item.href}
             data-mobile-nav-item
             data-href={item.href}
-            class="mobile-nav-link block px-4 py-3 rounded-lg text-base nav-link-interactive"
+            class="mobile-nav-link block px-4 py-3 rounded-lg border border-transparent text-base nav-link-interactive"
           >
             <div class="flex items-center gap-3">
-              <Icon name={item.icon} class="w-5 h-5" />
+              <Icon name={item.icon} class="w-5 h-5" data-icon />
               <span class="nav-label">{item.label}</span>
             </div>
           </a>
@@ -177,7 +179,7 @@ const currentPath = Astro.url.pathname;
   </div>
 </header>
 
-<script is:inline data-swup-ignore-script>
+<script is:inline>
   // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
   (function() {
     // 判断是否是当前页面
@@ -195,32 +197,23 @@ const currentPath = Astro.url.pathname;
       // 更新桌面导航
       document.querySelectorAll('[data-nav-item]').forEach(link => {
         const href = link.getAttribute('data-href');
-        const indicator = link.querySelector('.nav-indicator');
-        
         if (isActive(href, currentPath)) {
-          link.classList.remove('text-muted-foreground', 'hover:text-foreground', 'hover:bg-muted/50');
-          link.classList.add('text-foreground', 'font-medium', 'bg-muted');
-          if (indicator) indicator.classList.remove('opacity-0');
+          link.classList.add('nav-link-active');
         } else {
-          link.classList.add('text-muted-foreground', 'hover:text-foreground', 'hover:bg-muted/50');
-          link.classList.remove('text-foreground', 'font-medium', 'bg-muted');
-          if (indicator) indicator.classList.add('opacity-0');
+          link.classList.remove('nav-link-active');
         }
       });
       
       // 更新移动端导航
       document.querySelectorAll('[data-mobile-nav-item]').forEach(link => {
         const href = link.getAttribute('data-href');
-        const label = link.querySelector('.nav-label');
         const icon = link.querySelector('[data-icon]');
         
         if (isActive(href, currentPath)) {
-          link.classList.remove('text-muted-foreground', 'hover:text-foreground', 'hover:bg-muted/50');
-          link.classList.add('text-foreground', 'font-medium', 'bg-muted');
+          link.classList.add('mobile-nav-link-active');
           if (icon) icon.classList.add('text-indigo-500');
         } else {
-          link.classList.add('text-muted-foreground', 'hover:text-foreground', 'hover:bg-muted/50');
-          link.classList.remove('text-foreground', 'font-medium', 'bg-muted');
+          link.classList.remove('mobile-nav-link-active');
           if (icon) icon.classList.remove('text-indigo-500');
         }
       });
@@ -228,58 +221,66 @@ const currentPath = Astro.url.pathname;
     
     // 初始化移动菜单
     function initMobileMenu() {
-      const btn = document.getElementById('mobile-menu-btn');
       const menu = document.getElementById('mobile-menu');
-      const menuIcon = document.getElementById('menu-icon');
-      const closeIcon = document.getElementById('close-icon');
+      if (!menu) return;
       
-      if (!btn || !menu) return;
-      
-      // 移除旧的事件监听器（通过克隆节点）
-      const newBtn = btn.cloneNode(true);
-      btn.parentNode.replaceChild(newBtn, btn);
-      
-      // 重新获取元素
-      const newMenuBtn = document.getElementById('mobile-menu-btn');
-      const newMenuIcon = document.getElementById('menu-icon');
-      const newCloseIcon = document.getElementById('close-icon');
-      
-      newMenuBtn.addEventListener('click', () => {
-        const isExpanded = newMenuBtn.getAttribute('aria-expanded') === 'true';
-        newMenuBtn.setAttribute('aria-expanded', String(!isExpanded));
+      // 使用事件委托，避免重复绑定问题
+      document.body.addEventListener('click', (e) => {
+        const btn = e.target.closest('#mobile-menu-btn');
+        if (!btn) return;
+        
+        e.preventDefault();
+        const menuIcon = btn.querySelector('#menu-icon');
+        const closeIcon = btn.querySelector('#close-icon');
+        const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+        
+        btn.setAttribute('aria-expanded', String(!isExpanded));
         menu.classList.toggle('hidden');
-        newMenuIcon.classList.toggle('hidden');
-        newCloseIcon.classList.toggle('hidden');
+        menuIcon?.classList.toggle('hidden');
+        closeIcon?.classList.toggle('hidden');
       });
       
       // 点击链接后关闭菜单
-      menu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-          menu.classList.add('hidden');
-          newMenuIcon.classList.remove('hidden');
-          newCloseIcon.classList.add('hidden');
-          newMenuBtn.setAttribute('aria-expanded', 'false');
-        });
+      menu.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (!link) return;
+        
+        const btn = document.getElementById('mobile-menu-btn');
+        const menuIcon = btn?.querySelector('#menu-icon');
+        const closeIcon = btn?.querySelector('#close-icon');
+        
+        menu.classList.add('hidden');
+        menuIcon?.classList.remove('hidden');
+        closeIcon?.classList.add('hidden');
+        btn?.setAttribute('aria-expanded', 'false');
       });
     }
 
-    // 初始化移动端 Command Palette 触发
+    // 初始化移动端 Command Palette 触发（使用事件委托）
     function initMobileCmdTrigger() {
-      const mobileTrigger = document.getElementById('mobile-cmd-trigger');
-      const desktopTrigger = document.getElementById('cmd-palette-trigger');
-      
-      if (mobileTrigger && desktopTrigger) {
-        mobileTrigger.addEventListener('click', () => {
+      document.body.addEventListener('click', (e) => {
+        const mobileTrigger = e.target.closest('#mobile-cmd-trigger');
+        if (!mobileTrigger) return;
+        
+        const desktopTrigger = document.getElementById('cmd-palette-trigger');
+        if (desktopTrigger) {
           desktopTrigger.click();
-        });
-      }
+        }
+      });
     }
     
     // ========== 导航栏背景切换 ==========
+    let navScrollHandler = null;
     function initNavBackground() {
       const nav = document.getElementById('main-nav');
       const navBg = nav?.querySelector('.nav-bg');
       if (!nav || !navBg) return;
+      
+      // 清理旧的滚动监听器
+      if (navScrollHandler) {
+        window.removeEventListener('scroll', navScrollHandler);
+        navScrollHandler = null;
+      }
       
       // 检测是否在首页 Hero 区域（有动态背景）
       const path = window.location.pathname;
@@ -288,19 +289,10 @@ const currentPath = Astro.url.pathname;
       
       // 使用 CSS 变量方式设置玻璃态样式
       function applyGlassStyle() {
-        // 直接设置 CSS 变量，让浏览器自动计算颜色
         navBg.style.backgroundColor = 'color-mix(in oklch, var(--background) 80%, transparent)';
         navBg.style.borderBottom = '1px solid color-mix(in oklch, var(--border) 50%, transparent)';
         navBg.style.backdropFilter = 'blur(24px)';
         navBg.style.webkitBackdropFilter = 'blur(24px)';
-      }
-      
-      // 辅助函数：清除背景
-      function clearBackground() {
-        navBg.style.backgroundColor = 'transparent';
-        navBg.style.borderBottom = 'none';
-        navBg.style.backdropFilter = 'none';
-        navBg.style.webkitBackdropFilter = 'none';
       }
       
       if (!isHomePage || !hasAnimatedBg) {
@@ -310,24 +302,17 @@ const currentPath = Astro.url.pathname;
         return;
       }
       
-      // 首页：找到动态背景所在的 section
-      const animatedBg = document.querySelector('.animated-bg');
-      const heroSection = animatedBg?.closest('section');
-      
       // 首页：根据滚动位置切换背景
       function updateNavBg() {
         const scrollY = window.scrollY || window.pageYOffset;
-        // 滚动超过 80px 后显示完整背景
         const threshold = 80;
         
         if (scrollY > threshold) {
-          // 显示完整玻璃态背景
           navBg.style.opacity = '1';
           applyGlassStyle();
         } else {
-          // 顶部微弱背景，保证可读性的同时与 Hero 背景融合
           const progress = scrollY / threshold;
-          const opacity = 0.3 + progress * 0.7; // 0.3 ~ 1
+          const opacity = 0.3 + progress * 0.7;
           navBg.style.opacity = String(opacity);
           navBg.style.backgroundColor = 'color-mix(in oklch, var(--background) 40%, transparent)';
           navBg.style.backdropFilter = 'blur(12px)';
@@ -336,19 +321,18 @@ const currentPath = Astro.url.pathname;
         }
       }
       
-      // 首页初始状态 - 微弱背景
+      // 首页初始状态
       navBg.style.opacity = '0.3';
       navBg.style.backgroundColor = 'color-mix(in oklch, var(--background) 40%, transparent)';
       navBg.style.backdropFilter = 'blur(12px)';
       navBg.style.webkitBackdropFilter = 'blur(12px)';
       navBg.style.borderBottom = '1px solid color-mix(in oklch, var(--border) 30%, transparent)';
       
-      // 延迟执行一次以确保正确初始化
-      setTimeout(updateNavBg, 50);
+      updateNavBg();
       
       // 监听滚动
       let ticking = false;
-      window.addEventListener('scroll', () => {
+      navScrollHandler = function() {
         if (!ticking) {
           requestAnimationFrame(() => {
             updateNavBg();
@@ -356,20 +340,21 @@ const currentPath = Astro.url.pathname;
           });
           ticking = true;
         }
-      }, { passive: true });
+      };
+      window.addEventListener('scroll', navScrollHandler, { passive: true });
     }
     
     // 全局主题变化监听（只设置一次）
     (function setupThemeListener() {
+      if (window.__navThemeObserver) return;
+      
       const nav = document.getElementById('main-nav');
       const navBg = nav?.querySelector('.nav-bg');
       if (!nav || !navBg) return;
       
-      // 使用 MutationObserver 监听 html 元素的 class 变化（更可靠）
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            // 主题变化时，如果导航栏背景是显示的，更新样式
             if (navBg.style.opacity === '1') {
               navBg.style.backgroundColor = 'color-mix(in oklch, var(--background) 80%, transparent)';
               navBg.style.borderBottom = '1px solid color-mix(in oklch, var(--border) 50%, transparent)';
@@ -382,31 +367,33 @@ const currentPath = Astro.url.pathname;
         attributes: true,
         attributeFilter: ['class']
       });
+      
+      window.__navThemeObserver = true;
     })();
     
-    // 初始化
-    function init() {
-      updateNavHighlight();
+    // 初始化（只执行一次的逻辑）
+    function initOnce() {
+      if (window.__navInitOnce) return;
+      window.__navInitOnce = true;
+      
       initMobileMenu();
       initMobileCmdTrigger();
+    }
+    
+    // 每次页面切换后需要更新的逻辑
+    function init() {
+      updateNavHighlight();
       initNavBackground();
     }
     
-    // 页面加载时初始化
+    // 首次加载
+    initOnce();
     init();
     
-    // 使用 SwupCompat 统一处理页面切换
-    if (window.SwupCompat) {
-      window.SwupCompat.onPageView(init);
-    } else {
-      // 降级处理
-      document.addEventListener('swup:enable', () => {
-        window.swup?.hooks?.on('page:view', init);
-      });
-      document.addEventListener('astro:page-load', init);
-    }
+    // ClientRouter 页面切换后更新
+    document.addEventListener('astro:page-load', init);
     
-    // 监听 URL 变化（备用方案）
+    // 后退/前进按钮导航时更新高亮
     window.addEventListener('popstate', updateNavHighlight);
   })();
 </script>

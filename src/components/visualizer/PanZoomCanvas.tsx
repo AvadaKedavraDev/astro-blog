@@ -2,7 +2,7 @@
  * SolidJS 可拖动缩放画布组件
  * 支持鼠标/触摸拖动、滚轮缩放、过渡动画
  */
-import { For, createSignal, onMount, onCleanup, createEffect } from 'solid-js';
+import { For, createSignal, onMount, onCleanup } from 'solid-js';
 import type { StepState, VisualElement, Connection } from './types';
 
 interface PanZoomCanvasProps {
@@ -11,9 +11,6 @@ interface PanZoomCanvasProps {
 }
 
 // 画布尺寸（与 demo 数据中的坐标系统一致）
-const CANVAS_WIDTH = 3000;
-const CANVAS_HEIGHT = 2000;
-
 export default function PanZoomCanvas(props: PanZoomCanvasProps) {
   // 使用 ref 直接操作 SVG，避免 SolidJS 信号更新延迟问题
   let svgRef: SVGSVGElement | undefined;
@@ -507,21 +504,21 @@ export default function PanZoomCanvas(props: PanZoomCanvasProps) {
           
           {/* 连接线层 */}
           <g>
-            <For each={props.state.connections || []} key={item => `${item.from}-${item.to}`}>
+            <For each={props.state.connections || []}>
               {(conn) => renderConnection(conn, props.state.elements)}
             </For>
           </g>
           
           {/* 元素层 */}
           <g>
-            <For each={props.state.elements} key="id">
+            <For each={props.state.elements}>
               {(el) => renderElement(el)}
             </For>
           </g>
           
           {/* 高亮层 */}
           <g>
-            <For each={props.state.highlights || []} key="targetId">
+            <For each={props.state.highlights || []}>
               {(hl) => renderHighlight(hl, props.state.elements)}
             </For>
           </g>

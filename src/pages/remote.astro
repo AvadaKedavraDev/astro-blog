@@ -376,12 +376,8 @@ const SERVER_CONFIG = {
             }
         }
 
-        // 确保 DOM 加载完成
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
-        }
+        // ClientRouter 页面加载和过渡后初始化
+        document.addEventListener('astro:page-load', init);
     })();
 </script>
 

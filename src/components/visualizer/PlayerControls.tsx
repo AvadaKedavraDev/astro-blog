@@ -126,7 +126,7 @@ export default function PlayerControls(props: PlayerControlsProps) {
 
         {/* 步骤导航点 */}
         <div class="hidden sm:flex items-center gap-1.5">
-          <For each={Array.from({ length: props.state.totalSteps }, (_, i) => i)} key={i => i}>
+          <For each={Array.from({ length: props.state.totalSteps }, (_, i) => i)}>
             {(i) => (
               <button
                 class="w-1.5 h-1.5 rounded-full transition-all duration-200 hover:scale-125"
@@ -157,7 +157,7 @@ export default function PlayerControls(props: PlayerControlsProps) {
 
           {showSpeedMenu() && (
             <div class="absolute right-0 bottom-full mb-2 rounded-lg border border-border bg-card shadow-lg py-1 min-w-[72px] z-10">
-              <For each={speeds} key={speed => speed}>
+              <For each={speeds}>
                 {(speed) => (
                   <button
                     class="block w-full px-3 py-1.5 text-xs text-left hover:bg-muted transition-colors"

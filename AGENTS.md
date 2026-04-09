@@ -2,6 +2,7 @@
 
 > 本文档面向 AI 编程助手，提供项目架构、开发规范和关键信息速查。
 
+# **强约束**：所有文件读写一律使用 UTF‑8 （无 BOM ）。禁止使用默认编码、GBK 、ANSI 。
 ## 项目概述
 
 **Moonpeak** 是一个基于 [Astro](https://astro.build) 构建的极简现代个人博客，追求极致的阅读体验与优雅的视觉设计。
@@ -15,13 +16,13 @@
 
 | 类别 | 技术 | 版本 | 用途 |
 |------|------|------|------|
-| 框架 | [Astro](https://astro.build) | 5.x | 静态站点生成 |
+| 框架 | [Astro](https://astro.build) | 6.x | 静态站点生成 |
 | 样式 | [Tailwind CSS](https://tailwindcss.com) | 4.x | 原子化 CSS |
 | 交互组件 | [SolidJS](https://www.solidjs.com) | 1.x | 客户端交互 |
 | 代码高亮 | [Expressive Code](https://expressive-code.com) | 0.41.x | 代码块渲染 |
 | 图标 | [Lucide](https://lucide.dev) + [astro-icon](https://www.astroicon.dev) | - | 矢量图标 |
 | 搜索 | [Pagefind](https://pagefind.app) | 1.x | 静态搜索索引 |
-| 页面过渡 | [Swup](https://swup.js.org) | 4.x | 平滑页面切换 |
+| 页面过渡 | [Astro View Transitions](https://docs.astro.build/zh-cn/guides/view-transitions/) | 原生 | 平滑页面切换 |
 | 数学公式 | [KaTeX](https://katex.org) | - | 数学排版 |
 
 ## 项目结构
@@ -40,8 +41,7 @@ moonpeak-astro/
 │   │   │   ├── Pagination.astro           # 分页组件
 │   │   │   ├── ArticleDrawer.astro        # 文章抽屉
 │   │   │   ├── FansWall.astro             # 粉丝墙
-│   │   │   ├── SwupCompat.astro           # Swup 生命周期管理
-│   │   │   └── SwupScrollConfig.astro     # Swup 滚动配置（已弃用，功能合并至 SwupCompat）
+│   │   │   └── Navigation.astro           # 顶部导航栏（View Transitions 兼容）
 │   │   ├── exam/            # 考试系统组件
 │   │   │   ├── Badge.astro                # 徽章组件
 │   │   │   ├── QuestionCard.astro         # 题目卡片
@@ -354,158 +354,59 @@ draft: false
 - 插件: `@expressive-code/plugin-collapsible-sections`
 - 特性: 代码折叠、语法高亮、复制按钮
 
-### Swup (页面过渡)
+### View Transitions (页面过渡)
 
-- 主题: fade (100ms 淡入淡出)
-- 全局实例启用 (支持 Scroll Plugin)
-- 选择器: `a[href]:not([data-no-swup]):not([href^="#"])`
-- **可访问性**: 内置 ARIA live 区域，支持屏幕阅读器通知
-- **动画偏好**: 自动检测 `prefers-reduced-motion`，尊重用户偏好
+Astro 6 原生支持 View Transitions API，提供流畅的页面过渡效果。
 
 #### 配置说明
 
-Swup 配置在 `astro.config.mjs` 中：
+在 `BaseLayout.astro` 中配置：
 
-```javascript
-swup({
-    theme: [Theme.fade, {
-        duration: 100,      // 必须与 CSS 动画时长一致
-        delay: 0,
-        easing: 'ease-in-out',
-    }],
-    globalInstance: true,   // 启用全局实例以支持插件配置
-    // 其他选项由 @swup/astro 自动处理
-}),
+```astro
+---
+import { ClientRouter } from "astro:transitions";
+---
+<head>
+  <ClientRouter />
+</head>
 ```
 
-**重要**: CSS 动画时长（`global.css` 中的 `.transition-fade`）必须与 JS 配置的 `duration` 保持一致（100ms），否则会导致动画不同步。
+#### 动画配置
 
-### SwupCompat 组件
-
-统一的生命周期管理工具，位于 `src/components/common/SwupCompat.astro`，遵循 Swup 官方最佳实践，提供以下功能：
-
-#### API 参考
-
-```typescript
-// 页面切换完成后执行（最常用）
-window.SwupCompat.onPageView(callback, { 
-  immediate: true,              // 是否立即执行一次
-  respectMotionPreference: true // 是否尊重用户的减少动画偏好
-})
-
-// 内容替换前执行（用于清理）
-window.SwupCompat.beforeContentReplace(callback)
-
-// 移除回调
-window.SwupCompat.off(event, callback)
-
-// 触发回调
-window.SwupCompat.emit(event)
-
-// 初始化代码组（rehype-code-group）
-window.SwupCompat.initCodeGroups()
-
-// 运行脚本插件
-window.SwupCompat.runScripts()
-
-// 配置 Scroll Plugin（官方推荐方式）
-window.SwupCompat.configureScrollPlugin({
-  offset: 96,                   // 滚动偏移量（像素）
-  animateScroll: true,          // 是否启用平滑滚动
-  doScrollingRightAway: false   // 是否在内容替换前就开始滚动
-})
-
-// 清理动态内容（在页面切换前自动调用）
-window.SwupCompat.cleanup()
-
-// 更新 ARIA 通知（屏幕阅读器支持）
-window.SwupCompat.updateA11yNotification('页面已加载')
-
-// 动画偏好检测
-window.SwupCompat.prefersReducedMotion  // boolean
-
-// 内部状态（只读）
-window.SwupCompat.__isReady__  // boolean - 是否已完成初始化
+```javascript
+// 顺序淡出淡入动画
+const sequentialFade = {
+  forwards: {
+    old: { name: "content-fade-out", duration: "150ms", easing: "ease-out" },
+    new: { name: "content-fade-in", duration: "200ms", delay: "50ms", easing: "ease-out" }
+  },
+  backwards: {
+    old: { name: "content-fade-out", duration: "150ms", easing: "ease-out" },
+    new: { name: "content-fade-in", duration: "200ms", delay: "50ms", easing: "ease-out" }
+  }
+};
 ```
 
-#### 使用最佳实践
+#### 生命周期事件
 
-**1. 基本用法 - 页面切换后初始化**
 ```javascript
-<script is:inline data-swup-ignore-script>
-  (function() {
-    function init() {
-      // 组件初始化逻辑
-      console.log('组件已初始化');
-    }
-    
-    if (window.SwupCompat) {
-      window.SwupCompat.onPageView(init);
-    } else {
-      // 降级处理
-      document.addEventListener('astro:page-load', init);
-    }
-    
-    // 首次加载执行
-    init();
-  })();
-</script>
-```
+// 准备阶段开始前 - 显示加载指示器、禁用 scroll-snap
+document.addEventListener('astro:before-preparation', () => {
+  // 禁用 scroll-snap 防止干扰
+  document.querySelector('.scroll-snap-container')?.style.setProperty('scroll-snap-type', 'none');
+});
 
-**2. 尊重动画偏好**
-```javascript
-<script is:inline data-swup-ignore-script>
-  (function() {
-    function initAnimation() {
-      // 检查动画偏好
-      if (window.SwupCompat?.prefersReducedMotion) {
-        // 用户偏好减少动画，使用简单过渡
-        document.body.classList.add('reduced-motion');
-      } else {
-        // 正常动画
-        document.body.classList.add('full-animation');
-      }
-    }
-    
-    if (window.SwupCompat) {
-      // respectMotionPreference 默认为 true
-      window.SwupCompat.onPageView(initAnimation);
-    }
-    
-    initAnimation();
-  })();
-</script>
-```
+// DOM 交换前 - 在新文档上设置主题等
+// 这是设置主题的最后安全时机，可防止闪烁
+document.addEventListener('astro:before-swap', (event) => {
+  const theme = localStorage.getItem('theme') || 'light';
+  event.newDocument.documentElement.classList.toggle('dark', theme === 'dark');
+});
 
-**3. 清理逻辑 - 页面切换前执行**
-```javascript
-<script is:inline data-swup-ignore-script>
-  (function() {
-    let eventListeners = [];
-    
-    function init() {
-      // 添加事件监听
-      const handler = () => console.log('事件触发');
-      document.addEventListener('custom-event', handler);
-      eventListeners.push(handler);
-    }
-    
-    function cleanup() {
-      // 清理事件监听
-      eventListeners.forEach(handler => {
-        document.removeEventListener('custom-event', handler);
-      });
-      eventListeners = [];
-    }
-    
-    if (window.SwupCompat) {
-      window.SwupCompat.onPageView(init);
-      window.SwupCompat.beforeContentReplace(cleanup);
-    }
-    
-    init();
-  })();
-</script>
+// 页面切换完成后 - 重新初始化组件
+document.addEventListener('astro:page-load', () => {
+  // 初始化需要在新页面运行的脚本
+});
 ```
 
 ### Pagefind (搜索)
@@ -613,7 +514,7 @@ PUBLIC_IMG_BASE_URL=https://cdn.image.moonpeak.cn/
 使用 `is:inline` 属性避免打包，并添加 TypeScript 忽略注释：
 
 ```astro
-<script is:inline data-swup-ignore-script>
+<script is:inline data-astro-rerun>
   // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
   (function() {
     // 脚本逻辑
@@ -690,24 +591,26 @@ onCleanup(() => {
 });
 ```
 
-### Swup 脚本标记
+### View Transitions 脚本标记
 
 对于需要在页面过渡后重新执行的脚本：
 
 ```astro
-<!-- 普通脚本 - 不会被 Swup 重新执行 -->
-<script is:inline>
+<!-- 普通脚本 - 每次页面切换后自动重新执行 -->
+<script>
   // 初始化逻辑
 </script>
 
-<!-- 需要 Swup 重新加载的脚本 -->
-<script data-swup-reload-script>
-  // 页面切换后重新执行
+<!-- 需要持久化的脚本（只执行一次） -->
+<script is:inline data-astro-rerun>
+  // 使用 data-astro-rerun 强制重新执行
 </script>
 
-<!-- 忽略脚本（Swup Scripts Plugin 不执行） -->
-<script is:inline data-swup-ignore-script>
-  // 全局一次性脚本
+<!-- 使用 Astro 生命周期事件 -->
+<script is:inline>
+  document.addEventListener('astro:page-load', () => {
+    // 页面加载完成后执行
+  });
 </script>
 ```
 
@@ -839,9 +742,12 @@ knowledgePoints: ["知识点1", "知识点2"]
 3. **JS**: 零 JS 默认，交互按需加载 (SolidJS 组件)
 4. **CSS**: Tailwind 4.x 按需生成，CSS 变量系统减少重复
 5. **搜索**: Pagefind 静态索引，无服务端依赖
-6. **Swup**: 页面过渡减少整页刷新
+6. **View Transitions**: 原生页面过渡减少整页刷新
 7. **懒加载**: 图片使用 `loading="lazy"`
 8. **预取**: 基于视口的链接预取（Prefetch）
+9. **页面分级过渡**: Astro 6.x 下默认采用“轻页面走 View Transitions，重页面走整页跳转”的白名单策略，不要把所有页面强行纳入同一种过渡
+10. **文章详情页导航**: 指向 `/blog/...` 的站内链接默认使用 `data-astro-reload`，避免重文章页参与 View Transitions 时出现闪烁或低帧
+11. **重文章页首屏**: 对内容明显偏重的文章页，允许先落白底容器，待滚动稳定后再淡入正文
 
 ## 部署
 
@@ -867,77 +773,99 @@ EXPOSE 80
 ## 注意事项
 
 1. **主题切换**: 主题初始化脚本在 `BaseLayout.astro` 中内联执行，防止闪烁
-2. **Swup 兼容**: 页面过渡需要 `SwupCompat` 组件统一管理生命周期
+2. **View Transitions**: 使用 `ClientRouter` 和 Astro 生命周期事件管理轻页面过渡，`BaseLayout.astro` 只保留最小滚动处理，不使用全局空白遮罩兜底
 3. **KaTeX 样式**: 数学公式需要 `/katex.min.css` 在 `BaseLayout` 中加载
 4. **Content Collections**: 修改 `content.config.ts` 后需重启开发服务器
 5. **搜索功能**: 仅在构建后可用，开发模式显示提示信息
 6. **图片路径**: 开发/生产环境使用不同的图床基础 URL
+7. **文章页主内容过渡**: `ArticleLayout.astro` 默认传入 `disableMainTransition={true}`，不要轻易恢复文章页主内容 fade
+8. **文章页脚本绑定**: `astro:page-load` 下运行的脚本必须防重复绑定，长文章会放大监听器叠加带来的卡顿
+9. **页面职责边界**: 不要在 `BaseLayout.astro` 增加“全站导航遮罩/空白过渡”之类的兜底脚本；页面是否参与过渡，应优先通过链接类型和布局约定控制
+10. **导航栏过渡边界**: `Navigation` 和 `Footer` 不使用 `transition:persist`，避免固定头部在切页时继承旧状态产生晃动
+11. **滚动条稳定性**: 在 `global.css` 保持 `scrollbar-gutter: stable`，并为 `body` 预留纵向滚动条宽度，减少长短页面切换时的水平抖动
 
-### Swup 最佳实践
+### View Transitions 最佳实践
 
-1. **动画时长一致性**: CSS 中的 `.transition-fade` 动画时长（100ms）必须与 `astro.config.mjs` 中的 `duration` 配置保持一致
-2. **脚本标记**: 
-   - 一次性全局脚本使用 `data-swup-ignore-script`
-   - 需要每次页面切换后重新执行的脚本使用 `data-swup-reload-script`
-   - 使用 `SwupCompat.onPageView()` 注册回调替代直接监听事件
-3. **动画偏好**: 始终尊重用户的 `prefers-reduced-motion` 设置，可通过 `SwupCompat.prefersReducedMotion` 检测
-4. **Scroll Plugin**: 不要直接修改 `scrollPlugin.options`，使用 `SwupCompat.configureScrollPlugin()` 或等待 Swup hooks
+1. **动画时长优化**: 使用 GPU 加速的动画属性（`opacity`, `transform`），避免触发重排
+2. **滚动处理**: 在 `astro:before-preparation` / `astro:before-swap` 阶段只做最小化的 `scroll-behavior: auto` 处理，避免平滑滚动干扰过渡动画
+3. **首页 Scroll Snap**: 从首页跳转时需临时禁用 `scroll-snap-type`
+4. **性能优化**: 
+   - 使用 `will-change: transform` 提示浏览器优化
+   - 使用 `contain: layout style paint` 隔离重绘区域
+5. **页面分级**:
+   - 轻页面：关于、标签、列表、工具页，保留 `ClientRouter` 和轻量过渡
+   - 重页面：长文章详情、复杂交互页、明显依赖滚动落位的页面，优先 `data-astro-reload`
+   - 优先“白名单启用过渡”，不要在全站范围做统一兜底动画
+6. **首页到文章页的特殊处理**:
+   - 首页离场时只做最小化处理：关闭 `scroll-snap-type` 和平滑滚动
+   - 不要在离场前主动隐藏 Hero 背景或制造整页空白态
+   - 对文章详情页优先使用整页跳转而不是 View Transitions
 
-### Swup 页面初始化问题
+### View Transitions 常见问题
 
-**如果创建需要客户端数据加载的页面，可以使用 `SwupCompat`：**
+**问题**: 从首页点击文章链接先滚动后 fade
 
-1. 使用 `<script is:inline data-swup-ignore-script>` 标记脚本
-2. 使用 `window.SwupCompat.onPageView(callback)` 注册页面切换回调
-3. 在回调函数中执行数据加载逻辑
+**原因**: 首页的 `scroll-snap-container` 干扰了 View Transitions 的滚动
 
-**示例：**
+**解决方案**:
 ```javascript
-<script is:inline data-swup-ignore-script>
-  (function() {
-    function loadData() {
-      // 加载数据逻辑
-    }
-    
-    if (window.SwupCompat) {
-      window.SwupCompat.onPageView(loadData);
-    }
-    
-    // 首次加载执行
-    loadData();
-  })();
-</script>
+document.addEventListener('astro:before-preparation', () => {
+  const container = document.querySelector('.scroll-snap-container');
+  if (container) {
+    container.style.scrollSnapType = 'none';
+    container.style.overflow = 'visible';
+  }
+});
 ```
 
-### Swup 动画不同步
+### 文章详情页跳转与重内容页策略
 
-**症状**: 页面过渡时动画闪烁或时长不一致
+1. **进入文章详情页默认不走 View Transitions**
+   - 所有指向 `/blog/...` 的站内链接默认添加 `data-astro-reload`
+   - 适用位置包括：首页文章列表、博客列表、分页、标签页、相关文章、上下篇导航
+   - 原因：首页和长文章页组合时，旧页面截图和滚动复位容易造成闪烁或低帧体感
 
-**解决方案**:
-1. 检查 `astro.config.mjs` 中的 `duration` 是否与 `global.css` 中的 `.transition-fade` 动画时长一致（都应为 100ms）
-2. 确保 CSS 选择器正确：
-   ```css
-   html.is-changing .transition-fade { /* 动画开始状态 */ }
-   html.is-animating .transition-fade { /* 动画执行状态 */ }
-   ```
+2. **首页离场处理保持最小化**
+   - 首页只在点击站内链接前关闭 `scroll-snap-type` 和 `scroll-behavior`
+   - 不要在离场前主动隐藏 Hero 背景、停止整页动画或给首页整体加空白态
+   - 原因：过强的离场处理会导致“旧页面先空白再跳转”
 
-### Swup Scroll Plugin 不生效
+3. **重文章页采用“白底先落地，正文稳定后淡入”**
+   - 实现在 `src/layouts/ArticleLayout.astro`
+   - 通过 `#article-page-shell` 承载正文，并在滚动位置稳定后添加 `article-ready`
+   - 仅对重文章启用，普通文章直接显示
+   - 当前重文章判定：
+     - `readingTime >= 8`
+     - 或 `headings.length >= 18`
+     - 或同时满足“有封面图且标题较多”
 
-**症状**: 锚点跳转时被导航栏遮挡
+4. **不要轻易恢复文章页主内容 fade 进入**
+   - `BaseLayout.astro` 提供 `disableMainTransition`
+   - `ArticleLayout.astro` 传入 `disableMainTransition={true}`
+   - 原因：文章页本身内容重时，再叠加主内容 fade，用户落地后立刻滚动会更容易感知掉帧
 
-**解决方案**:
-1. 确保 `SwupCompat` 组件已正确加载
-2. 检查控制台是否有 `[SwupCompat] Binding to swup hooks` 日志
-3. 确认 `configureScrollPlugin({ offset: 96 })` 中的 offset 值是否正确
+5. **文章页滚动脚本要避免重复绑定**
+   - `ScrollToTop`、`ArticleDrawer`、目录高亮等脚本在 `astro:page-load` 下必须防重复绑定
+   - 目录高亮只在 active heading 真变化时更新，目录内部滚动使用 `behavior: 'auto'`
+   - 原因：长文章会放大 document 级监听和多余动画的性能问题
 
-### 减少动画偏好被忽略
+### Astro 6.x 页面分级规范
 
-**症状**: 用户设置了减少动画但页面仍有动画效果
-
-**解决方案**:
-1. 使用 `window.SwupCompat.prefersReducedMotion` 检测用户偏好
-2. 确保 `onPageView` 的 `respectMotionPreference` 选项为 `true`（默认值）
-3. CSS 动画也应添加 `@media (prefers-reduced-motion: reduce)` 媒体查询
+1. **默认采用白名单过渡**
+   - 轻页面：关于、标签、列表、工具页，可保留 `ClientRouter` 和轻量过渡
+   - 重页面：长文章详情、复杂交互页、明显依赖滚动落位的页面，优先使用普通导航或 `data-astro-reload`
+   - 不要把所有页面强行纳入同一种过渡策略
+2. **`BaseLayout.astro` 只做最小路由职责**
+   - 保留 `ClientRouter`、主题同步、切页前临时禁用平滑滚动
+   - 不要在 `BaseLayout.astro` 增加全局遮罩、整页空白态或其它覆盖 Astro 原生过渡的兜底层
+   - `Navigation` / `Footer` 不做 `transition:persist`，固定头部和页脚应按新页面重新渲染
+3. **页面级问题在页面级解决**
+   - 首页只负责在离场前关闭 `scroll-snap-type` 和平滑滚动
+   - 文章页只负责自己的重内容落地策略和脚本防重复绑定
+   - 链接是否整页跳转，应优先在链接入口声明，而不是交给全局脚本兜底
+4. **先消除布局抖动，再考虑禁用过渡**
+   - 长短页面切换时，优先通过 `scrollbar-gutter: stable` 和稳定的 `body` 滚动条宽度消除导航栏横向晃动
+   - 如果问题已解决，不需要因为个别过渡问题移除整个站点的 `ClientRouter`
 
 ## 安全考虑
 
@@ -956,9 +884,9 @@ EXPOSE 80
 - 检查是否正确导入 `global.css`
 - Tailwind 4.x 使用 `@import` 而非 `@tailwind` 指令
 
-### Swup 过渡异常
-- 确保 `SwupCompat` 组件已加载
-- 检查脚本是否有 `data-swup-ignore-script` 标记
+### View Transitions 过渡异常
+- 检查 `ClientRouter` 是否正确导入和配置
+- 使用 `astro:page-load` 事件重新初始化组件
 
 ### 图片不显示
 - 开发环境检查 `PUBLIC_IMG_BASE_URL` 配置
@@ -971,4 +899,4 @@ EXPOSE 80
 
 ---
 
-*最后更新: 2026-03-26* - 添加考试系统、算法可视化、容器查询等文档
+*最后更新: 2026-03-31* - Astro 6.x 升级、迁移到 Content Layer API、View Transitions 优化

@@ -55,7 +55,6 @@ const createArrayWithLabel = (
   prefix: string,
   startX: number,
   y: number,
-  size: number,
   capacity: number,
   values: string[],
   highlightIndex?: number
@@ -110,7 +109,7 @@ export const arraylistResizeDemo: AlgorithmDemoConfig = {
 
   initialState: {
     elements: [
-      ...createArrayWithLabel('Array', ARRAY_X_START, ARRAY_Y, 0, 4, []),
+      ...createArrayWithLabel('Array', ARRAY_X_START, ARRAY_Y, 4, []),
       { id: 'info', type: 'text', x: 400 + OFFSET_X, y: 50 + OFFSET_Y, value: '初始容量 = 4，size = 0', color: '#6b7280', visible: true }
     ],
     description: '初始状态：创建默认容量为 4 的空 ArrayList'
@@ -126,7 +125,7 @@ export const arraylistResizeDemo: AlgorithmDemoConfig = {
       codeLineRange: [0, 3],
       state: {
         elements: [
-          ...createArrayWithLabel('Array', ARRAY_X_START, ARRAY_Y, 1, 4, ['A']),
+          ...createArrayWithLabel('Array', ARRAY_X_START, ARRAY_Y, 4, ['A']),
           { id: 'info', type: 'text', x: 400 + OFFSET_X, y: 50 + OFFSET_Y, value: 'size=1 < capacity=4，无需扩容', color: '#10b981', visible: true }
         ],
         highlights: [{ targetId: 'Array-slot-0', color: '#3b82f6' }],
@@ -143,7 +142,7 @@ export const arraylistResizeDemo: AlgorithmDemoConfig = {
       codeLineRange: [13, 15],
       state: {
         elements: [
-          ...createArrayWithLabel('Array', ARRAY_X_START, ARRAY_Y, 3, 4, ['A', 'B', 'C']),
+          ...createArrayWithLabel('Array', ARRAY_X_START, ARRAY_Y, 4, ['A', 'B', 'C']),
           { id: 'info', type: 'text', x: 400 + OFFSET_X, y: 50 + OFFSET_Y, value: 'size=3 < capacity=4，继续添加', color: '#10b981', visible: true }
         ],
         highlights: [{ targetId: 'Array-slot-2', color: '#3b82f6' }],
@@ -160,7 +159,7 @@ export const arraylistResizeDemo: AlgorithmDemoConfig = {
       codeLineRange: [1, 3],
       state: {
         elements: [
-          ...createArrayWithLabel('Array', ARRAY_X_START, ARRAY_Y, 3, 4, ['A', 'B', 'C']),
+          ...createArrayWithLabel('Array', ARRAY_X_START, ARRAY_Y, 4, ['A', 'B', 'C']),
           { id: 'check', type: 'text', x: 400 + OFFSET_X, y: 50 + OFFSET_Y, value: 'size+1=4 <= capacity=4，刚好够用', color: '#f59e0b', visible: true }
         ],
         highlights: [{ targetId: 'Array-slot-3', color: '#f59e0b', blink: true }],
@@ -177,7 +176,7 @@ export const arraylistResizeDemo: AlgorithmDemoConfig = {
       codeLineRange: [13, 15],
       state: {
         elements: [
-          ...createArrayWithLabel('Array', ARRAY_X_START, ARRAY_Y, 4, 4, ['A', 'B', 'C', 'D']),
+          ...createArrayWithLabel('Array', ARRAY_X_START, ARRAY_Y, 4, ['A', 'B', 'C', 'D']),
           { id: 'full', type: 'text', x: 400 + OFFSET_X, y: 50 + OFFSET_Y, value: '数组已满！size=4 == capacity=4', color: '#ef4444', visible: true }
         ],
         highlights: [{ targetId: 'Array-slot-3', color: '#3b82f6' }],
@@ -194,7 +193,7 @@ export const arraylistResizeDemo: AlgorithmDemoConfig = {
       codeLineRange: [5, 6],
       state: {
         elements: [
-          ...createArrayWithLabel('Array', ARRAY_X_START, ARRAY_Y, 4, 4, ['A', 'B', 'C', 'D']),
+          ...createArrayWithLabel('Array', ARRAY_X_START, ARRAY_Y, 4, ['A', 'B', 'C', 'D']),
           { id: 'need-resize', type: 'text', x: 400 + OFFSET_X, y: 50 + OFFSET_Y, value: 'minCapacity=5 > capacity=4，需要扩容！', color: '#ef4444', visible: true }
         ],
         highlights: [{ targetId: 'Array-slot-0', color: '#ef4444', blink: true }],
@@ -211,7 +210,7 @@ export const arraylistResizeDemo: AlgorithmDemoConfig = {
       codeLineRange: [6, 8],
       state: {
         elements: [
-          ...createArrayWithLabel('Old', ARRAY_X_START, ARRAY_Y, 4, 4, ['A', 'B', 'C', 'D']),
+          ...createArrayWithLabel('Old', ARRAY_X_START, ARRAY_Y, 4, ['A', 'B', 'C', 'D']),
           { id: 'calc', type: 'text', x: 400 + OFFSET_X, y: 50 + OFFSET_Y, value: 'newCapacity = 4 + (4 >> 1) = 6', color: '#8b5cf6', visible: true },
           { id: 'formula', type: 'text', x: 400 + OFFSET_X, y: 75 + OFFSET_Y, value: '扩容为原来的 1.5 倍', color: '#6b7280', visible: true }
         ],
@@ -228,8 +227,8 @@ export const arraylistResizeDemo: AlgorithmDemoConfig = {
       codeLineRange: [9, 11],
       state: {
         elements: [
-          ...createArrayWithLabel('Old', ARRAY_X_START, ARRAY_Y, 4, 4, ['A', 'B', 'C', 'D']),
-          ...createArrayWithLabel('New', ARRAY_X_START, NEW_ARRAY_Y, 0, 6, []),
+          ...createArrayWithLabel('Old', ARRAY_X_START, ARRAY_Y, 4, ['A', 'B', 'C', 'D']),
+          ...createArrayWithLabel('New', ARRAY_X_START, NEW_ARRAY_Y, 6, []),
           { id: 'copying', type: 'text', x: 400 + OFFSET_X, y: 50 + OFFSET_Y, value: 'Arrays.copyOf(elementData, 6)', color: '#8b5cf6', visible: true },
           { id: 'arrow', type: 'text', x: 400 + OFFSET_X, y: 320 + OFFSET_Y, value: '↓ 复制元素', color: '#8b5cf6', visible: true }
         ],
@@ -252,7 +251,7 @@ export const arraylistResizeDemo: AlgorithmDemoConfig = {
       codeLineRange: [13, 15],
       state: {
         elements: [
-          ...createArrayWithLabel('New', ARRAY_X_START, NEW_ARRAY_Y, 5, 6, ['A', 'B', 'C', 'D', 'E']),
+          ...createArrayWithLabel('New', ARRAY_X_START, NEW_ARRAY_Y, 6, ['A', 'B', 'C', 'D', 'E']),
           { id: 'done', type: 'text', x: 400 + OFFSET_X, y: 50 + OFFSET_Y, value: '✓ 扩容完成，新容量 = 6', color: '#10b981', visible: true },
           { id: 'summary', type: 'text', x: 400 + OFFSET_X, y: 75 + OFFSET_Y, value: 'size=5，还可以再添加 1 个元素', color: '#6b7280', visible: true }
         ],

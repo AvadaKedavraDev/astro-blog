@@ -4,6 +4,37 @@
 @plugin "@tailwindcss/typography";
 @plugin 'tailwind-scrollbar';
 
+/* ===== 性能优化：Containment 和图层提升 ===== */
+@layer base {
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    overflow-y: scroll;
+  }
+
+  /* 创建新的图层上下文，防止重绘扩散 */
+  .gpu-layer {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* 内容隔离 - 防止布局抖动 */
+  .content-isolate {
+    contain: layout style paint;
+  }
+  
+  /* 性能优化的滚动容器 */
+  .scroll-optimized {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    will-change: transform;
+  }
+}
+
 /* ===== 暗黑模式变体 ===== */
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -23,6 +54,16 @@
   --card-foreground: #171717;
   --code-bg: #f5f5f5;
   --code-text: #ea580c;
+  --code-block-bg: #f7f8fc;
+  --code-block-border: #d9deea;
+  --code-block-shadow: 0 18px 38px -28px rgba(15, 23, 42, 0.28);
+  --code-inline-bg: #eef2ff;
+  --code-inline-text: #3347a9;
+  --nav-active-bg: color-mix(in oklch, #1e40af 10%, white);
+  --nav-active-border: color-mix(in oklch, #1d4ed8 26%, var(--border));
+  --nav-active-text: #12357a;
+  --nav-active-shadow: 0 10px 22px -18px rgba(30, 64, 175, 0.45);
+  --nav-active-bar: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%);
   --ec-theme-active-index: 0;
   
   /* 文章阅读设置变量 */
@@ -57,6 +98,16 @@
   --card-foreground: #fafafa;
   --code-bg: #1a1a1a;
   --code-text: #fb923c;
+  --code-block-bg: #0f172a;
+  --code-block-border: #243041;
+  --code-block-shadow: 0 22px 40px -30px rgba(2, 6, 23, 0.9);
+  --code-inline-bg: #172554;
+  --code-inline-text: #bfd7ff;
+  --nav-active-bg: color-mix(in oklch, #1d4ed8 22%, #111827);
+  --nav-active-border: color-mix(in oklch, #60a5fa 28%, #243041);
+  --nav-active-text: #eff6ff;
+  --nav-active-shadow: 0 12px 24px -18px rgba(59, 130, 246, 0.55);
+  --nav-active-bar: linear-gradient(90deg, #60a5fa 0%, #22d3ee 100%);
   --ec-theme-active-index: 1;
   
   /* 深色模式文档颜色 */
@@ -152,6 +203,12 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     font-family: var(--font-ui);
+  }
+  
+  /* View Transitions 期间强制禁用平滑滚动 */
+  html.is-changing,
+  html.is-animating {
+    scroll-behavior: auto !important;
   }
 
   body {
@@ -448,8 +505,9 @@
     font-size: 0.875em;
     font-weight: 500;
     font-family: var(--font-code);
-    background-color: color-mix(in oklch, var(--muted) 80%, transparent);
-    color: var(--prose-heading);
+    background-color: var(--code-inline-bg);
+    color: var(--code-inline-text);
+    border: 1px solid color-mix(in oklch, var(--code-inline-text) 12%, transparent);
   }
 
   .prose-custom :where(code)::before,
@@ -461,23 +519,26 @@
   .prose-custom :where(pre) {
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
-    border-radius: 0.375rem;
+    border-radius: 0.875rem;
     overflow: hidden;
-    background-color: var(--prose-blockquote-bg);
-    border: 1px solid var(--border);
+    background-color: var(--code-block-bg);
+    border: 1px solid var(--code-block-border);
+    box-shadow: var(--code-block-shadow);
   }
 
   .dark .prose-custom :where(pre) {
-    background-color: #1e293b;
-    border-color: #334155;
+    background-color: var(--code-block-bg);
+    border-color: var(--code-block-border);
   }
 
   .prose-custom .expressive-code {
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
-    border-radius: 0.375rem;
+    border-radius: 0.875rem;
     overflow: hidden;
-    border: 1px solid var(--border);
+    border: 1px solid var(--code-block-border);
+    box-shadow: var(--code-block-shadow);
+    background: var(--code-block-bg);
   }
 
   /* 表格 */
@@ -486,25 +547,74 @@
     font-size: 0.9375rem;
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
-    border-collapse: collapse;
-    border: 1px solid var(--border);
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid color-mix(in oklch, var(--border) 82%, transparent);
+    border-radius: 0.875rem;
+    background: color-mix(in oklch, var(--card) 99%, var(--muted) 1%);
+    box-shadow:
+      0 1px 0 color-mix(in oklch, var(--background) 78%, transparent) inset,
+      0 10px 26px -24px color-mix(in oklch, var(--foreground) 16%, transparent);
+    table-layout: auto;
+    overflow: hidden;
   }
 
   .prose-custom :where(th), .prose-custom :where(td) {
-    padding: 0.75rem 1rem;
+    padding: 0.8rem 1rem;
     text-align: left;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid color-mix(in oklch, var(--border) 62%, transparent);
+    vertical-align: top;
   }
 
   .prose-custom :where(th) {
     font-weight: 600;
-    background-color: var(--muted);
-    color: var(--foreground);
-    font-size: 0.875rem;
+    background: color-mix(in oklch, var(--muted) 72%, var(--background) 28%);
+    color: color-mix(in oklch, var(--foreground) 94%, transparent);
+    font-size: 0.8125rem;
+    letter-spacing: 0.015em;
+    border-bottom-color: color-mix(in oklch, var(--border) 78%, transparent);
+  }
+
+  .prose-custom :where(td) {
+    color: color-mix(in oklch, var(--prose-text) 95%, transparent);
+    background: transparent;
+  }
+
+  .prose-custom :where(tbody tr) {
+    transition: background-color 0.18s ease;
+  }
+
+  .prose-custom :where(tbody tr:nth-child(even) td) {
+    background: color-mix(in oklch, var(--muted) 10%, var(--background) 90%);
+  }
+
+  .prose-custom :where(tbody tr:hover td) {
+    background: color-mix(in oklch, var(--muted) 22%, var(--background) 78%);
   }
 
   .prose-custom :where(tr):last-child td {
     border-bottom: none;
+  }
+
+  .prose-custom :where(th:first-child) {
+    border-top-left-radius: 0.875rem;
+  }
+
+  .prose-custom :where(th:last-child) {
+    border-top-right-radius: 0.875rem;
+  }
+
+  .prose-custom :where(td + td),
+  .prose-custom :where(th + th) {
+    border-left: 1px solid color-mix(in oklch, var(--border) 38%, transparent);
+  }
+
+  .prose-custom :where(caption) {
+    caption-side: bottom;
+    padding-top: 0.875rem;
+    font-size: 0.8125rem;
+    color: color-mix(in oklch, var(--muted-foreground) 88%, transparent);
+    text-align: left;
   }
 
   /* 分隔线 */
@@ -770,6 +880,27 @@
     background-color: color-mix(in oklch, var(--muted) 70%, #ffffff 8%);
   }
 
+  .nav-link-active {
+    color: var(--nav-active-text) !important;
+    background: var(--nav-active-bg) !important;
+    border: 1px solid var(--nav-active-border);
+    box-shadow: var(--nav-active-shadow);
+    font-weight: 600;
+  }
+
+  .nav-link-active .nav-active-bar {
+    opacity: 1;
+    background: var(--nav-active-bar);
+  }
+
+  .mobile-nav-link-active {
+    color: var(--nav-active-text) !important;
+    background: var(--nav-active-bg) !important;
+    border: 1px solid var(--nav-active-border);
+    box-shadow: var(--nav-active-shadow);
+    font-weight: 600;
+  }
+
   .article-title-link {
     color: var(--foreground);
     transition: all 0.2s ease;
@@ -901,6 +1032,7 @@
 /* ===== Expressive Code ===== */
 .expressive-code {
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .expressive-code .frame .header,
@@ -913,7 +1045,7 @@
 
 .expressive-code pre {
   transition: background-color 0.3s ease, color 0.3s ease;
-  border-radius: 0.625rem !important;
+  border-radius: 0.875rem !important;
   margin: 0 !important;
 }
 
@@ -924,11 +1056,16 @@
 
 .expressive-code .copy-button {
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  transform: scale(0.94);
+  background: color-mix(in oklch, var(--background) 72%, transparent) !important;
+  border: 1px solid color-mix(in oklch, var(--border) 78%, transparent) !important;
+  backdrop-filter: blur(12px);
 }
 
 .expressive-code:hover .copy-button {
   opacity: 1;
+  transform: scale(1);
 }
 
 /* ===== 动画 ===== */
@@ -1193,17 +1330,33 @@
   transform: translateY(-4px);
 }
 
-/* ===== Swup 页面过渡 ===== */
-/* 注意：动画时长必须与 astro.config.mjs 中的 Swup 配置保持一致 */
-.transition-fade {
-  transition: opacity 100ms ease-in-out;
-  opacity: 1;
+/* ===== View Transitions API 页面过渡 ===== */
+/* 方案 3: 顺序淡出淡入 - 内容区域先完全淡出，再淡入新内容 */
+
+/* 持久化元素（导航栏、页脚）在过渡时保持不动 */
+::view-transition-group(navbar),
+::view-transition-group(footer) {
+  animation: none !important;
 }
 
-html.is-changing .transition-fade,
-html.is-animating .transition-fade {
-  opacity: 0;
-  transition: opacity 100ms ease-in-out;
+/* 内容淡出动画 */
+@keyframes content-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* 内容淡入动画 */
+@keyframes content-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ===== 阅读设置 ===== */
@@ -1317,11 +1470,12 @@ article.theme-dark .card-base {
     scroll-behavior: auto !important;
   }
 
-  .transition-fade,
-  html.is-changing .transition-fade,
-  html.is-animating .transition-fade {
-    transition: none !important;
-    opacity: 1 !important;
+  /* 禁用 View Transitions 动画 */
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-group(navbar),
+  ::view-transition-group(footer) {
+    animation: none !important;
   }
 }
 

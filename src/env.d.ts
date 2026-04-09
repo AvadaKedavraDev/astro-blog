@@ -1,32 +1,5 @@
 /// <reference types="astro/client" />
 
-// Swup 类型
-declare interface SwupHooks {
-  on: (event: string, callback: () => void) => void;
-}
-
-declare interface SwupInstance {
-  hooks: SwupHooks;
-  findPlugin: (name: string) => any;
-}
-
-// SwupCompat 类型
-declare interface SwupCompatCallbacks {
-  'page:view': Array<() => void>;
-  'content:replace:before': Array<() => void>;
-}
-
-declare interface SwupCompatInstance {
-  callbacks: SwupCompatCallbacks;
-  __isReady__: boolean;
-  onPageView: (callback: () => void, options?: { immediate?: boolean }) => (() => void);
-  beforeContentReplace: (callback: () => void) => (() => void);
-  off: (event: keyof SwupCompatCallbacks, callback: () => void) => void;
-  emit: (event: keyof SwupCompatCallbacks) => void;
-  runScripts: () => void;
-  init: () => void;
-}
-
 // Pagefind 类型
 declare interface PagefindResult {
   id: string;
@@ -58,12 +31,6 @@ declare interface ThemeManager {
 
 // 声明全局变量
 interface Window {
-  // Swup
-  swup?: SwupInstance;
-  
-  // SwupCompat
-  SwupCompat?: SwupCompatInstance;
-  
   // Pagefind
   pagefind?: PagefindInstance;
   
@@ -78,16 +45,6 @@ interface Window {
 // 声明模块
 declare module 'astro-icon/components' {
   export const Icon: any;
-}
-
-declare module '@swup/astro' {
-  const swup: any;
-  export default swup;
-  export const Theme: {
-    fade: string;
-    slide: string;
-    overlay: string;
-  };
 }
 
 // 环境变量

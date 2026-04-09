@@ -171,7 +171,7 @@ const actionCommands = [
   </div>
 </div>
 
-<script is:inline data-swup-ignore-script>
+<script is:inline>
   // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
   (function() {
     // DOM 元素
@@ -625,20 +625,8 @@ const actionCommands = [
       }, 2000);
     }
 
-    // 初始化
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
-    }
-
-    // Swup 兼容
-    if (window.SwupCompat) {
-      window.SwupCompat.onPageView(() => {
-        // 重新获取 DOM 引用
-        setTimeout(init, 0);
-      });
-    }
+    // ClientRouter 页面加载和过渡后初始化
+    document.addEventListener('astro:page-load', init);
   })();
 </script>
 

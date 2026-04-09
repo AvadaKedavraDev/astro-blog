@@ -16,7 +16,7 @@ interface Props {
   ogImage?: string;
 }
 
-const { title, description, canonicalUrl, ogImage = '/favicon.svg' } = Astro.props;
+const { title, description, canonicalUrl, ogImage = '/logo.png' } = Astro.props;
 
 const siteName = "Moonpeak";
 const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
@@ -45,6 +45,6 @@ const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`;
 {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
 <!-- Favicon -->
-<link rel="icon" type="image/png" href="/favicon.svg" />
+<link rel="icon" type="image/png" href="/logo.png" />
 
 <title>{fullTitle}</title>

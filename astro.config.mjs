@@ -11,7 +11,7 @@ import remarkBreaks from 'remark-breaks';
 import remarkCallouts from 'remark-callouts';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import swup, {Theme} from '@swup/astro';
+
 import icon from 'astro-icon';
 import solid from '@astrojs/solid-js';
 
@@ -25,21 +25,48 @@ const customLatte = {
   colors: {
     ...latte.colors,
     // 核心背景色（代码块背景）
-    'editor.background': '#f6f6fa',  
+    'editor.background': '#f7f8fc',  
     // 各种边框色
-    'panel.border': '#e1e1e8',           // 面板边框
-    'editorGroup.border': '#e1e1e8',     // 编辑器组边框
-    'sideBar.border': '#e1e1e8',         // 侧边栏边框（如果有）
+    'panel.border': '#d9deea',           // 面板边框
+    'editorGroup.border': '#d9deea',     // 编辑器组边框
+    'sideBar.border': '#d9deea',         // 侧边栏边框（如果有）
     // 如果需要调整行号栏背景等
-    'editorLineNumber.foreground': '#9ca0b0',
+    'editorLineNumber.foreground': '#8d95ab',
   }
 };
 
 // https://astro.build/config
 export default defineConfig({
+    // 站点配置
+    site: 'https://moonpeak.cn',
+    
+    // 输出配置
+    output: 'static',
+    
+    // 构建配置 - 性能优化
+    build: {
+        // 压缩 HTML
+        inlineStylesheets: 'auto',
+    },
+    
     vite: {
         // @ts-ignore - TailwindCSS Vite 插件类型版本不匹配，不影响运行
         plugins: [tailwindcss()],
+        // 构建优化
+        build: {
+            // 代码分割
+            rollupOptions: {
+                output: {
+                    manualChunks: {
+                        // 将图标库单独打包
+                        'icons': ['astro-icon'],
+                    },
+                },
+            },
+            // 压缩选项
+            minify: 'esbuild',
+            cssMinify: true,
+        },
     },
 
     // 预取配置 - 提升页面切换速度
@@ -48,29 +75,29 @@ export default defineConfig({
         prefetchAll: true,
         defaultStrategy: 'viewport',
     },
+    
+    // 实验性功能 - 根据 Astro 版本选择合适的实验性功能
+    // 注意：实验性功能需要查看官方文档
+    // https://docs.astro.build/zh-cn/reference/experimental-flags/
 
     markdown: {
         // 解决MD 换行被破坏、注释挤在一起的问题
         // @ts-ignore - remark 插件类型版本不匹配，不影响运行
         remarkPlugins: [remarkGfm, remarkBreaks, remarkCallouts, remarkMath],
         rehypePlugins: [rehypeKatex, rehypeCodeGroup],
+        // 优化语法高亮性能
+        syntaxHighlight: 'shiki',
+        shikiConfig: {
+            theme: 'github-light',
+            themes: {
+                light: 'github-light',
+                dark: 'github-dark',
+            },
+            wrap: true,
+        },
     },
 
     integrations: [
-        swup({
-            theme: [Theme.fade, {
-                duration: 100,
-                delay: 0,
-                easing: 'ease-in-out',
-                factor: 1
-            }],
-
-            // @ts-ignore
-            animateHistoryBrowsing: false,
-            linkSelector: 'a[href]:not([data-no-swup]):not([href^="#"])',
-            // 启用全局实例，以便配置 Scroll Plugin
-            globalInstance: true,
-        }),
         expressiveCode({
             themes: [customLatte, 'houston'],
             useDarkModeMediaQuery: false,

@@ -27,6 +27,7 @@ const { prevArticle, nextArticle } = Astro.props;
       {prevArticle ? (
         <a
           href={`/blog/${prevArticle.slug}/`}
+          data-astro-reload
           class="group block p-6 card-base !no-underline interactive-item"
         >
           <div class="flex items-center gap-2 text-sm text-muted-foreground mb-2 group-hover:text-foreground transition-colors">
@@ -52,6 +53,7 @@ const { prevArticle, nextArticle } = Astro.props;
       {nextArticle ? (
         <a
           href={`/blog/${nextArticle.slug}/`}
+          data-astro-reload
           class="group block p-6 card-base !no-underline interactive-item text-right"
         >
           <div class="flex items-center justify-end gap-2 text-sm text-muted-foreground mb-2 group-hover:text-foreground transition-colors">

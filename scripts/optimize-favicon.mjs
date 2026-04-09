@@ -5,7 +5,6 @@
 
 import sharp from 'sharp';
 import fs from 'fs/promises';
-import path from 'path';
 
 const FAVICON_PATH = 'public/favicon.png';
 const BACKUP_PATH = 'public/favicon.png.backup';

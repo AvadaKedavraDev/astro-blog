@@ -47,7 +47,7 @@ const LIST_START_Y = 220 + OFFSET_Y;
 const LIST_SPACING = 75;
 
 // 创建数组单元格
-const createArraySlot = (index: number, x: number, data?: { hash?: number; key?: string; value?: any; next?: string }): VisualElement => ({
+const createArraySlot = (index: number, x: number, data?: { hash?: number; key?: string; value?: any; next?: string | null }): VisualElement => ({
   id: `array-${index}`,
   type: 'array',
   x, y: ARRAY_Y,
@@ -69,7 +69,7 @@ const createListNode = (id: string, x: number, level: number, hash: number, key:
   width: 110,
   height: 55,
   visible: true,
-  metadata: { hash, key, value, next: hasNext ? 'next' : null }
+  metadata: { hash, key, value, next: hasNext ? 'next' : undefined }
 });
 
 // 基础数组位置

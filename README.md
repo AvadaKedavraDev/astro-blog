@@ -34,7 +34,7 @@
 - **📝 丰富的 Markdown** — 支持代码高亮、数学公式、Callouts、任务列表等
 - **🖼️ 图片灯箱** — 文章内图片支持点击放大预览
 - **📱 响应式设计** — 完美适配桌面端和移动端
-- **🔄 平滑过渡** — Swup 实现页面间丝滑过渡效果
+- **🔄 平滑过渡** — Astro View Transitions 实现页面间丝滑过渡效果
 
 ## 🛠️ 技术栈
 
@@ -45,7 +45,7 @@
 | 代码高亮 | [Expressive Code](https://expressive-code.com) — 美观的代码块 |
 | 图标 | [Lucide](https://lucide.dev) — 精美的开源图标库 |
 | 搜索 | [Pagefind](https://pagefind.app) — 静态站点搜索 |
-| 页面过渡 | [Swup](https://swup.js.org) — 平滑的页面过渡 |
+| 页面过渡 | [Astro View Transitions](https://docs.astro.build/zh-cn/guides/view-transitions/) — 平滑的页面过渡 |
 | 数学公式 | [KaTeX](https://katex.org) — 高性能数学排版 |
 
 ## 🚀 快速开始

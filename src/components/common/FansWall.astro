@@ -164,13 +164,12 @@ const totalSections = 1 + enrichedFans.length + 1;
     // 全屏滚动控制器
     class FullPageScroll {
         private container: HTMLElement;
-        private sections: HTMLElement[];
+        private sections: HTMLElement[] = [];
         private currentIndex: number = 0;
         private isScrolling: boolean = false;
         private scrollTimeout: ReturnType<typeof setTimeout> | null = null;
         private touchStartY: number = 0;
         private readonly scrollCooldown: number = 800;
-        private isInFreeScroll: boolean = false;
 
         constructor(containerId: string) {
             this.container = document.getElementById(containerId) as HTMLElement;
@@ -353,8 +352,8 @@ const totalSections = 1 + enrichedFans.length + 1;
         }
     }
 
-    // 初始化
-    document.addEventListener('DOMContentLoaded', () => {
+    // ClientRouter 页面加载和过渡后初始化
+    document.addEventListener('astro:page-load', () => {
         new FullPageScroll('fanswall-container');
     });
 </script>

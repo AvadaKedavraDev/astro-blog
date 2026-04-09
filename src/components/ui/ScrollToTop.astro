@@ -1,7 +1,7 @@
 ---
 /**
  * @description 返回顶部按钮组件，滚动超过300px时显示
- * @features requestAnimationFrame 优化、平滑滚动、Swup 兼容
+ * @features requestAnimationFrame 优化、平滑滚动、View Transitions 兼容
  * @usage 在 BaseLayout 中引用
  */
 import { Icon } from "astro-icon/components";
@@ -20,60 +20,62 @@ import { Icon } from "astro-icon/components";
   />
 </button>
 
-<script is:inline data-swup-ignore-script>
+<script is:inline>
   // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
   (function() {
+    let scrollHandler = null;
+    let clickBound = false;
+
     function initScrollToTop() {
       const button = document.getElementById('scroll-to-top');
       if (!button) return;
       
       // 移除旧的事件监听器（通过克隆）
-      const newButton = button.cloneNode(true);
-      button.parentNode.replaceChild(newButton, button);
-      
       let ticking = false;
       
       function toggleVisibility() {
         const scrollTop = window.scrollY;
         if (scrollTop > 300) {
-          newButton.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
-          newButton.classList.add('opacity-100', 'translate-y-0');
+          button.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+          button.classList.add('opacity-100', 'translate-y-0');
         } else {
-          newButton.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
-          newButton.classList.remove('opacity-100', 'translate-y-0');
+          button.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+          button.classList.remove('opacity-100', 'translate-y-0');
         }
         ticking = false;
       }
       
-      window.addEventListener('scroll', function() {
+      if (scrollHandler) {
+        window.removeEventListener('scroll', scrollHandler);
+      }
+
+      scrollHandler = function() {
         if (!ticking) {
           requestAnimationFrame(toggleVisibility);
           ticking = true;
         }
-      }, { passive: true });
+      };
+
+      window.addEventListener('scroll', scrollHandler, { passive: true });
       
-      newButton.addEventListener('click', function() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
+      if (!clickBound) {
+        button.addEventListener('click', function() {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        clickBound = true;
+      }
       
       // 初始检查
       toggleVisibility();
     }
     
-    // 页面加载时初始化
+    // ClientRouter 页面加载和过渡后初始化
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initScrollToTop);
     } else {
       initScrollToTop();
     }
-    
-    // Swup 兼容 - 使用统一的 SwupCompat
-    if (window.SwupCompat) {
-      window.SwupCompat.onPageView(initScrollToTop);
-    } else {
-      // 降级处理
-      document.addEventListener('swup:contentReplaced', initScrollToTop);
-      document.addEventListener('astro:page-load', initScrollToTop);
-    }
+
+    document.addEventListener('astro:page-load', initScrollToTop);
   })();
 </script>

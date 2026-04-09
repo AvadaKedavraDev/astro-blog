@@ -46,7 +46,7 @@ export default function CodePanel(props: CodePanelProps) {
       {/* 代码区域 */}
       <div class="flex-1 overflow-auto px-3 py-2 bg-background min-h-0">
         <div class="font-mono text-[13px] leading-6">
-          <For each={props.codeLines} key="lineNumber">
+          <For each={props.codeLines}>
             {(line, index) => (
               <div
                 class={`flex items-start gap-3 px-2 py-0.5 rounded transition-all duration-200 ${

@@ -1,10 +1,9 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
-import { getCollection, type CollectionEntry } from "astro:content";
-import { getAllTags } from "@lib/post";
+import { getAllTags, getPublishedPosts } from "@lib/post";
 
 export async function getStaticPaths() {
-  const posts = await getCollection("blog");
+  const posts = await getPublishedPosts();
   const tagSet = new Set<string>();
   
   posts.forEach(post => {
@@ -16,10 +15,7 @@ export async function getStaticPaths() {
 
 const { tag } = Astro.params;
 
-const allPosts = (await getCollection("blog")).sort(
-  (a: CollectionEntry<"blog">, b: CollectionEntry<"blog">) =>
-    new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
-);
+const allPosts = await getPublishedPosts();
 
 const taggedPosts = allPosts.filter(post => 
   post.data.tags?.includes(tag)
@@ -56,7 +52,7 @@ const allTags = await getAllTags();
       <div class="space-y-1">
         {taggedPosts.map((post) => (
           <article class="group">
-            <a href={`/blog/${post.slug}/`} class="block">
+            <a href={`/blog/${post.id}/`} class="block" data-astro-reload>
               <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-5 py-5 list-item-base">
                 <!-- Date -->
                 <time class="text-sm text-muted-foreground font-mono shrink-0 w-24">

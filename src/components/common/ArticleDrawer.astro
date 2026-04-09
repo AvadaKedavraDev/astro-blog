@@ -42,10 +42,11 @@
     </div>
 </aside>
 
-<script is:inline data-swup-ignore-script>
+<script is:inline>
 // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
 (function() {
     'use strict';
+    let eventsBound = false;
     
     // 抽屉状态
     const state = {
@@ -180,7 +181,7 @@
     
     // 事件委托处理器 - 处理抽屉点击
     function handleLinkClick(e) {
-        const link = e.target.closest('a[href^="/blog/"][data-no-swup]');
+        const link = e.target.closest('a[href^="/blog/"][data-astro-reload]');
         if (!link) return;
         
         const href = link.getAttribute('href');
@@ -201,8 +202,10 @@
     
     // 绑定事件
     function bindEvents() {
+        if (eventsBound) return;
+        eventsBound = true;
         // 使用事件委托，在 document 级别捕获点击
-        // 这样可以确保在 Swup 之前处理
+        // 这样可以确保在 View Transitions 之前处理
         document.addEventListener('click', handleLinkClick, true);
         
         // 抽屉控制
@@ -217,15 +220,15 @@
         });
     }
     
-    // 添加视觉提示和 data-no-swup 标记
+    // 添加视觉提示和 data-astro-reload 标记
     function addVisualHints() {
         document.querySelectorAll('.prose-custom a[href^="/blog/"]').forEach(link => {
             const href = link.getAttribute('href');
             if (href.includes('#')) return;
             if (link.querySelector('.drawer-hint')) return;
             
-            // 添加 data-no-swup 排除 Swup 处理，确保抽屉功能正常工作
-            link.setAttribute('data-no-swup', '');
+            // 添加 data-astro-reload 排除 View Transitions 处理，确保抽屉功能正常工作
+            link.setAttribute('data-astro-reload', '');
             link.classList.add('inline-flex', 'items-center', 'gap-1');
             link.innerHTML += `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-50 drawer-hint"><path d="m9 18 6-6-6-6"/></svg>`;
             link.title = "点击预览文章";
@@ -239,22 +242,7 @@
         addVisualHints();
     }
     
-    // 立即执行
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-    
-    // Swup 兼容
-    if (window.SwupCompat) {
-        window.SwupCompat.onPageView(() => {
-            addVisualHints();
-        });
-    } else {
-        // 降级处理
-        document.addEventListener('astro:page-load', addVisualHints);
-        document.addEventListener('swup:contentReplaced', addVisualHints);
-    }
+    // ClientRouter 页面加载和过渡后初始化
+    document.addEventListener('astro:page-load', init);
 })();
 </script>

@@ -2,31 +2,26 @@
 /**
  * @layout BaseLayout
  * @description 基础布局组件，提供站点通用的页面结构
- * @features SEO、导航栏、页脚、Swup 兼容、主题切换、返回顶部、开屏弹窗
+ * @features SEO、导航栏、页脚、View Transitions、主题切换、返回顶部、开屏弹窗
  * @props title - 页面标题
  * @props description - 页面描述（可选）
  * @props canonicalUrl - 规范链接（可选）
  * @props ogImage - OG 图片（可选）
- * @props hideTopNotification - 是否隐藏顶部通知栏（可选）
  */
 import "../styles/global.css";
+import { ClientRouter } from "astro:transitions";
+
 import SEO from "@components/widgets/SEO.astro";
 import Navigation from "@components/common/Navigation.astro";
 import Footer from "@components/common/Footer.astro";
 import ScrollToTop from "@components/ui/ScrollToTop.astro";
-import SwupScrollConfig from "@components/common/SwupScrollConfig.astro";
-import SwupCompat from "@components/common/SwupCompat.astro";
-import SplashModal from "@components/ui/SplashModal.astro";
-import TopNotification from "@components/ui/TopNotification.astro";
-import MicroInteractions from "@components/ui/MicroInteractions.astro";
 
 export interface Props {
   title: string;
   description?: string;
   canonicalUrl?: string;
   ogImage?: string;
-  hideTopNotification?: boolean;
-  hideSplashModal?: boolean;
+  disableMainTransition?: boolean;
 }
 
 const {
@@ -34,8 +29,7 @@ const {
   description = "一个极简现代的个人博客",
   canonicalUrl = Astro.url.href,
   ogImage,
-  hideTopNotification = false,
-  hideSplashModal = false,
+  disableMainTransition = false,
 } = Astro.props;
 
 const fullTitle = title === "首页" ? "Moonpeak" : `${title} — Moonpeak`;
@@ -45,99 +39,96 @@ const fullTitle = title === "首页" ? "Moonpeak" : `${title} — Moonpeak`;
 <html lang="zh-CN" class="scroll-smooth antialiased">
   <head>
     <SEO title={fullTitle} {description} {canonicalUrl} {ogImage} />
+    <ClientRouter />
     <meta name="baidu-site-verification" content="codeva-DaleZ0kdGN" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- 优化后的 favicon：SVG 格式仅 234 字节，相比原 1MB PNG 大幅减少 -->
-<link rel="icon" type="image/svg+xml" href="/favicon-optimized.svg" />
-<!-- 回退：Safari 和旧浏览器使用原始 PNG -->
-<link rel="alternate icon" type="image/png" href="/favicon.png" />
 
-    {/* ===== 字体加载（本地优先 + 系统后备） ===== */}
+    <!-- 网站图标：使用 logo.png -->
+    <link rel="icon" type="image/png" href="/logo.png" />
+
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/logo.png" />
+
     {/* 使用本地字体文件，不依赖外部 CDN */}
     <link rel="stylesheet" href="/fonts/fonts.css">
 
     {/* ===== KaTeX 数学公式样式 ===== */}
     <link rel="stylesheet" href="/katex.min.css">
 
-    {/* 主题初始化 - 必须在最前面执行，防止闪烁 */}
+    {/* 关键 CSS - 防止闪烁 */}
+    <style is:inline>:root { color-scheme: light dark; } :root.dark { color-scheme: dark; }</style>
+    
+    {/* 主题初始化 - 同步执行防止闪烁 */}
     <script is:inline>
-      // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
       (function() {
-        const theme = localStorage.getItem('theme') ||
-          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        function applyTheme() {
+          const theme = localStorage.getItem('theme') ||
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+          
+          document.documentElement.dataset.themeInitialized = 'true';
         }
+        
+        applyTheme();
+        
+        document.addEventListener('astro:before-swap', (event) => {
+          const theme = localStorage.getItem('theme') ||
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          
+          if (theme === 'dark') {
+            event.newDocument.documentElement.classList.add('dark');
+          } else {
+            event.newDocument.documentElement.classList.remove('dark');
+          }
+        });
+      })();
+    </script>
+
+    <script is:inline>
+      (function() {
+        function disableSmoothScroll() {
+          document.documentElement.style.scrollBehavior = 'auto';
+          document.body.style.scrollBehavior = 'auto';
+        }
+
+        function restoreSmoothScroll() {
+          document.documentElement.style.removeProperty('scroll-behavior');
+          document.body.style.removeProperty('scroll-behavior');
+        }
+
+        document.addEventListener('astro:before-preparation', disableSmoothScroll);
+        document.addEventListener('astro:before-swap', disableSmoothScroll);
+        document.addEventListener('astro:page-load', restoreSmoothScroll);
       })();
     </script>
   </head>
 
   <body class="min-h-screen bg-background text-foreground">
-    <SwupCompat />
-    <SwupScrollConfig />
-    <MicroInteractions />
+    <div class="contents">
+      <Navigation />
+    </div>
 
-    {/* 顶部通知栏插槽 - 可通过 slot 自定义或使用默认 */}
-    {!hideTopNotification && (
-      <slot name="top-notification">
-        {/* 默认顶部通知栏 - 如需启用，取消下面的注释并修改内容 */}
-        {/*
-        <TopNotification
-          type="info"
-          message="🎉 欢迎来到 Moonpeak！"
-          dismissible={true}
-        />
-        */}
-      </slot>
-    )}
-
-    <Navigation />
-
-    <main id="swup" class="pt-16 transition-fade">
+    <main class="pt-16" transition:animate={disableMainTransition ? undefined : "fade"}>
       <slot />
     </main>
 
-    <Footer />
+    <div>
+      <Footer />
+    </div>
     <ScrollToTop />
-
-    {/* 开屏弹窗插槽 - 可通过 slot 自定义或使用默认 */}
-    {!hideSplashModal && (
-      <slot name="splash-modal">
-        {/* 默认开屏弹窗 - 如需启用，取消下面的注释并修改内容 */}
-        {/*
-        <SplashModal
-          title="欢迎访问 Moonpeak"
-          description="这是一个极简现代的个人博客，记录技术与生活。"
-          buttonText="开始探索"
-          buttonLink="/about"
-          showOncePerSession={true}
-        />
-        */}
-      </slot>
-    )}
 
     <slot name="footer-scripts" />
 
-    {/* 考试系统数据层初始化（开发调试用途） */}
-    <script>
-      // @ts-nocheck
-      // 动态导入考试系统模块，挂载到 window 供控制台调试
-      import('../lib/examDB.ts').then(m => {
-        if (typeof window !== 'undefined') {
-          window.examDB = m.examDB;
-          console.log('[ExamDB] 已加载，可用 examDB 访问');
-        }
-      });
-      import('../lib/examStore.ts').then(m => {
-        if (typeof window !== 'undefined') {
-          window.examStore = m.examStore;
-          console.log('[ExamStore] 已加载，可用 examStore 访问');
-        }
-      });
-    </script>
+    {/* rehype-code-group 代码块多标签切换初始化 */}
+    <script is:inline src="/js/code-groups.js"></script>
   </body>
 </html>

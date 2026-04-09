@@ -15,7 +15,6 @@ series:
 
 ---
 
-import Image from "@components/ui/Image.astro";
 
 ## 一、Redis 架构全景：从宏观到微观
 

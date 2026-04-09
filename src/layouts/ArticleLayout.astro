@@ -30,10 +30,10 @@ const {
 } = post.data;
 
 // 获取相邻文章
-const {prev, next} = await getAdjacentPosts(post.slug);
+const {prev, next} = await getAdjacentPosts(post.id);
 
 // 获取同标签文章
-const relatedPosts = await getRelatedPostsByTags(post.slug, tags, 8);
+const relatedPosts = await getRelatedPostsByTags(post.id, tags, 8);
 
 // 判断是否有目录
 const tocHeadings = headings.filter(h => h.depth >= 2 && h.depth <= 3);
@@ -44,13 +44,23 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
     month: 'long',
     day: 'numeric'
 });
+
+// 仅对明显偏重的文章启用延迟淡入，避免普通文章被额外过渡影响
+const isHeavyArticle =
+    (readingTime ?? 0) >= 8 ||
+    headings.length >= 18 ||
+    Boolean(coverImage && headings.length >= 10);
 ---
 
-<BaseLayout title={title} description={description} ogImage={coverImage}>
+<BaseLayout title={title} description={description} ogImage={coverImage} disableMainTransition={true}>
     <ReadingProgress/>
 
-    {/* 文章页面整体背景 - 比默认背景稍深，突出 card */}
-    <div class="min-h-screen bg-[#f5f5f5] dark:bg-[#0f0f0f] transition-colors duration-300">
+    {/* 文章页面整体背景 - 与 body 背景一致，避免过渡闪烁 */}
+    <div
+        id="article-page-shell"
+        class="article-page-shell min-h-screen bg-background transition-colors duration-300"
+        data-heavy-article={isHeavyArticle ? "true" : "false"}
+    >
 
         {/* Hero Header - 在 card 外部 */}
         <header class="pt-24 pb-8 px-4 sm:px-6">
@@ -113,8 +123,6 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
             </div>
         </header>
 
-        {/* Cover Image - 已整合到文章卡片内部 */}
-
         {/* Main Content Area - 三栏 Card 布局 */}
         <div class="px-4 sm:px-6 pb-16">
             <div class="max-w-7xl mx-auto">
@@ -124,7 +132,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                     <aside
                             id="left-sidebar"
                             class:list={[
-                                "hidden lg:block shrink-0 transition-all duration-300 ease-out",
+                                "hidden lg:block shrink-0",
                                 relatedPosts.length > 0 ? "w-64 opacity-100" : "w-0 opacity-0 overflow-hidden"
                             ]}
                     >
@@ -189,7 +197,7 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                     {relatedPosts.length > 0 && (
                             <button
                                     id="expand-left-sidebar"
-                                    class="hidden flex-col items-center gap-1 fixed left-0 top-1/2 -translate-y-1/2 z-40 px-2 py-3 rounded-r-lg card-base rounded-l-none! border-l-0! transition-all duration-300 hover:pl-3"
+                                    class="hidden flex-col items-center gap-1 fixed left-0 top-1/2 -translate-y-1/2 z-40 px-2 py-3 rounded-r-lg card-base rounded-l-none! border-l-0!"
                                     aria-label="展开相关文章"
                                     title="相关文章"
                             >
@@ -225,8 +233,8 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                             {/* 文章底部导航 */}
                             <div class="p-6 md:p-8">
                                 <ArticleNavigation
-                                        prevArticle={prev ? {title: prev.data.title, slug: prev.slug} : undefined}
-                                        nextArticle={next ? {title: next.data.title, slug: next.slug} : undefined}
+                                        prevArticle={prev ? {title: prev.data.title, slug: prev.id} : undefined}
+                                        nextArticle={next ? {title: next.data.title, slug: next.id} : undefined}
                                 />
                             </div>
                         </article>
@@ -313,7 +321,8 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
                         <div class="grid gap-3 sm:grid-cols-2">
                             {relatedPosts.slice(0, 4).map(post => (
                                     <a
-                                            href={`/blog/${post.slug}/`}
+                                            href={`/blog/${post.id}/`}
+                                            data-astro-reload
                                             class="group flex items-start gap-3 p-3 rounded-lg interactive-item"
                                     >
                                         <div class="w-1 h-1 rounded-full bg-indigo-500 mt-2 shrink-0"></div>
@@ -338,410 +347,101 @@ const formattedDate = pubDate?.toLocaleDateString("zh-CN", {
 
     {/* ========== 文章抽屉 ========== */}
     <ArticleDrawer />
-
-    {/* Sidebar Toggle Scripts */}
-    <script is:inline>
-        // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
-        (function () {
-            const leftSidebar = document.getElementById('left-sidebar');
-            const leftToggle = document.getElementById('toggle-left-sidebar');
-            const leftExpand = document.getElementById('expand-left-sidebar');
-
-            const rightSidebar = document.getElementById('right-sidebar');
-            const rightToggle = document.getElementById('toggle-right-sidebar');
-            const rightExpand = document.getElementById('expand-right-sidebar');
-
-            // 从 localStorage 读取状态
-            const leftCollapsed = localStorage.getItem('left-sidebar-collapsed') === 'true';
-            const rightCollapsed = localStorage.getItem('right-sidebar-collapsed') === 'true';
-
-            // 初始化左侧边栏
-            if (leftSidebar && leftCollapsed) {
-                leftSidebar.style.width = '0';
-                leftSidebar.style.opacity = '0';
-                leftSidebar.style.marginRight = '-20px';
-                if (leftExpand) {
-                    leftExpand.style.display = 'flex';
-                    leftExpand.style.opacity = '1';
-                }
-            }
-
-            // 初始化右侧边栏
-            if (rightSidebar && rightCollapsed) {
-                rightSidebar.style.width = '0';
-                rightSidebar.style.opacity = '0';
-                rightSidebar.style.marginLeft = '-20px';
-                if (rightExpand) {
-                    rightExpand.style.display = 'flex';
-                    rightExpand.style.opacity = '1';
-                }
-            }
-
-            // 左侧边栏切换
-            leftToggle?.addEventListener('click', () => {
-                leftSidebar.style.width = '0';
-                leftSidebar.style.opacity = '0';
-                leftSidebar.style.marginRight = '-20px';
-                localStorage.setItem('left-sidebar-collapsed', 'true');
-                if (leftExpand) {
-                    setTimeout(() => {
-                        leftExpand.style.display = 'flex';
-                        leftExpand.style.opacity = '1';
-                    }, 300);
-                }
-            });
-
-            leftExpand?.addEventListener('click', () => {
-                leftSidebar.style.width = '16rem'; // w-64
-                leftSidebar.style.opacity = '1';
-                leftSidebar.style.marginRight = '0';
-                leftExpand.style.opacity = '0';
-                localStorage.setItem('left-sidebar-collapsed', 'false');
-                setTimeout(() => {
-                    leftExpand.style.display = 'none';
-                }, 300);
-            });
-
-            // 右侧边栏切换
-            rightToggle?.addEventListener('click', () => {
-                rightSidebar.style.width = '0';
-                rightSidebar.style.opacity = '0';
-                rightSidebar.style.marginLeft = '-20px';
-                localStorage.setItem('right-sidebar-collapsed', 'true');
-                if (rightExpand) {
-                    setTimeout(() => {
-                        rightExpand.style.display = 'flex';
-                        rightExpand.style.opacity = '1';
-                    }, 300);
-                }
-            });
-
-            rightExpand?.addEventListener('click', () => {
-                rightSidebar.style.width = '14rem'; // w-56
-                rightSidebar.style.opacity = '1';
-                rightSidebar.style.marginLeft = '0';
-                rightExpand.style.opacity = '0';
-                localStorage.setItem('right-sidebar-collapsed', 'false');
-                setTimeout(() => {
-                    rightExpand.style.display = 'none';
-                }, 300);
-            });
-        })();
-    </script>
 </BaseLayout>
 
-<!-- 图片灯箱脚本 -->
+<script is:inline src="/js/sidebar-toggle.js"></script>
+<script is:inline src="/js/lightbox.js"></script>
+
 <script is:inline>
-// @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
-(function() {
-    // 灯箱状态
-    let lightbox = null;
-    let lightboxImg = null;
-    let isOpen = false;
+    // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
+    (function() {
+        let revealTimer = null;
+        let revealFrame = null;
+        let settleTimer = null;
 
-    // 缩放状态
-    let currentScale = 1;
-    let currentX = 0;
-    let currentY = 0;
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-    let currentContent = null; // 当前显示的内容（图片或SVG）
-    let rafId = null; // requestAnimationFrame ID
-    let pendingX = 0;
-    let pendingY = 0;
-
-    // 初始化灯箱
-    function initLightbox() {
-        // 如果已存在则不再创建
-        if (document.getElementById('image-lightbox')) return;
-
-        // 创建灯箱 DOM
-        lightbox = document.createElement('div');
-        lightbox.id = 'image-lightbox';
-        lightbox.className = 'fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300';
-        lightbox.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
-        lightbox.style.backdropFilter = 'blur(8px)';
-        
-        // 灯箱内容：图片 + 关闭按钮 + 缩放控制
-        lightbox.innerHTML = `
-            <div id="lightbox-content-wrapper" class="relative flex items-center justify-center" style="width: 90vw; height: 90vh; overflow: hidden; touch-action: none;">
-                <img id="lightbox-img" src="" alt="" class="max-w-full max-h-full object-contain transition-transform duration-100 rounded-lg shadow-2xl" style="transform-origin: center center; will-change: transform;" />
-            </div>
-            
-            <!-- 关闭按钮 -->
-            <button id="lightbox-close" class="absolute top-4 right-4 p-2 text-white/80 hover:text-white transition-colors rounded-full hover:bg-white/10 bg-black/20" aria-label="关闭">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            
-            <!-- 缩放控制栏 -->
-            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-black/50 rounded-full backdrop-blur-sm">
-                <button id="lightbox-zoom-out" class="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors" aria-label="缩小">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
-                <span id="lightbox-zoom-level" class="text-white text-sm font-mono min-w-[60px] text-center">100%</span>
-                <button id="lightbox-zoom-in" class="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors" aria-label="放大">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
-                <div class="w-px h-6 bg-white/20 mx-1"></div>
-                <button id="lightbox-reset" class="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors" aria-label="重置">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-                </button>
-            </div>
-            
-            <!-- 提示文字 -->
-            <div id="lightbox-hint" class="absolute top-4 left-1/2 -translate-x-1/2 text-white/60 text-xs px-3 py-1 bg-black/30 rounded-full">
-                滚轮缩放 · 拖拽移动 · ESC 关闭
-            </div>
-            
-            <div id="lightbox-caption" class="absolute bottom-20 left-1/2 -translate-x-1/2 text-white/80 text-sm max-w-[80vw] text-center"></div>
-        `;
-        
-        document.body.appendChild(lightbox);
-        lightboxImg = document.getElementById('lightbox-img');
-
-        // 点击关闭
-        lightbox.addEventListener('click', function(e) {
-            if (e.target === lightbox) {
-                closeLightbox();
+        function cleanup() {
+            if (revealTimer) {
+                clearTimeout(revealTimer);
+                revealTimer = null;
             }
-        });
-        
-        // 关闭按钮
-        document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
-
-        // ESC 关闭
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && isOpen) {
-                closeLightbox();
+            if (settleTimer) {
+                clearTimeout(settleTimer);
+                settleTimer = null;
             }
-        });
-
-        // 缩放控制按钮
-        document.getElementById('lightbox-zoom-in').addEventListener('click', (e) => {
-            e.stopPropagation();
-            zoomIn();
-        });
-        document.getElementById('lightbox-zoom-out').addEventListener('click', (e) => {
-            e.stopPropagation();
-            zoomOut();
-        });
-        document.getElementById('lightbox-reset').addEventListener('click', (e) => {
-            e.stopPropagation();
-            resetZoom();
-        });
-
-        // 滚轮缩放
-        const wrapper = document.getElementById('lightbox-content-wrapper');
-        wrapper.addEventListener('wheel', handleWheel, { passive: false });
-
-        // 拖拽移动
-        wrapper.addEventListener('mousedown', handleMouseDown);
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-    }
-
-    // 更新变换 - 使用 requestAnimationFrame 优化性能
-    function updateTransform() {
-        if (!currentContent) return;
-        if (rafId) return; // 避免重复请求
-        
-        rafId = requestAnimationFrame(() => {
-            rafId = null;
-            currentContent.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
-        });
-        
-        document.getElementById('lightbox-zoom-level').textContent = Math.round(currentScale * 100) + '%';
-    }
-
-    // 缩放功能
-    function zoomIn() {
-        currentScale = Math.min(currentScale * 1.25, 5);
-        updateTransform();
-    }
-
-    function zoomOut() {
-        currentScale = Math.max(currentScale / 1.25, 0.2);
-        updateTransform();
-    }
-
-    function resetZoom() {
-        currentScale = 1;
-        currentX = 0;
-        currentY = 0;
-        pendingX = 0;
-        pendingY = 0;
-        if (rafId) {
-            cancelAnimationFrame(rafId);
-            rafId = null;
+            if (revealFrame) {
+                cancelAnimationFrame(revealFrame);
+                revealFrame = null;
+            }
         }
-        updateTransform();
-    }
 
-    // 滚轮缩放
-    function handleWheel(e) {
-        if (!isOpen) return;
-        e.preventDefault();
-        
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        const newScale = Math.max(0.2, Math.min(5, currentScale * delta));
-        
-        currentScale = newScale;
-        updateTransform();
-    }
+        function revealWhenSettled() {
+            cleanup();
 
-    // 拖拽移动 - 优化性能
-    function handleMouseDown(e) {
-        if (!isOpen || e.button !== 0) return;
-        if (e.target.closest('button')) return;
-        
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        pendingX = currentX;
-        pendingY = currentY;
-        
-        if (currentContent) currentContent.style.cursor = 'grabbing';
-        e.preventDefault();
-    }
+            const shell = document.getElementById('article-page-shell');
+            if (!shell) return;
 
-    function handleMouseMove(e) {
-        if (!isDragging || !isOpen) return;
-        
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        
-        currentX = pendingX + dx;
-        currentY = pendingY + dy;
-        
-        updateTransform();
-    }
+            if (shell.dataset.heavyArticle !== 'true') {
+                shell.classList.add('article-ready');
+                return;
+            }
 
-    function handleMouseUp() {
-        if (isDragging) {
-            isDragging = false;
-            pendingX = currentX;
-            pendingY = currentY;
-            if (currentContent) currentContent.style.cursor = 'grab';
+            shell.classList.remove('article-ready');
+
+            let lastScrollY = window.scrollY;
+            let stableCount = 0;
+
+            function check() {
+                const currentScrollY = window.scrollY;
+
+                if (Math.abs(currentScrollY - lastScrollY) < 1) {
+                    stableCount += 1;
+                } else {
+                    stableCount = 0;
+                    lastScrollY = currentScrollY;
+                }
+
+                if (stableCount >= 3) {
+                    revealTimer = window.setTimeout(() => {
+                        shell.classList.add('article-ready');
+                    }, 40);
+                    return;
+                }
+
+                revealFrame = requestAnimationFrame(check);
+            }
+
+            settleTimer = window.setTimeout(() => {
+                shell.classList.add('article-ready');
+            }, 400);
+
+            revealFrame = requestAnimationFrame(check);
         }
-    }
 
-    // 打开灯箱
-    function openLightbox(img) {
-        if (!lightbox) initLightbox();
-        
-        // 重置缩放状态
-        resetZoom();
-        
-        lightboxImg.src = img.src;
-        lightboxImg.alt = img.alt || '';
-        lightboxImg.style.display = '';
-        lightboxImg.style.cursor = 'grab';
-        
+        document.addEventListener('astro:before-swap', cleanup);
+        document.addEventListener('astro:page-load', revealWhenSettled);
 
-        
-        // 设置当前内容
-        currentContent = lightboxImg;
-        
-        // 设置图片说明（如果有 alt 文本）
-        const caption = document.getElementById('lightbox-caption');
-        caption.textContent = img.alt || '';
-        caption.style.display = img.alt ? 'block' : 'none';
-        
-        // 显示灯箱
-        lightbox.classList.remove('opacity-0', 'pointer-events-none');
-        lightbox.classList.add('opacity-100', 'pointer-events-auto');
-        
-        // 图片放大动画
-        setTimeout(() => {
-            lightboxImg.style.transform = 'scale(1)';
-        }, 10);
-        
-        isOpen = true;
-        document.body.style.overflow = 'hidden'; // 禁止背景滚动
-    }
-
-    // 关闭灯箱
-    function closeLightbox() {
-        if (!lightbox || !isOpen) return;
-        
-        lightbox.classList.remove('opacity-100', 'pointer-events-auto');
-        lightbox.classList.add('opacity-0', 'pointer-events-none');
-        
-        // 取消未完成的动画帧
-        if (rafId) {
-            cancelAnimationFrame(rafId);
-            rafId = null;
+        if (document.readyState === 'complete') {
+            revealWhenSettled();
+        } else {
+            window.addEventListener('load', revealWhenSettled, { once: true });
         }
-        
-        // 重置状态
-        isOpen = false;
-        isDragging = false;
-        document.body.style.overflow = ''; // 恢复背景滚动
-        
-        // 延迟清理
-        setTimeout(() => {
-            lightboxImg.style.display = '';
-            lightboxImg.style.transform = '';
-            currentContent = null;
-            resetZoom();
-        }, 300);
-    }
-
-    // 绑定图片点击事件
-    function bindImages() {
-        // 只绑定文章内容区的图片
-        const articleContent = document.querySelector('.prose-custom');
-        if (!articleContent) return;
-
-        const images = articleContent.querySelectorAll('img');
-        images.forEach(img => {
-            // 跳过已绑定的图片
-            if (img.dataset.lightboxBound) return;
-            
-            // 添加点击样式
-            img.style.cursor = 'zoom-in';
-            img.classList.add('hover:opacity-90', 'transition-opacity');
-            
-            // 绑定点击事件
-            img.addEventListener('click', function(e) {
-                e.preventDefault();
-                openLightbox(img);
-            });
-            
-            img.dataset.lightboxBound = 'true';
-        });
-    }
-
-    // 初始化
-    function init() {
-        initLightbox();
-        bindImages();
-    }
-
-    // 页面加载完成后初始化
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-
-    // Swup 页面过渡后重新绑定
-    if (window.SwupCompat) {
-        window.SwupCompat.onPageView(init);
-    } else {
-        // 降级处理
-        document.addEventListener('swup:contentReplaced', init);
-        document.addEventListener('astro:page-load', init);
-    }
-})();
+    })();
 </script>
 
 <style>
-    /* 垂直文字 */
     .writing-vertical {
         writing-mode: vertical-rl;
         text-orientation: mixed;
         letter-spacing: 0.1em;
     }
+
+    .article-page-shell {
+        opacity: 0;
+        transition: opacity 220ms ease;
+    }
+
+    .article-page-shell.article-ready {
+        opacity: 1;
+    }
+    
 </style>

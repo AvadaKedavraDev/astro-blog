@@ -5,7 +5,7 @@
  * @props class - 自定义类名
  * @props speed - 打字速度（默认100ms）
  * @props delay - 延迟开始时间（默认500ms）
- * @features 字符级动画、Swup 兼容、防止重复初始化
+ * @features 字符级动画、View Transitions 兼容、防止重复初始化
  * @usage 用于首页标题等需要打字效果的场景
  */
 // 打字机组件
@@ -161,20 +161,6 @@ const uid = Math.random().toString(36).substring(2, 11);
                 reinitTimer?: number;
             };
             fixTypewriter?: () => void;
-            SwupCompat?: {
-                onPageView: (callback: () => void) => () => void;
-                onContentReplace: (callback: () => void) => () => void;
-                beforeContentReplace: (callback: () => void) => () => void;
-            };
-            swup?: {
-                hooks?: {
-                    on: (event: string, callback: () => void) => void;
-                    off: (event: string, callback: () => void) => void;
-                };
-                options?: {
-                    cache?: boolean;
-                };
-            };
         }
     }
 
@@ -244,56 +230,12 @@ const uid = Math.random().toString(36).substring(2, 11);
             G.timeouts.add(t);
         }
 
-        // 使用 SwupCompat 统一处理（如果可用）
-        function bindWithSwupCompat(): boolean {
-            if (window.SwupCompat) {
-                window.SwupCompat.beforeContentReplace(nukeAllTypewriters);
-                window.SwupCompat.onPageView(init);
-                return true;
-            }
-            return false;
-        }
-
-        // 直接绑定 Swup hooks（备用方案）
-        function bindSwupHooks(): boolean {
-            if (window.swup && window.swup.hooks) {
-                // 注意：先解绑再绑定，避免重复
-                window.swup.hooks.off('content:replace', nukeAllTypewriters);
-                window.swup.hooks.off('page:view', init);
-                window.swup.hooks.on('content:replace', nukeAllTypewriters);
-                window.swup.hooks.on('page:view', init);
-                return true;
-            }
-            return false;
-        }
-
-        // 降级处理：标准事件（兼容旧版 Swup）
-        document.addEventListener('swup:contentReplaced', () => {
-            nukeAllTypewriters();
-            init();
-        });
-        document.addEventListener('swup:beforeContentReplace', nukeAllTypewriters);
-        
-        // 降级处理：Astro View Transitions 兼容
+        // View Transitions 事件处理
+        document.addEventListener('astro:before-swap', nukeAllTypewriters);
         document.addEventListener('astro:page-load', () => {
             nukeAllTypewriters();
             init();
         });
-
-        // 延迟绑定（等待 SwupCompat 或 Swup 加载）
-        if (!bindWithSwupCompat()) {
-            const checkInterval = window.setInterval(() => {
-                if (bindWithSwupCompat() || bindSwupHooks()) {
-                    clearInterval(checkInterval);
-                }
-            }, 100);
-            G.timeouts.add(checkInterval);
-
-            // 10秒后停止检查
-            window.setTimeout(() => {
-                clearInterval(checkInterval);
-            }, 10000);
-        }
 
         // MutationObserver 监视 DOM 变化
         if (!G.observer) {
@@ -324,14 +266,11 @@ const uid = Math.random().toString(36).substring(2, 11);
             });
         }
 
-        // 首次加载
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
-        }
+        // ClientRouter 页面加载和过渡后初始化
+        document.addEventListener('astro:page-load', init);
 
         // 暴露全局清理函数
+        init();
         window.fixTypewriter = nukeAllTypewriters;
 
     })();
