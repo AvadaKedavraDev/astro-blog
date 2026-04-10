@@ -40,6 +40,11 @@ const fullTitle = title === "首页" ? "Moonpeak" : `${title} — Moonpeak`;
   <head>
     <SEO title={fullTitle} {description} {canonicalUrl} {ogImage} />
     <ClientRouter />
+    
+    {/* 首页预加载关键资源 */}
+    {title === "首页" && (
+      <link rel="preload" href="/logo.png" as="image" type="image/png" fetchpriority="high" />
+    )}
     <meta name="baidu-site-verification" content="codeva-DaleZ0kdGN" />
 
     <!-- PWA Manifest -->
