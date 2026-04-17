@@ -24,15 +24,14 @@ import { Icon } from "astro-icon/components";
   // @ts-nocheck - 这是一个纯 JavaScript 文件，禁用 TypeScript 检查
   (function() {
     let scrollHandler = null;
-    let clickBound = false;
+    let clickHandler = null;
 
     function initScrollToTop() {
       const button = document.getElementById('scroll-to-top');
       if (!button) return;
-      
-      // 移除旧的事件监听器（通过克隆）
+
       let ticking = false;
-      
+
       function toggleVisibility() {
         const scrollTop = window.scrollY;
         if (scrollTop > 300) {
@@ -44,7 +43,7 @@ import { Icon } from "astro-icon/components";
         }
         ticking = false;
       }
-      
+
       if (scrollHandler) {
         window.removeEventListener('scroll', scrollHandler);
       }
@@ -57,14 +56,16 @@ import { Icon } from "astro-icon/components";
       };
 
       window.addEventListener('scroll', scrollHandler, { passive: true });
-      
-      if (!clickBound) {
-        button.addEventListener('click', function() {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-        clickBound = true;
+
+      if (clickHandler) {
+        button.removeEventListener('click', clickHandler);
       }
-      
+
+      clickHandler = function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+      button.addEventListener('click', clickHandler);
+
       // 初始检查
       toggleVisibility();
     }

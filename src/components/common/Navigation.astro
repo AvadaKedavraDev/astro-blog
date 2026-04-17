@@ -52,7 +52,7 @@ const currentPath = Astro.url.pathname;
     <div class="hidden md:flex items-center gap-1" id="desktop-nav">
       {navItems.map((item) => (
         item.children ? (
-          <div class="relative group -my-2">
+          <div class="relative group -my-2" data-dropdown>
             <button
               class="nav-link relative px-4 py-2 text-sm rounded-lg border border-transparent nav-link-interactive flex items-center gap-2 group cursor-pointer"
               data-dropdown-trigger
@@ -61,7 +61,7 @@ const currentPath = Astro.url.pathname;
               <span>{item.label}</span>
               <Icon name="lucide:chevron-down" class="w-3 h-3 transition-transform duration-300 group-hover:rotate-180" />
             </button>
-            <div class="absolute top-full left-0 mt-0 pt-1 w-40 rounded-lg bg-card border border-border shadow-lg opacity-0 invisible transform -translate-y-2 transition-all duration-200 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0">
+            <div data-dropdown-menu class="dropdown-menu absolute top-full left-0 mt-0 pt-1 w-40 rounded-lg bg-card border border-border shadow-lg opacity-0 invisible transform -translate-y-2 transition-all duration-200">
               {item.children.map((child) => (
                 <a
                   href={child.href}
@@ -219,16 +219,27 @@ const currentPath = Astro.url.pathname;
       });
     }
     
+    // 安全获取事件目标元素（兼容文本节点和 SVG）
+    function getEventTarget(e) {
+      const target = e.target;
+      if (!target) return null;
+      if (target.nodeType === Node.TEXT_NODE) return target.parentElement;
+      if (typeof target.closest === 'function') return target;
+      return null;
+    }
+    
     // 初始化移动菜单
     function initMobileMenu() {
-      const menu = document.getElementById('mobile-menu');
-      if (!menu) return;
-      
       // 使用事件委托，避免重复绑定问题
-      document.body.addEventListener('click', (e) => {
-        const btn = e.target.closest('#mobile-menu-btn');
+      document.addEventListener('click', (e) => {
+        const target = getEventTarget(e);
+        if (!target) return;
+        const btn = target.closest('#mobile-menu-btn');
         if (!btn) return;
         
+        const menu = document.getElementById('mobile-menu');
+        if (!menu) return;
+
         e.preventDefault();
         const menuIcon = btn.querySelector('#menu-icon');
         const closeIcon = btn.querySelector('#close-icon');
@@ -240,12 +251,17 @@ const currentPath = Astro.url.pathname;
         closeIcon?.classList.toggle('hidden');
       });
       
-      // 点击链接后关闭菜单
-      menu.addEventListener('click', (e) => {
-        const link = e.target.closest('a');
+      // 点击移动端菜单链接后关闭菜单
+      document.addEventListener('click', (e) => {
+        const target = getEventTarget(e);
+        if (!target) return;
+        const link = target.closest('#mobile-menu a');
         if (!link) return;
         
+        const menu = document.getElementById('mobile-menu');
         const btn = document.getElementById('mobile-menu-btn');
+        if (!menu || !btn) return;
+
         const menuIcon = btn?.querySelector('#menu-icon');
         const closeIcon = btn?.querySelector('#close-icon');
         
@@ -255,11 +271,88 @@ const currentPath = Astro.url.pathname;
         btn?.setAttribute('aria-expanded', 'false');
       });
     }
+    
+    // 初始化桌面端下拉菜单 - document 事件委托，兼容 View Transitions
+    function initDesktopDropdown() {
+      let closeTimeout = null;
+      
+      // 安全获取元素节点（文本节点转父元素）
+      function getEl(node) {
+        if (!node) return null;
+        if (node.nodeType === Node.TEXT_NODE) return node.parentElement;
+        if (typeof node.closest === 'function') return node;
+        return null;
+      }
+      
+      // 使用事件委托处理所有下拉菜单（mouseenter/mouseleave 不冒泡，用捕获阶段）
+      document.addEventListener('mouseenter', (e) => {
+        const el = getEl(e.target);
+        if (!el) return;
+        const wrapper = el.closest('[data-dropdown]');
+        if (!wrapper) return;
+        
+        // 清除关闭定时器
+        if (closeTimeout) {
+          clearTimeout(closeTimeout);
+          closeTimeout = null;
+        }
+        
+        // 关闭其他已打开的下拉菜单
+        document.querySelectorAll('[data-dropdown-menu]').forEach(d => {
+          if (!wrapper.contains(d)) {
+            d.classList.remove('dropdown-visible');
+            d.classList.add('dropdown-hidden');
+          }
+        });
+        
+        // 打开当前下拉菜单
+        const dropdown = wrapper.querySelector('[data-dropdown-menu]');
+        if (dropdown) {
+          dropdown.classList.remove('dropdown-hidden');
+          dropdown.classList.add('dropdown-visible');
+        }
+      }, true);
+      
+      document.addEventListener('mouseleave', (e) => {
+        const el = getEl(e.target);
+        if (!el) return;
+        const wrapper = el.closest('[data-dropdown]');
+        if (!wrapper) return;
+        
+        // 如果鼠标只是移动到了 wrapper 内部的另一个元素，不关闭
+        const related = getEl(e.relatedTarget);
+        if (related && wrapper.contains(related)) return;
+        
+        const dropdown = wrapper.querySelector('[data-dropdown-menu]');
+        if (dropdown) {
+          closeTimeout = setTimeout(() => {
+            dropdown.classList.remove('dropdown-visible');
+            dropdown.classList.add('dropdown-hidden');
+          }, 150);
+        }
+      }, true);
+      
+      // 点击下拉菜单中的链接后关闭菜单
+      document.addEventListener('click', (e) => {
+        const target = getEventTarget(e);
+        if (!target) return;
+        const link = target.closest('[data-dropdown-menu] a');
+        if (!link) return;
+        
+        // 关闭所有下拉菜单
+        document.querySelectorAll('[data-dropdown-menu]').forEach(d => {
+          d.classList.remove('dropdown-visible');
+          d.classList.add('dropdown-hidden');
+        });
+      });
+    }
 
     // 初始化移动端 Command Palette 触发（使用事件委托）
     function initMobileCmdTrigger() {
-      document.body.addEventListener('click', (e) => {
-        const mobileTrigger = e.target.closest('#mobile-cmd-trigger');
+      document.addEventListener('click', (e) => {
+        const target = getEventTarget(e);
+        if (!target) return;
+        const mobileTrigger = target.closest('#mobile-cmd-trigger');
         if (!mobileTrigger) return;
         
         const desktopTrigger = document.getElementById('cmd-palette-trigger');
@@ -378,12 +471,32 @@ const currentPath = Astro.url.pathname;
       
       initMobileMenu();
       initMobileCmdTrigger();
+      initDesktopDropdown();
+    }
+    
+    // 重置菜单状态
+    function resetMenus() {
+      // 重置移动菜单
+      const menu = document.getElementById('mobile-menu');
+      const btn = document.getElementById('mobile-menu-btn');
+      if (menu && !menu.classList.contains('hidden')) {
+        menu.classList.add('hidden');
+        btn?.setAttribute('aria-expanded', 'false');
+        btn?.querySelector('#menu-icon')?.classList.remove('hidden');
+        btn?.querySelector('#close-icon')?.classList.add('hidden');
+      }
+      
+      // 重置桌面端下拉菜单 - 清除 JS 控制的状态
+      document.querySelectorAll('[data-dropdown-menu]').forEach(d => {
+        d.classList.remove('dropdown-visible', 'dropdown-hidden');
+      });
     }
     
     // 每次页面切换后需要更新的逻辑
     function init() {
       updateNavHighlight();
       initNavBackground();
+      resetMenus();
     }
     
     // 首次加载
@@ -397,3 +510,34 @@ const currentPath = Astro.url.pathname;
     window.addEventListener('popstate', updateNavHighlight);
   })();
 </script>
+
+<style>
+  /* 桌面端下拉菜单 - JS 控制 */
+  .dropdown-menu {
+    pointer-events: none;
+  }
+  
+  .dropdown-menu.dropdown-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  
+  .dropdown-menu.dropdown-hidden {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    pointer-events: none;
+  }
+  
+  /* 保留原来的 group-hover 作为降级方案 */
+  @media (hover: hover) {
+    .group:hover .dropdown-menu:not(.dropdown-visible):not(.dropdown-hidden) {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+  }
+</style>

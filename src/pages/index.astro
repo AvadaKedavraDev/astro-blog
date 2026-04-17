@@ -603,7 +603,11 @@ const runningDays = Math.floor((now.getTime() - birth.getTime()) / 86400000);
 
       // 清理函数
       document.addEventListener('click', (e) => {
-        const link = e.target.closest('a');
+        const target = e.target;
+        if (!target) return;
+        const el = target.nodeType === Node.TEXT_NODE ? target.parentElement : (typeof target.closest === 'function' ? target : null);
+        if (!el) return;
+        const link = el.closest('a');
         if (!link) return;
 
         const href = link.getAttribute('href');

@@ -2,7 +2,7 @@
 title: "Spring 事务管理深度解析"
 pubDate: 2025-03-09
 description: "深入剖析 Spring 事务传播行为、隔离级别、失效场景及 DataSourceTransactionManager 挂起恢复机制"
-tags: ["Spring", "事务", "数据库", "源码分析"]
+tags: ["Spring", "事务", "源码分析"]
 readingTime: 28
 pinned: true
 series:

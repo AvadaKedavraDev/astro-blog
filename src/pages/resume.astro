@@ -1,0 +1,580 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="简历" description="Moonpeak 的个人简历 - 全栈开发工程师">
+  <div class="pt-32 pb-24 px-6">
+    <div class="container-medium">
+      
+      {/* Header - 个人信息 */}
+      <header class="mb-12 text-center">
+        <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+          M
+        </div>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">
+          Moonpeak
+        </h1>
+        <p class="text-xl text-muted-foreground mb-4">
+          全栈开发工程师
+        </p>
+        <p class="text-sm text-muted-foreground max-w-md mx-auto">
+          热爱技术，追求极致 · 4年+ 开发经验 · 专注 Web 开发与系统架构
+        </p>
+        
+        {/* 联系方式快捷入口 */}
+        <div class="flex flex-wrap justify-center gap-3 mt-6">
+          <a href="mailto:moonpeak1999@gmail.com" class="card-base flex items-center gap-2 px-4 py-2 !no-underline text-sm hover:border-indigo-300 transition-colors">
+            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span>moonpeak1999@gmail.com</span>
+          </a>
+          <a href="https://github.com/AvadaKedavraDev" target="_blank" rel="noopener" class="card-base flex items-center gap-2 px-4 py-2 !no-underline text-sm hover:border-indigo-300 transition-colors">
+            <svg class="w-4 h-4 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+              <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
+            </svg>
+            <span>GitHub</span>
+          </a>
+          <a href="/" class="card-base flex items-center gap-2 px-4 py-2 !no-underline text-sm hover:border-indigo-300 transition-colors">
+            <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+            </svg>
+            <span>技术博客</span>
+          </a>
+        </div>
+      </header>
+
+      <div class="grid lg:grid-cols-3 gap-8">
+        {/* 左侧栏 */}
+        <div class="lg:col-span-2 space-y-8">
+          
+          {/* 个人简介 */}
+          <section class="card-base p-6 overflow-visible">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+              <span class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+              </span>
+              个人简介
+            </h2>
+            <p class="text-muted-foreground leading-relaxed">
+              我是一名专注于AI医疗系统的Java后端开发工程师，拥有丰富的企业级开发和AI工程化经验。擅长将传统医疗业务与AI大模型技术结合，构建智能化临床辅助决策系统。
+              精通分布式微服务架构、多LLM编排、RAG知识增强等技术，同时对物流、仓储、电商等传统企业级系统也有丰富的开发经验。热衷于研究框架源码，具备良好的代码规范和团队协作能力。
+            </p>
+          </section>
+
+          {/* 工作经历 */}
+          <section class="card-base p-6">
+            <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+              <span class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              </span>
+              工作经历
+            </h2>
+            
+            <div class="space-y-6">
+              {/* 工作1 - 中医AI项目 */}
+              <div class="relative pl-6 border-l-2 border-border">
+                <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-emerald-500 border-4 border-background"></div>
+                <div class="mb-2">
+                  <h3 class="font-semibold text-foreground">Java后端开发工程师 / AI工程化</h3>
+                  <p class="text-sm text-muted-foreground">某智慧医疗科技公司 · 2023.06 - 至今</p>
+                </div>
+                <ul class="space-y-2 text-sm text-muted-foreground">
+                  <li class="flex items-start gap-2">
+                    <span class="text-emerald-500 mt-1">•</span>
+                    <span>负责中医AI辅助诊疗系统的核心架构设计与开发，基于 Dubbo + ZooKeeper 构建分布式微服务架构</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-emerald-500 mt-1">•</span>
+                    <span>设计多LLM路由策略，集成 DeepSeek、通义千问、GLM、Kimi、火山引擎等6+模型，实现智能调度</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-emerald-500 mt-1">•</span>
+                    <span>构建 RAG 知识增强系统，基于 ChromaDB + BGE Chinese Embedding 实现中医古籍语义检索</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-emerald-500 mt-1">•</span>
+                    <span>实现AOP限流保护、全链路操作审计、SQL注入过滤、AES加密等安全防护机制，满足等保2.0要求</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-emerald-500 mt-1">•</span>
+                    <span>完成国产数据库（人大金仓）适配，实现MySQL与Kingbase双库兼容，满足信创迁移需求</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* 工作2 - 物流/仓储 */}
+              <div class="relative pl-6 border-l-2 border-border">
+                <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-muted-foreground border-4 border-background"></div>
+                <div class="mb-2">
+                  <h3 class="font-semibold text-foreground">Java开发工程师</h3>
+                  <p class="text-sm text-muted-foreground">物牛帮科技有限公司 · 2022.09 - 2023.06</p>
+                </div>
+                <ul class="space-y-2 text-sm text-muted-foreground">
+                  <li class="flex items-start gap-2">
+                    <span class="text-muted-foreground mt-1">•</span>
+                    <span>负责DYB快递运营管理(TMS)系统开发，使用SpringCloud微服务架构完成订单、司机、员工管理模块</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-muted-foreground mt-1">•</span>
+                    <span>参与WMS仓库管理系统开发，负责系统管理、基础资料维护、库存查询等核心功能</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-muted-foreground mt-1">•</span>
+                    <span>与项目经理、测试人员沟通协作，编写技术文档，确保项目按时交付</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* 工作3 - 早期经历 */}
+              <div class="relative pl-6 border-l-2 border-border">
+                <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-muted-foreground/50 border-4 border-background"></div>
+                <div class="mb-2">
+                  <h3 class="font-semibold text-foreground">Java开发工程师</h3>
+                  <p class="text-sm text-muted-foreground">内蒙古智开科技有限公司 · 2020.12 - 2022.06</p>
+                </div>
+                <ul class="space-y-2 text-sm text-muted-foreground">
+                  <li class="flex items-start gap-2">
+                    <span class="text-muted-foreground/70 mt-1">•</span>
+                    <span>负责普济商城（微信小程序+Web）开发，实现订单、支付、客服等核心功能</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-muted-foreground/70 mt-1">•</span>
+                    <span>参与云飞OA办公系统开发，负责基础数据、权限管理、知识文档模块</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-muted-foreground/70 mt-1">•</span>
+                    <span>参与车货匹配平台开发，实现用户认证、货源管理、司机指派等功能</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* 项目经历 */}
+          <section class="card-base p-6">
+            <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+              <span class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
+              </span>
+              项目经历
+            </h2>
+
+            <div class="space-y-6">
+              {/* 项目1 - 中医AI诊疗系统（核心项目） */}
+              <div class="p-5 rounded-xl bg-muted/50 border border-border hover:border-purple-300 transition-colors">
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                  <span class="text-2xl">🎯</span>
+                  <h3 class="font-semibold text-lg">中医AI辅助诊疗系统</h3>
+                  <span class="tag-base text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">核心项目</span>
+                </div>
+                <p class="text-sm text-muted-foreground mb-4">
+                  将千年中医辨证理论与大模型技术结合，打造智能化临床辅助决策系统。覆盖闭经、高血压、银屑病、咳嗽等10+专科智能体，提供辨证诊断、审方审核、古籍检索等核心功能。
+                </p>
+                
+                <div class="grid sm:grid-cols-2 gap-4 mb-4">
+                  <div class="p-3 rounded-lg bg-background/50">
+                    <h4 class="text-sm font-medium text-foreground mb-2">🏗️ 技术架构</h4>
+                    <ul class="text-xs text-muted-foreground space-y-1">
+                      <li>• Dubbo + ZooKeeper 分布式服务治理</li>
+                      <li>• Kafka 异步处理诊疗事件流</li>
+                      <li>• MySQL + 人大金仓 双库适配</li>
+                      <li>• Redis 缓存 + 限流保护</li>
+                    </ul>
+                  </div>
+                  <div class="p-3 rounded-lg bg-background/50">
+                    <h4 class="text-sm font-medium text-foreground mb-2">🤖 AI技术栈</h4>
+                    <ul class="text-xs text-muted-foreground space-y-1">
+                      <li>• DeepSeek/通义千问/GLM 多模型路由</li>
+                      <li>• ChromaDB + BGE Embedding 向量检索</li>
+                      <li>• Python Flask 桥接Java与AI生态</li>
+                      <li>• SSE 流式响应实现"打字机"体验</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="tag-base text-xs">Spring</span>
+                  <span class="tag-base text-xs">Dubbo</span>
+                  <span class="tag-base text-xs">Kafka</span>
+                  <span class="tag-base text-xs">Redis</span>
+                  <span class="tag-base text-xs">LLM</span>
+                  <span class="tag-base text-xs">RAG</span>
+                  <span class="tag-base text-xs">ChromaDB</span>
+                  <span class="tag-base text-xs">Python</span>
+                </div>
+              </div>
+
+              {/* 项目2 - TMS/WMS（物流仓储） */}
+              <div class="p-5 rounded-xl bg-muted/50 border border-border hover:border-purple-300 transition-colors">
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                  <span class="text-2xl">📦</span>
+                  <h3 class="font-semibold text-lg">物流仓储管理系统（TMS/WMS）</h3>
+                </div>
+                <p class="text-sm text-muted-foreground mb-4">
+                  TMS为四方格国际物流提供技术方案支持，完善物流管理和交货过程；WMS为聚物霸科技定制开发的仓储管理系统，应用云计算、大数据、物联网技术实现仓库物品实时追踪和精准管理。
+                </p>
+                
+                <div class="grid sm:grid-cols-2 gap-4 mb-4">
+                  <div class="p-3 rounded-lg bg-background/50">
+                    <h4 class="text-sm font-medium text-foreground mb-2">🛠️ 责任描述</h4>
+                    <ul class="text-xs text-muted-foreground space-y-1">
+                      <li>• TMS：订单管理（下单/取消/查询）、司机管理（作业单/提货/交付）</li>
+                      <li>• TMS：员工管理（排班/工作模式）</li>
+                      <li>• WMS：系统规则、权限管理、产品资料维护</li>
+                      <li>• WMS：库存查询、条形码序列号标签生成</li>
+                    </ul>
+                  </div>
+                  <div class="p-3 rounded-lg bg-background/50">
+                    <h4 class="text-sm font-medium text-foreground mb-2">🏗️ 技术架构</h4>
+                    <ul class="text-xs text-muted-foreground space-y-1">
+                      <li>• 后端：SpringBoot/SpringCloud + MyBatis</li>
+                      <li>• 前端：Vue.js + jQuery + Ajax</li>
+                      <li>• 数据库：MySQL</li>
+                      <li>• 中间件：Redis + RabbitMQ</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="tag-base text-xs">SpringBoot</span>
+                  <span class="tag-base text-xs">SpringCloud</span>
+                  <span class="tag-base text-xs">Vue</span>
+                  <span class="tag-base text-xs">MyBatis</span>
+                  <span class="tag-base text-xs">MySQL</span>
+                  <span class="tag-base text-xs">Redis</span>
+                  <span class="tag-base text-xs">RabbitMQ</span>
+                </div>
+              </div>
+
+              {/* 项目3 - 普济商城 */}
+              <div class="p-5 rounded-xl bg-muted/50 border border-border hover:border-purple-300 transition-colors">
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                  <span class="text-2xl">🛒</span>
+                  <h3 class="font-semibold text-lg">普济商城（微信小程序+Web）</h3>
+                </div>
+                <p class="text-sm text-muted-foreground mb-4">
+                  支持浏览器和微信小程序访问的商城系统，包含购物功能和管理平台。商城功能包括首页专题、分类、优惠券、团购、商品详情、购物车、下单、订单管理、地址、收藏、客服等。
+                </p>
+                
+                <div class="grid sm:grid-cols-2 gap-4 mb-4">
+                  <div class="p-3 rounded-lg bg-background/50">
+                    <h4 class="text-sm font-medium text-foreground mb-2">🛠️ 责任描述</h4>
+                    <ul class="text-xs text-muted-foreground space-y-1">
+                      <li>• 用户订单模块：实现不同状态订单（已支付/未支付/支付超时）</li>
+                      <li>• 地址栏模块：用户送货地址的保存和修改功能</li>
+                      <li>• 客服在线聊天模块：实现将用户消息转发给客服</li>
+                      <li>• 微信开发：集成微信登录、支付（OAuth2.0）</li>
+                    </ul>
+                  </div>
+                  <div class="p-3 rounded-lg bg-background/50">
+                    <h4 class="text-sm font-medium text-foreground mb-2">🏗️ 技术架构</h4>
+                    <ul class="text-xs text-muted-foreground space-y-1">
+                      <li>• 后端：SpringBoot + SpringCloud 微服务</li>
+                      <li>• 安全：OAuth2.0 认证授权</li>
+                      <li>• 工具：HuTool + Swagger + Redis</li>
+                      <li>• 微信：微信开发SDK集成</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="tag-base text-xs">SpringBoot</span>
+                  <span class="tag-base text-xs">SpringCloud</span>
+                  <span class="tag-base text-xs">MyBatis</span>
+                  <span class="tag-base text-xs">OAuth2.0</span>
+                  <span class="tag-base text-xs">Redis</span>
+                  <span class="tag-base text-xs">微信小程序</span>
+                </div>
+              </div>
+
+              {/* 其他项目简列 */}
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div class="p-4 rounded-xl bg-muted/50 border border-border hover:border-purple-300 transition-colors">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-xl">📋</span>
+                    <h3 class="font-semibold">云飞OA办公系统</h3>
+                  </div>
+                  <p class="text-sm text-muted-foreground mb-2">企业办公自动化系统，负责基础数据、权限管理、知识文档模块</p>
+                  <div class="flex flex-wrap gap-1">
+                    <span class="tag-base text-xs">SpringBoot</span>
+                    <span class="tag-base text-xs">Shiro</span>
+                    <span class="tag-base text-xs">Druid</span>
+                  </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-muted/50 border border-border hover:border-purple-300 transition-colors">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-xl">🚚</span>
+                    <h3 class="font-semibold">车货匹配平台</h3>
+                  </div>
+                  <p class="text-sm text-muted-foreground mb-2">货主与司机在线撮合货运平台，实现用户认证、货源管理、司机指派</p>
+                  <div class="flex flex-wrap gap-1">
+                    <span class="tag-base text-xs">Spring</span>
+                    <span class="tag-base text-xs">MyBatis</span>
+                    <span class="tag-base text-xs">Redis</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* 右侧栏 */}
+        <div class="space-y-6">
+          
+          {/* 技能栈 */}
+          <section class="card-base p-6">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+              <span class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+              </span>
+              技能专长
+            </h2>
+
+            <div class="space-y-4">
+              {/* 后端技能 */}
+              <div>
+                <h3 class="text-sm font-medium text-foreground mb-2">Java后端</h3>
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="tag-base bg-emerald-50/50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">JavaSE/JavaEE</span>
+                  <span class="tag-base bg-emerald-50/50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">Spring</span>
+                  <span class="tag-base bg-emerald-50/50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">SpringBoot</span>
+                  <span class="tag-base bg-emerald-50/50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">SpringCloud</span>
+                  <span class="tag-base bg-emerald-50/50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">Dubbo</span>
+                  <span class="tag-base bg-emerald-50/50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">MyBatis</span>
+                </div>
+              </div>
+
+              {/* 数据库与中间件 */}
+              <div>
+                <h3 class="text-sm font-medium text-foreground mb-2">数据库与中间件</h3>
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="tag-base bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">MySQL</span>
+                  <span class="tag-base bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">Redis</span>
+                  <span class="tag-base bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">Kafka</span>
+                  <span class="tag-base bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">RabbitMQ</span>
+                  <span class="tag-base bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">ZooKeeper</span>
+                </div>
+              </div>
+
+              {/* AI技能 */}
+              <div>
+                <h3 class="text-sm font-medium text-foreground mb-2">AI工程化</h3>
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="tag-base bg-indigo-50/50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800">LLM编排</span>
+                  <span class="tag-base bg-indigo-50/50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800">RAG</span>
+                  <span class="tag-base bg-indigo-50/50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800">ChromaDB</span>
+                  <span class="tag-base bg-indigo-50/50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800">Python</span>
+                  <span class="tag-base bg-indigo-50/50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800">向量检索</span>
+                </div>
+              </div>
+
+              {/* 前端技能 */}
+              <div>
+                <h3 class="text-sm font-medium text-foreground mb-2">前端开发</h3>
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="tag-base bg-amber-50/50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800">Vue</span>
+                  <span class="tag-base bg-amber-50/50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800">HTML/CSS/JS</span>
+                  <span class="tag-base bg-amber-50/50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800">jQuery</span>
+                  <span class="tag-base bg-amber-50/50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800">ElementUI</span>
+                </div>
+              </div>
+
+              {/* 其他技能 */}
+              <div>
+                <h3 class="text-sm font-medium text-foreground mb-2">运维与工具</h3>
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="tag-base bg-purple-50/50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800">Linux</span>
+                  <span class="tag-base bg-purple-50/50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800">Docker</span>
+                  <span class="tag-base bg-purple-50/50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800">Nginx</span>
+                  <span class="tag-base bg-purple-50/50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800">Git</span>
+                  <span class="tag-base bg-purple-50/50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800">Maven</span>
+                </div>
+              </div>
+
+              {/* 微信开发 */}
+              <div>
+                <h3 class="text-sm font-medium text-foreground mb-2">微信生态</h3>
+                <div class="flex flex-wrap gap-1.5">
+                  <span class="tag-base bg-cyan-50/50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800">微信小程序</span>
+                  <span class="tag-base bg-cyan-50/50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800">微信支付</span>
+                  <span class="tag-base bg-cyan-50/50 dark:bg-cyan-900/20 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800">OAuth2.0</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 教育背景 */}
+          <section class="card-base p-6">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+              <span class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                </svg>
+              </span>
+              教育背景
+            </h2>
+            
+            <div class="space-y-4">
+              <div class="p-3 rounded-lg bg-muted/50">
+                <h3 class="font-medium text-foreground">计算机科学与技术</h3>
+                <p class="text-sm text-muted-foreground">本科 · 淮南师范学院</p>
+                <p class="text-xs text-muted-foreground mt-1">2018.09 - 2022.06</p>
+                <div class="mt-2 pt-2 border-t border-border/50">
+                  <p class="text-xs text-muted-foreground">主修：数据结构、操作系统、计算机网络、数据库原理、Java编程、软件工程等</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 证书与荣誉 */}
+          <section class="card-base p-6">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+              <span class="w-8 h-8 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-pink-600 dark:text-pink-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
+              </span>
+              证书荣誉
+            </h2>
+            
+            <ul class="space-y-2 text-sm text-muted-foreground">
+              <li class="flex items-start gap-2">
+                <span class="text-pink-500 mt-0.5">🏆</span>
+                <span>软考高级系统架构设计师</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-pink-500 mt-0.5">🏆</span>
+                <span>大学英语四级证书</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-pink-500 mt-0.5">🏆</span>
+                <span>全国计算机二级证书</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-pink-500 mt-0.5">🏆</span>
+                <span>国家励志奖学金</span>
+              </li>
+            </ul>
+          </section>
+
+          {/* 个人优势 */}
+          <section class="card-base p-6">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+              <span class="w-8 h-8 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </span>
+              个人优势
+            </h2>
+            
+            <ul class="space-y-2 text-sm text-muted-foreground">
+              <li class="flex items-start gap-2">
+                <span class="text-cyan-500 mt-1">•</span>
+                <span>具有积极的思考能力，对代码业务逻辑非常执着，喜欢深入思考并理解代码的运行逻辑</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-cyan-500 mt-1">•</span>
+                <span>喜欢研究各种框架的源代码，能够学习到更多优秀的设计和编码实践</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-cyan-500 mt-1">•</span>
+                <span>性格开朗活泼，善于沟通，具备静下心来分析需求的能力</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-cyan-500 mt-1">•</span>
+                <span>具备良好的自学能力和解决问题的能力，能够灵活应对各种挑战</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-cyan-500 mt-1">•</span>
+                <span>对工作持严谨和细致的态度，遵守上级安排，虚心听取同事建议</span>
+              </li>
+            </ul>
+          </section>
+
+          {/* 下载简历按钮 */}
+          <div class="flex flex-col gap-3">
+            <button 
+              onclick="window.print()"
+              class="btn w-full gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+              </svg>
+              打印 / 保存 PDF
+            </button>
+            <a href="mailto:contact@example.com?subject=面试邀请" class="btn-secondary w-full gap-2 !no-underline">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+              联系我
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* 底部 */}
+      <div class="mt-16 text-center pt-8 border-t border-border">
+        <p class="text-sm text-muted-foreground">
+          💡 感谢您抽出宝贵时间阅读我的简历，期待与您的交流！
+        </p>
+        <p class="text-xs text-muted-foreground mt-2">
+          本页面由 Astro 构建 · <a href="/" class="text-indigo-500 hover:underline">访问我的博客</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  {/* 打印样式 */}
+  <style is:inline>
+    @media print {
+      @page {
+        margin: 1.5cm;
+      }
+      
+      body {
+        background: white !important;
+        color: black !important;
+      }
+      
+      nav, footer, .scroll-to-top, button, .btn, .btn-secondary {
+        display: none !important;
+      }
+      
+      main {
+        padding-top: 0 !important;
+      }
+      
+      .card-base {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+      }
+      
+      .dark .card-base {
+        background: white !important;
+        color: black !important;
+      }
+      
+      a {
+        text-decoration: none !important;
+        color: black !important;
+      }
+      
+      .text-muted-foreground {
+        color: #555 !important;
+      }
+    }
+  </style>
+</BaseLayout>

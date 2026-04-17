@@ -1,0 +1,19 @@
+# MoonPeak Blog - Robots.txt
+# 站点: https://moonpeak.cn
+
+User-agent: *
+Allow: /
+
+# 禁止索引低价值/功能性页面
+Disallow: /search
+Disallow: /remote
+Disallow: /visualizer
+
+# 禁止索引静态资源目录（节省爬虫预算）
+Disallow: /js/
+Disallow: /fonts/
+Disallow: /local-images/
+Disallow: /pagefind/
+
+# Sitemap
+Sitemap: https://moonpeak.cn/sitemap-index.xml

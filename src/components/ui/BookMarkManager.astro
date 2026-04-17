@@ -81,7 +81,7 @@ function generateColor(str: string): string {
                 </div>
 
                 <!-- Links Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {category.links.map((link) => {
                         const hostname = getHostname(link.url);
                         const initial = getInitial(link.name);
@@ -91,11 +91,11 @@ function generateColor(str: string): string {
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                class="bookmark-card group flex items-start gap-4 p-5 card-base no-underline! hover:-translate-y-0.5"
+                                class="bookmark-card group flex items-start gap-3 p-3 card-base no-underline! hover:-translate-y-0.5"
                             >
                                 <!-- Favicon -->
                                 <div 
-                                    class="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden favicon-container"
+                                    class="w-8 h-8 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden favicon-container"
                                     data-hostname={hostname}
                                     data-initial={initial}
                                     data-color={bgColor}
@@ -103,13 +103,13 @@ function generateColor(str: string): string {
                                     <img
                                         src={`https://www.google.com/s2/favicons?domain=${link.url}&sz=128`}
                                         alt=""
-                                        class="w-6 h-6 object-contain favicon-img"
+                                        class="w-5 h-5 object-contain favicon-img"
                                         loading="lazy"
                                         onerror="this.style.display='none'; this.parentElement.classList.add('show-fallback');"
                                     />
                                     <!-- 备用图标 - 首字母 -->
                                     <div 
-                                        class="favicon-fallback w-full h-full flex items-center justify-center text-white text-sm font-bold" 
+                                        class="favicon-fallback w-full h-full flex items-center justify-center text-white text-xs font-bold" 
                                         style={`background-color: ${bgColor}`}
                                     >
                                         {initial}
@@ -118,19 +118,16 @@ function generateColor(str: string): string {
 
                                 <!-- Content -->
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="font-medium text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
+                                    <div class="flex items-center gap-1.5">
+                                        <h3 class="font-medium text-sm text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
                                             {link.name}
                                         </h3>
                                         <svg class="w-3 h-3 text-muted-foreground opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                                         </svg>
                                     </div>
-                                    <p class="text-xs text-muted-foreground mt-0.5 truncate">
-                                        {hostname}
-                                    </p>
                                     {link.desc && (
-                                        <p class="text-sm text-muted-foreground mt-2 line-clamp-2">
+                                        <p class="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                                             {link.desc}
                                         </p>
                                     )}

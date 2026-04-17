@@ -8,71 +8,6 @@ import { glob } from 'astro/loaders';
 // z.url() 而非 z.string().url()
 
 // ============================================
-// Questions Collection Schema（软考题库）
-// ============================================
-
-/**
- * 选项 Schema（导出供类型推导使用）
- */
-export const optionSchema = z.object({
-    id: z.string()
-        .min(1, '选项ID不能为空')
-        .max(10, '选项ID不能超过 10 字符'),
-    text: z.string()
-        .min(1, '选项内容不能为空')
-        .max(500, '选项内容不能超过 500 字符'),
-    isCorrect: z.boolean(),
-});
-
-/**
- * 题目 Schema（导出供类型推导使用）
- * 默认科目：系统架构设计师
- */
-export const questionSchema = z.object({
-    // 题目唯一标识
-    id: z.string()
-        .min(1, '题目ID不能为空')
-        .regex(/^[a-zA-Z0-9-_]+$/, '题目ID只能包含字母、数字、连字符和下划线'),
-    
-    // 所属章节
-    chapter: z.string()
-        .min(1, '章节不能为空')
-        .max(100, '章节名称不能超过 100 字符'),
-    
-    // 难度等级：1-5
-    difficulty: z.number()
-        .int('难度必须是整数')
-        .min(1, '难度最低为 1')
-        .max(5, '难度最高为 5'),
-    
-    // 题目类型
-    type: z.enum(['single', 'multiple', 'judge']),
-    
-    // 所属科目（可选，默认为系统架构设计师）
-    subject: z.enum(['system-architect', 'software-design']).default('system-architect'),
-    
-    // 题目内容
-    content: z.string()
-        .min(1, '题目内容不能为空')
-        .max(2000, '题目内容不能超过 2000 字符'),
-    
-    // 选项（单选、多选题目需要，判断题可选）
-    options: z.array(optionSchema).optional(),
-    
-    // 答案解析
-    explanation: z.string()
-        .min(1, '答案解析不能为空')
-        .max(3000, '答案解析不能超过 3000 字符'),
-    
-    // 知识点标签
-    knowledgePoints: z.array(
-        z.string()
-            .min(1, '知识点标签不能为空')
-            .max(50, '单个知识点标签不能超过 50 字符')
-    ).default([]),
-}).strict();
-
-// ============================================
 // Collections 定义 - Astro 6.x Content Layer API
 // ============================================
 
@@ -197,21 +132,8 @@ const authorsCollection = defineCollection({
     }),
 });
 
-// 3. 定义 'questions' 集合（软考题库）
-const questionsCollection = defineCollection({
-    loader: glob({ pattern: '**/*.json', base: './src/content/questions' }),
-    schema: questionSchema,
-});
-
-// 4. 导出所有已定义的集合
+// 3. 导出所有已定义的集合
 export const collections = {
     'blog': blogCollection,
     'authors': authorsCollection,
-    'questions': questionsCollection,
 };
-
-// 5. 导出类型（供 TypeScript 使用）
-// 注意：blogCollection 和 authorsCollection 的 schema 可能为函数类型，
-// 因此不导出 BlogSchema 和 AuthorsSchema 以避免类型推断问题
-export type QuestionSchema = z.infer<typeof questionSchema>;
-export type OptionSchema = z.infer<typeof optionSchema>;

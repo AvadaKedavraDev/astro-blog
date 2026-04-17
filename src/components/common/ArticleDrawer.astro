@@ -181,7 +181,11 @@
     
     // 事件委托处理器 - 处理抽屉点击
     function handleLinkClick(e) {
-        const link = e.target.closest('a[href^="/blog/"][data-astro-reload]');
+        const target = e.target;
+        if (!target) return;
+        const el = target.nodeType === Node.TEXT_NODE ? target.parentElement : (typeof target.closest === 'function' ? target : null);
+        if (!el) return;
+        const link = el.closest('a[href^="/blog/"][data-astro-reload]');
         if (!link) return;
         
         const href = link.getAttribute('href');

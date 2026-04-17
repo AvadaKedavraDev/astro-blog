@@ -559,6 +559,61 @@
     overflow: hidden;
   }
 
+  /* 移动端表格横向滚动支持 */
+  @media (max-width: 768px) {
+    .prose-custom :where(table) {
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: nowrap;
+      max-width: 100vw;
+      margin-left: -1rem;
+      margin-right: -1rem;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      /* 隔离堆叠上下文 */
+      isolation: isolate;
+    }
+    
+    .prose-custom :where(th), .prose-custom :where(td) {
+      white-space: nowrap;
+      min-width: 120px;
+      /* 确保单元格有独立背景 */
+      background-clip: padding-box;
+    }
+    
+    /* 固定第一列 - 使用不透明背景遮挡后面的内容 */
+    .prose-custom :where(th:first-child),
+    .prose-custom :where(td:first-child) {
+      position: sticky;
+      left: 0;
+      z-index: 10;
+      /* 使用实色背景，不使用 transparent */
+      background-color: var(--card) !important;
+      border-right: 2px solid color-mix(in oklch, var(--border) 60%, transparent);
+      /* 添加阴影效果区分固定列 */
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    /* 表头第一列使用不同的背景色 */
+    .prose-custom :where(thead th:first-child) {
+      background-color: color-mix(in oklch, var(--muted) 72%, var(--background) 28%) !important;
+      z-index: 11;
+    }
+    
+    /* 斑马纹行第一列的背景色 */
+    .prose-custom :where(tbody tr:nth-child(even) td:first-child) {
+      background-color: color-mix(in oklch, var(--muted) 10%, var(--background) 90%) !important;
+    }
+    
+    /* 深色模式下的阴影 */
+    .dark .prose-custom :where(th:first-child),
+    .dark .prose-custom :where(td:first-child) {
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.25);
+    }
+  }
+
   .prose-custom :where(th), .prose-custom :where(td) {
     padding: 0.8rem 1rem;
     text-align: left;

@@ -43,7 +43,7 @@ const actionCommands = [
 <!-- Command Palette 遮罩层 -->
 <div
   id="cmd-palette-overlay"
-  class="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm opacity-0 invisible transition-all duration-200"
+  class="fixed inset-0 z-100 bg-black/40 backdrop-blur-sm opacity-0 invisible transition-all duration-200"
   aria-hidden="true"
 >
   <!-- Command Palette 面板 -->
@@ -216,7 +216,11 @@ const actionCommands = [
 
       // 使用事件委托处理命令项点击
       panel.addEventListener('click', (e) => {
-        const item = e.target.closest('.cmd-item');
+        const target = e.target;
+        if (!target) return;
+        const el = target.nodeType === Node.TEXT_NODE ? target.parentElement : (typeof target.closest === 'function' ? target : null);
+        if (!el) return;
+        const item = el.closest('.cmd-item');
         if (item) {
           executeCommand(item);
         }

@@ -114,9 +114,11 @@ const iconSizes = {
 
                 // 使用事件委托，无论按钮何时被添加到 DOM 都有效
                 this.handleClick = (e: MouseEvent) => {
-                    const btn = (e.target as HTMLElement).closest(
-                        "[data-theme-toggle]"
-                    );
+                    const target = e.target as Node | null;
+                    if (!target) return;
+                    const el = target.nodeType === Node.TEXT_NODE ? target.parentElement : (target instanceof Element ? target : null);
+                    if (!el) return;
+                    const btn = el.closest("[data-theme-toggle]");
                     if (!btn) return;
 
                     e.preventDefault();
@@ -126,9 +128,11 @@ const iconSizes = {
                 this.handleKeydown = (e: KeyboardEvent) => {
                     if (e.key !== "Enter" && e.key !== " ") return;
 
-                    const btn = (e.target as HTMLElement).closest(
-                        "[data-theme-toggle]"
-                    );
+                    const target = e.target as Node | null;
+                    if (!target) return;
+                    const el = target.nodeType === Node.TEXT_NODE ? target.parentElement : (target instanceof Element ? target : null);
+                    if (!el) return;
+                    const btn = el.closest("[data-theme-toggle]");
                     if (!btn) return;
 
                     e.preventDefault();

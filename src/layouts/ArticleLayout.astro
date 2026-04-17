@@ -129,16 +129,20 @@ const isHeavyArticle =
                 <div class="flex gap-4 lg:gap-5">
 
                     {/* ========== 左侧边栏 - 相关文章 Card ========== */}
+                    {(() => {
+                        const hasLeftSidebar = relatedPosts.length > 0 || tags.length > 0;
+                        return hasLeftSidebar && (
                     <aside
                             id="left-sidebar"
                             class:list={[
                                 "hidden lg:block shrink-0",
-                                relatedPosts.length > 0 ? "w-64 opacity-100" : "w-0 opacity-0 overflow-hidden"
+                                hasLeftSidebar ? "w-56 opacity-100" : "w-0 opacity-0 overflow-hidden"
                             ]}
                     >
                         <div class="sticky top-20 space-y-4">
 
                             {/* 相关文章 Card */}
+                            {relatedPosts.length > 0 && (
                             <div class="bg-background rounded-xl shadow-sm border border-border overflow-hidden">
                                 {/* Card Header */}
                                 <div class="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
@@ -160,6 +164,7 @@ const isHeavyArticle =
                                     <RelatedPostsByTag posts={relatedPosts} currentTags={tags}/>
                                 </div>
                             </div>
+                            )}
 
                             {/* 可以添加更多 Card，比如：标签云 */}
                             {tags.length > 0 && (
@@ -190,8 +195,38 @@ const isHeavyArticle =
                                     </div>
                             )}
 
+                            {/* 功能快捷操作 */}
+                            <div class="bg-background rounded-xl shadow-sm border border-border overflow-hidden">
+                                <div class="px-4 py-3 border-b border-border bg-muted/30">
+                                    <div class="flex items-center gap-2">
+                                        <Icon name="lucide:zap" class="w-4 h-4 text-amber-500"/>
+                                        <span class="text-sm font-semibold text-foreground">快捷操作</span>
+                                    </div>
+                                </div>
+                                <div class="p-3 space-y-2">
+                                    <a
+                                            href="/blog"
+                                            class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg action-btn group"
+                                    >
+                                        <Icon name="lucide:arrow-left"
+                                              class="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1"/>
+                                        返回文章列表
+                                    </a>
+                                    <button
+                                            onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
+                                            class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg action-btn group"
+                                    >
+                                        <Icon name="lucide:arrow-up"
+                                              class="w-4 h-4 transition-transform duration-300 group-hover:-translate-y-1"/>
+                                        回到顶部
+                                    </button>
+                                </div>
+                            </div>
+
                         </div>
                     </aside>
+                        );
+                    })()}
 
                     {/* 左侧展开按钮 - 收起时显示在左侧边缘 */}
                     {relatedPosts.length > 0 && (
@@ -244,7 +279,7 @@ const isHeavyArticle =
                     {hasTOC && (
                             <aside
                                     id="right-sidebar"
-                                    class="hidden xl:block w-56 shrink-0"
+                                    class="hidden xl:block w-64 shrink-0"
                             >
                                 <div class="sticky top-20">
                                     {/* 目录 Card */}
@@ -270,25 +305,7 @@ const isHeavyArticle =
                                         </div>
                                     </div>
 
-                                    {/* 快捷操作 */}
-                                    <div class="card-base overflow-hidden mt-4">
-                                        <div class="px-4 py-3 border-b border-border bg-muted/30">
-                                            <div class="flex items-center gap-2">
-                                                <Icon name="lucide:zap" class="w-4 h-4 text-amber-500"/>
-                                                <span class="text-sm font-semibold text-foreground">快捷操作</span>
-                                            </div>
-                                        </div>
-                                        <div class="p-3 space-y-2">
-                                            <button
-                                                    onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
-                                                    class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg action-btn group"
-                                            >
-                                                <Icon name="lucide:arrow-up"
-                                                      class="w-4 h-4 transition-transform duration-300 group-hover:-translate-y-1"/>
-                                                回到顶部
-                                            </button>
-                                        </div>
-                                    </div>
+
                                 </div>
                             </aside>
                     )}

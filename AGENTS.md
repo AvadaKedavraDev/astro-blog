@@ -42,13 +42,6 @@ moonpeak-astro/
 │   │   │   ├── ArticleDrawer.astro        # 文章抽屉
 │   │   │   ├── FansWall.astro             # 粉丝墙
 │   │   │   └── Navigation.astro           # 顶部导航栏（View Transitions 兼容）
-│   │   ├── exam/            # 考试系统组件
-│   │   │   ├── Badge.astro                # 徽章组件
-│   │   │   ├── QuestionCard.astro         # 题目卡片
-│   │   │   ├── InteractiveQuestionCard.astro  # 交互式题目卡片
-│   │   │   ├── ProgressBar.astro          # 进度条
-│   │   │   ├── FavoriteButton.tsx         # 收藏按钮（SolidJS）
-│   │   │   └── OptionGroup.tsx            # 选项组（SolidJS）
 │   │   ├── ui/              # UI 组件
 │   │   │   ├── ReadingProgress.astro      # 阅读进度条
 │   │   │   ├── ScrollToTop.astro          # 返回顶部
@@ -81,8 +74,7 @@ moonpeak-astro/
 │   │       └── VisualizerClient.tsx       # 客户端包装器
 │   ├── layouts/             # 布局组件
 │   │   ├── BaseLayout.astro               # 基础布局
-│   │   ├── ArticleLayout.astro            # 文章页布局（三栏）
-│   │   └── ExamLayout.astro               # 考试页面布局
+│   │   └── ArticleLayout.astro            # 文章页布局（三栏）
 │   ├── pages/               # 页面路由
 │   │   ├── index.astro                    # 首页
 │   │   ├── blog/                          # 文章列表/详情
@@ -92,18 +84,13 @@ moonpeak-astro/
 │   │   ├── tags/                          # 标签页
 │   │   │   ├── index.astro                # 标签列表
 │   │   │   └── [tag].astro                # 单个标签页
-│   │   ├── exam/                          # 考试系统
-│   │   │   ├── index.astro                # 考试首页
-│   │   │   └── practice/[subject]/[id].astro  # 练习题页面
 │   │   ├── about.astro                    # 关于页面
 │   │   ├── search.astro                   # 搜索页面 (Pagefind)
 │   │   ├── links.astro                    # 工具箱页面
 │   │   ├── fanswall.astro                 # 粉丝墙页面
 │   │   ├── resume.astro                   # 简历页面
 │   │   ├── remote.astro                   # 远程页面
-│   │   ├── visualizer.astro               # 算法可视化页面
-│   │   ├── exam-demo.astro                # 考试演示页面
-│   │   └── exam-demo-interactive.astro    # 交互式考试演示
+│   │   └── visualizer.astro               # 算法可视化页面
 │   ├── content/             # 内容集合
 │   │   ├── blog/                          # 博客文章（Markdown）
 │   │   │   ├── astro/                     # Astro 相关
@@ -118,14 +105,9 @@ moonpeak-astro/
 │   │   │   ├── test/                      # 测试/模板
 │   │   │   ├── deploy/                    # 部署相关
 │   │   │   └── work/                      # 工作记录
-│   │   └── questions/                     # 题库数据（YAML/JSON）
-│   │       └── system-architect/          # 系统架构设计师题库
 │   ├── lib/                 # 工具函数
-│   │   ├── post.ts                        # 文章数据处理
-│   │   ├── examDB.ts                      # 考试系统数据库
-│   │   └── examStore.ts                   # 考试状态管理
+│   │   └── post.ts                        # 文章数据处理
 │   ├── types/               # 类型定义
-│   │   └── exam.ts                        # 考试系统类型
 │   ├── plugins/             # 自定义插件
 │   │   └── remark-img-bed.mjs             # 图床图片转换
 │   ├── styles/              # 全局样式
@@ -226,22 +208,6 @@ import { getPosts } from "@lib/post";
     nofollow?: boolean;
   };
   license?: string;        // 可选 - 版权信息
-}
-```
-
-### 题库 Schema
-
-```typescript
-{
-  id: string;              // 必填 - 题目唯一标识
-  chapter: string;         // 必填 - 所属章节
-  difficulty: number;      // 必填 - 难度 1-5
-  type: 'single' | 'multiple' | 'judge';  // 必填 - 题目类型
-  subject: string;         // 可选 - 科目，默认 'system-architect'
-  content: string;         // 必填 - 题目内容
-  options?: Option[];      // 可选 - 选项列表
-  explanation: string;     // 必填 - 答案解析
-  knowledgePoints: string[];  // 必填 - 知识点标签
 }
 ```
 
@@ -522,6 +488,51 @@ PUBLIC_IMG_BASE_URL=https://cdn.image.moonpeak.cn/
 </script>
 ```
 
+### DOM 事件委托与文本节点陷阱
+
+在 `is:inline` 内联脚本中使用 `e.target.closest()` 进行事件委托时，`e.target` 可能是 **文本节点 (`TextNode`)**，而文本节点没有 `closest` 方法。这在使用 SVG 图标或 `<span>` 文字包裹的场景下尤为常见。
+
+#### 错误示范
+```javascript
+// ❌ 不处理文本节点：旧版 Safari 等浏览器中会报 TypeError
+const btn = e.target.closest('[data-dropdown-trigger]');
+
+// ❌ 过度防御：直接 return 会丢弃 TextNode 的 mouseenter 事件
+if (!e.target || typeof e.target.closest !== 'function') return;
+```
+在桌面端下拉菜单中，上述防御代码会导致鼠标移入菜单子项的文本节点时 `mouseenter` 被忽略，进而清理不掉 `mouseleave` 设置的关闭定时器，表现为**下拉菜单闪烁或移入子项立即收起**。
+
+#### 正确做法
+统一封装安全获取元素的方法：
+```javascript
+function getEventTarget(e) {
+  const target = e.target;
+  if (!target) return null;
+  if (target.nodeType === Node.TEXT_NODE) return target.parentElement;
+  if (typeof target.closest === 'function') return target;
+  return null;
+}
+```
+
+对于 `mouseleave` 监听器，必须结合 `e.relatedTarget` 判断鼠标是否只是移动到了容器内部的另一个元素：
+```javascript
+document.addEventListener('mouseleave', (e) => {
+  const wrapper = getEventTarget(e)?.closest('[data-dropdown]');
+  if (!wrapper) return;
+  
+  // 如果鼠标只是移到了 wrapper 内部的另一个元素，不关闭
+  const related = e.relatedTarget;
+  const relatedEl = related?.nodeType === Node.TEXT_NODE ? related.parentElement : related;
+  if (relatedEl && wrapper.contains(relatedEl)) return;
+  
+  // 真正离开整个区域时才关闭
+  closeDropdown();
+}, true);
+```
+
+#### View Transitions 兼容性
+Astro ClientRouter 页面切换后会重新渲染导航栏 DOM。若将事件监听器直接绑定到 `[data-dropdown]` 等具体元素上，新页面渲染出的元素将丢失监听器。因此**下拉菜单等固定组件优先使用 `document` 级别的事件委托**（配合捕获阶段），而不是直接绑定到会被重建的 DOM 元素。
+
 ### SolidJS 组件规范
 
 #### 1. 列表渲染必须添加 key 属性
@@ -659,53 +670,6 @@ onCleanup(() => {
 - 动态计算并显示网站运行时间
 - 可配置建站日期（修改 `SITE_BIRTH` 常量）
 - ICP 备案信息展示
-
-## 考试系统
-
-项目包含完整的软考（系统架构设计师）题库功能：
-
-### 数据层
-
-- **examDB.ts**: 客户端数据持久化（localStorage）
-  - 错题本管理
-  - 收藏题目管理
-  - 答题历史记录
-  
-- **examStore.ts**: 全局状态管理
-  - 答题状态
-  - 练习进度
-  - 统计信息
-
-### 题目数据结构
-
-题库数据存储在 `src/content/questions/system-architect/` 目录下，使用 YAML 格式：
-
-```yaml
-id: "sa-001"
-chapter: "计算机系统基础"
-difficulty: 3
-type: "single"
-subject: "system-architect"
-content: "题目内容..."
-options:
-  - id: "A"
-    text: "选项A内容"
-    isCorrect: true
-  - id: "B"
-    text: "选项B内容"
-    isCorrect: false
-explanation: "答案解析..."
-knowledgePoints: ["知识点1", "知识点2"]
-```
-
-### 功能特性
-
-- 章节练习
-- 随机练习
-- 错题本复习
-- 收藏题目
-- 答题统计
-- 进度追踪
 
 ## 算法可视化
 
@@ -891,11 +855,6 @@ document.addEventListener('astro:before-preparation', () => {
 ### 图片不显示
 - 开发环境检查 `PUBLIC_IMG_BASE_URL` 配置
 - 确保图片路径正确（相对路径会被转换）
-
-### 题库数据不加载
-- 检查 `src/content/questions/` 目录结构
-- 确保 YAML 格式正确，符合 Zod Schema
-- 修改配置后需重启开发服务器
 
 ---
 
